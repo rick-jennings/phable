@@ -1,0 +1,33 @@
+[tool.poetry]
+name = "phable"
+version = "0.1.7"
+description = ""
+authors = ["Rick Jennings <rjennings055@gmail.com>"]
+readme = "README.md"
+packages = [{include = "phable"}]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+pandas = "^2.0.0"
+
+
+[tool.poetry.group.dev.dependencies]
+black = "^23.1.0"
+flake8 = "^6.0.0"
+mypy = "^1.1.1"
+pytest = "^7.3.0"
+isort = "^5.12.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+log_cli = true
+log_level = "DEBUG"
+log_cli_level = "DEBUG"
+log_format = "[%(levelname)s]: %(message)s"
+log_cli_format = "[%(levelname)s]: %(message)s"
+log_date_format = "%Y-%m-%d %H:%M:%S"
+log_cli_date_format = "%Y-%m-%d %H:%M:%S"

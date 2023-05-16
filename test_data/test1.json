@@ -1,0 +1,329 @@
+{
+    "_kind": "grid",
+    "meta": {
+        "ver": "3.0",
+        "hisStart": {
+            "_kind": "dateTime",
+            "val": "2023-03-14T00:00:00-04:00",
+            "tz": "New_York"
+        },
+        "hisEnd": {
+            "_kind": "dateTime",
+            "val": "2023-03-14T01:00:00-04:00",
+            "tz": "New_York"
+        }
+    },
+    "cols": [
+        {
+            "name": "ts",
+            "meta": {
+                "disKey": "ui::timestamp",
+                "tz": "New_York",
+                "chartFormat": "ka'\n'WWW DDD"
+            }
+        },
+        {
+            "name": "v0",
+            "meta": {
+                "id": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-d7707510",
+                    "dis": "Jacksonville ElecMeter-Main kW"
+                },
+                "ac": {
+                    "_kind": "marker"
+                },
+                "active": {
+                    "_kind": "marker"
+                },
+                "cur": {
+                    "_kind": "marker"
+                },
+                "curStatus": "ok",
+                "curVal": {
+                    "_kind": "number",
+                    "val": 605.1,
+                    "unit": "kW"
+                },
+                "disMacro": "$equipRef $navName",
+                "elec": {
+                    "_kind": "marker"
+                },
+                "equipRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-a7285252",
+                    "dis": "Jacksonville ElecMeter-Main"
+                },
+                "his": {
+                    "_kind": "marker"
+                },
+                "hisEnd": {
+                    "_kind": "dateTime",
+                    "val": "2023-06-20T23:45:00-04:00",
+                    "tz": "New_York"
+                },
+                "hisInterval": {
+                    "_kind": "number",
+                    "val": 15,
+                    "unit": "min"
+                },
+                "hisMode": "sampled",
+                "hisSize": 51448,
+                "hisStart": {
+                    "_kind": "dateTime",
+                    "val": "2022-01-01T00:00:00-05:00",
+                    "tz": "New_York"
+                },
+                "kind": "Number",
+                "kwSite": {
+                    "_kind": "marker"
+                },
+                "navName": "kW",
+                "point": {
+                    "_kind": "marker"
+                },
+                "power": {
+                    "_kind": "marker"
+                },
+                "regionRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-56e66e46",
+                    "dis": "Jacksonville"
+                },
+                "sensor": {
+                    "_kind": "marker"
+                },
+                "siteMeter": {
+                    "_kind": "marker"
+                },
+                "siteRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-576dd9b9",
+                    "dis": "Jacksonville"
+                },
+                "total": {
+                    "_kind": "marker"
+                },
+                "tz": "New_York",
+                "unit": "kW",
+                "mod": {
+                    "_kind": "dateTime",
+                    "val": "2023-03-22T20:37:27.87Z",
+                    "tz": "UTC"
+                }
+            }
+        },
+        {
+            "name": "v1",
+            "meta": {
+                "id": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-974f9223",
+                    "dis": "Cleveland ElecMeter-Main kW"
+                },
+                "ac": {
+                    "_kind": "marker"
+                },
+                "active": {
+                    "_kind": "marker"
+                },
+                "cur": {
+                    "_kind": "marker"
+                },
+                "curStatus": "ok",
+                "curVal": {
+                    "_kind": "number",
+                    "val": 742.7,
+                    "unit": "kW"
+                },
+                "disMacro": "$equipRef $navName",
+                "elec": {
+                    "_kind": "marker"
+                },
+                "equipRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-2db32d71",
+                    "dis": "Cleveland ElecMeter-Main"
+                },
+                "his": {
+                    "_kind": "marker"
+                },
+                "hisEnd": {
+                    "_kind": "dateTime",
+                    "val": "2023-06-20T23:45:00-04:00",
+                    "tz": "New_York"
+                },
+                "hisInterval": {
+                    "_kind": "number",
+                    "val": 15,
+                    "unit": "min"
+                },
+                "hisMode": "sampled",
+                "hisSize": 51448,
+                "hisStart": {
+                    "_kind": "dateTime",
+                    "val": "2022-01-01T00:00:00-05:00",
+                    "tz": "New_York"
+                },
+                "kind": "Number",
+                "kwSite": {
+                    "_kind": "marker"
+                },
+                "navName": "kW",
+                "point": {
+                    "_kind": "marker"
+                },
+                "power": {
+                    "_kind": "marker"
+                },
+                "regionRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-56e66e46",
+                    "dis": "Cleveland"
+                },
+                "sensor": {
+                    "_kind": "marker"
+                },
+                "siteMeter": {
+                    "_kind": "marker"
+                },
+                "siteRef": {
+                    "_kind": "ref",
+                    "val": "p:demo:r:2bae2387-cd79dce9",
+                    "dis": "Cleveland"
+                },
+                "total": {
+                    "_kind": "marker"
+                },
+                "tz": "New_York",
+                "unit": "kW",
+                "mod": {
+                    "_kind": "dateTime",
+                    "val": "2023-03-22T20:37:27.849Z",
+                    "tz": "UTC"
+                }
+            }
+        }
+    ],
+    "rows": [
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-13T23:45:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 94,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 206,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T00:00:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 82,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 198,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T00:15:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 89,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 201,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T00:30:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 83,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 208,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T00:45:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 89,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 200,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T01:00:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 87,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 202,
+                "unit": "kW"
+            }
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2023-03-14T01:15:00-04:00",
+                "tz": "New_York"
+            },
+            "v0": {
+                "_kind": "number",
+                "val": 87,
+                "unit": "kW"
+            },
+            "v1": {
+                "_kind": "number",
+                "val": 192,
+                "unit": "kW"
+            }
+        }
+    ]
+}
