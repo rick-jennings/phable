@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 
-from phable.json_parser import grid_to_pandas, parse_kinds
+from phable.parser.json import grid_to_pandas, parse_kinds
 from phable.kinds import Grid
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 
 def test_misc():
-    with open("test_data/test1.json") as f:
+    with open("tests/json_test_data1.json") as f:
         ts_test = json.load(f)
 
     ts_test = parse_kinds(ts_test)

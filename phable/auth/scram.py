@@ -8,16 +8,27 @@ from dataclasses import dataclass
 from hashlib import pbkdf2_hmac
 from random import getrandbits
 from time import time_ns
-from typing import Optional
+from typing import Optional, Any
 
-from phable.http import request
-
-from .http import Response
+from phable.http import Response
 
 logger = logging.getLogger(__name__)
 
 
 # TODO: Check the validity of the server final message
+
+
+@dataclass
+class HelloCallResult:
+    handshake_token: str
+    hash: str
+
+
+@dataclass
+class FirstCallResult:
+    s_nonce: str
+    salt: str
+    iter_count: int
 
 
 class ScramException(Exception):
@@ -35,131 +46,155 @@ class NotFoundError(Exception):
     help_msg: str
 
 
-class ScramClient:
-    def __init__(
-        self, host_url: str, username: str, password: str, hash: str = "sha256"
-    ):
-        if hash not in ["sha256"]:
-            raise ScramException(
-                "The 'hash' parameter must be a str equal to 'sha256'."
+def hello_call_headers(username: str) -> dict[str, str]:
+    """
+    Return the HTTP headers required for the client's hello message.
+
+    Note:  There is no data required for the client's hello message.
+    """
+    username = _to_base64(username)
+    headers = {"Authorization": f"HELLO username={username}"}
+    return headers
+
+
+def parse_hello_result(resp: Response) -> HelloCallResult:
+    """
+    Save server's response data as class attributes to be able to get other
+    request messages.
+    """
+    auth_header = resp.headers["WWW-Authenticate"]
+    handshake_token = _parse_handshake_token(auth_header)
+    hash = _parse_hash_func(auth_header)
+    return HelloCallResult(handshake_token, hash)
+
+
+def first_call_headers(
+    hello_call_result: HelloCallResult, c1_bare: str
+) -> dict[str, Any]:
+    handshake_token = hello_call_result.handshake_token
+    hash = hello_call_result.hash
+
+    gs2_header = "n,,"
+
+    headers = {
+        "Authorization": f"scram handshakeToken={handshake_token}, "
+        f"hash={hash}, data={_to_base64(gs2_header+c1_bare)}"
+    }
+
+    return headers
+
+
+def parse_first_result(first_result: Response) -> FirstCallResult:
+    auth_header = first_result.headers["WWW-Authenticate"]
+    r, s, i = _parse_scram_data(auth_header)
+    return FirstCallResult(r, s, i)
+
+
+def last_call_headers(
+    password: str,
+    hello_call_result: HelloCallResult,
+    c1_bare: str,
+    first_call_result: FirstCallResult,
+) -> dict[str, Any]:
+    hash = hello_call_result.hash
+    handshake_token = hello_call_result.handshake_token
+
+    s_nonce = first_call_result.s_nonce
+    salt = first_call_result.salt
+    iter_count = first_call_result.iter_count
+
+    # define the client final no proof
+    client_final_no_proof = f"c={_to_base64('n,,')},r={s_nonce}"
+
+    # define the auth msg
+    auth_msg = (
+        f"{c1_bare},r={s_nonce},s={salt}," + f"i={iter_count},{client_final_no_proof}"
+    )
+
+    # define the client key
+    client_key = hmac.new(
+        unhexlify(
+            _salted_password(
+                salt,
+                iter_count,
+                hash,
+                password,
             )
+        ),
+        "Client Key".encode("UTF-8"),
+        hash,
+    ).hexdigest()
 
-        self.host_url = host_url
-        self._username = username
-        self._password = password
-        self.auth_token = self._get_auth_token()
-        self._hash = hash
+    # find the stored key
+    hashFunc = hashlib.new(hash)
+    hashFunc.update(unhexlify(client_key))
+    stored_key = hashFunc.hexdigest()
 
-    def _get_auth_token(self):
-        host_url = self.host_url
+    # find the client signature
+    client_signature = hmac.new(
+        unhexlify(stored_key), auth_msg.encode("utf-8"), hash
+    ).hexdigest()
 
-        # send hello msg & set the response
-        hello_resp = request(host_url, headers=self._get_hello_req())
-        self._set_hello_resp(hello_resp)
+    # find the client proof
+    client_proof = hex(int(client_key, 16) ^ int(client_signature, 16))[2:]
 
-        # send first msg & set the response
-        first_resp = request(host_url, headers=self._get_first_req())
-        self._set_first_resp(first_resp)
+    # may need to do some padding before converting the hex to its
+    # binary representation
+    while len(client_proof) < 64:
+        client_proof = "0" + client_proof
 
-        # send last msg & receive the response
-        last_resp = request(host_url, headers=self._get_last_req())
+    client_proof_encode = _to_base64(unhexlify(client_proof))
 
-        # parse the auth token from the last response
-        auth_token = _parse_auth_token(last_resp.headers.as_string())
+    client_final = client_final_no_proof + ",p=" + client_proof_encode
+    client_final_base64 = _to_base64(client_final)
 
-        return auth_token
+    final_msg = f"scram handshaketoken={handshake_token},data={client_final_base64}"
 
-    def _get_hello_req(self) -> dict[str, str]:
-        """
-        Return the HTTP headers required for the client's hello message.
+    headers = {"Authorization": final_msg}
+    return headers
 
-        Note:  There is no data required for the client's hello message.
-        """
-        username = _to_base64(self._username)
-        headers = {"Authorization": f"HELLO username={username}"}
-        return headers
 
-    def _set_hello_resp(self, resp: Response) -> None:
-        """
-        Save server's response data as class attributes to be able to get other
-        request messages.
-        """
-        auth_header = resp.headers["WWW-Authenticate"]
-        self.handshake_token = _parse_handshake_token(auth_header)
-        self._hash = _parse_hash_func(auth_header)
+def parse_last_result(resp: Response) -> str:
+    """Parses the auth token from the contents of a 'WWW-Authenticate' header.
 
-    def _get_first_req(self) -> dict[str, str]:
-        gs2_header = "n,,"
+    Args:
+        auth_header (str): Contents of the 'WWW-Authenticate' header in the HTTP
+        response received from the server.  Search 'WWW-Authenticate' in the Project
+        Haystack docs for more details.
 
-        self._c_nonce: str = _gen_nonce()
-        self._c1_bare: str = f"n={self._username},r={self._c_nonce}"
+    Raises:
+        NotFoundError: When the parameter, auth_header, does not contain the expected
+        substring.
 
-        headers = {
-            "Authorization": f"scram handshakeToken={self.handshake_token}, "
-            f"hash={self._hash}, data={_to_base64(gs2_header+self._c1_bare)}"
-        }
-        return headers
+    Returns:
+        str: Auth token generated by the server.
 
-    def _set_first_resp(self, resp: Response) -> None:
-        auth_header = resp.headers["WWW-Authenticate"]
-        r, s, i = _parse_scram_data(auth_header)
-        self._s_nonce: str = r
-        self._salt: str = s
-        self._iter_count: int = i
+    Examples:
+        A valid input
+        >>> parse_auth_token("authToken=web-syPGBhoPY0XhKi6EXUG62BMACc0Ot7xuq4PShtjI47c\
+-38,data=dj1ENDJEbS9kckRiSUN1NXpvTHd2OWloSlJiWkxzMFBRNllibm5EY2NNU1M4PQ,hash=SHA-256")
+        'web-syPGBhoPY0XhKi6EXUG62BMACc0Ot7xuq4PShtjI47c-38'
 
-    def _get_last_req(self):
-        # define the client final no proof
-        client_final_no_proof = f"c={_to_base64('n,,')},r={self._s_nonce}"
+        An invalid input
+        >>> parse_auth_token("This is an invalid input!")
+        Traceback (most recent call last):
+        ...
+        phable.scram.NotFoundError: Auth token not found in the 'WWW-Authenticate' \
+header:
+        This is an invalid input!
+    """
 
-        # define the auth msg
-        auth_msg = (
-            f"{self._c1_bare},r={self._s_nonce},s={self._salt},"
-            + f"i={self._iter_count},{client_final_no_proof}"
+    auth_header = resp.headers.as_string()
+
+    exclude_msg = "authToken="
+    s = re.search(f"({exclude_msg})[^,]+", auth_header)
+
+    if s is None:
+        raise NotFoundError(
+            f"Auth token not found in the 'WWW-Authenticate' header:\n{auth_header}"
         )
 
-        # define the client key
-        client_key = hmac.new(
-            unhexlify(
-                _salted_password(
-                    self._salt,
-                    self._iter_count,
-                    self._hash,
-                    self._password,
-                )
-            ),
-            "Client Key".encode("UTF-8"),
-            self._hash,
-        ).hexdigest()
-
-        # find the stored key
-        hashFunc = hashlib.new(self._hash)
-        hashFunc.update(unhexlify(client_key))
-        stored_key = hashFunc.hexdigest()
-
-        # find the client signature
-        client_signature = hmac.new(
-            unhexlify(stored_key), auth_msg.encode("utf-8"), self._hash
-        ).hexdigest()
-
-        # find the client proof
-        client_proof = hex(int(client_key, 16) ^ int(client_signature, 16))[2:]
-
-        # may need to do some padding before converting the hex to its
-        # binary representation
-        while len(client_proof) < 64:
-            client_proof = "0" + client_proof
-
-        client_proof_encode = _to_base64(unhexlify(client_proof))
-
-        client_final = client_final_no_proof + ",p=" + client_proof_encode
-        client_final_base64 = _to_base64(client_final)
-
-        final_msg = (
-            f"scram handshaketoken={self.handshake_token},data={client_final_base64}"
-        )
-
-        headers = {"Authorization": final_msg}
-        return headers
+    return s.group(0)[len(exclude_msg) :]
 
 
 def _parse_scram_data(auth_header: str) -> tuple[str, str, int]:
@@ -326,47 +361,6 @@ header:
     return s_new
 
 
-def _parse_auth_token(auth_header: str) -> str:
-    """Parses the auth token from the contents of a 'WWW-Authenticate' header.
-
-    Args:
-        auth_header (str): Contents of the 'WWW-Authenticate' header in the HTTP
-        response received from the server.  Search 'WWW-Authenticate' in the Project
-        Haystack docs for more details.
-
-    Raises:
-        NotFoundError: When the parameter, auth_header, does not contain the expected
-        substring.
-
-    Returns:
-        str: Auth token generated by the server.
-
-    Examples:
-        A valid input
-        >>> parse_auth_token("authToken=web-syPGBhoPY0XhKi6EXUG62BMACc0Ot7xuq4PShtjI47c\
--38,data=dj1ENDJEbS9kckRiSUN1NXpvTHd2OWloSlJiWkxzMFBRNllibm5EY2NNU1M4PQ,hash=SHA-256")
-        'web-syPGBhoPY0XhKi6EXUG62BMACc0Ot7xuq4PShtjI47c-38'
-
-        An invalid input
-        >>> parse_auth_token("This is an invalid input!")
-        Traceback (most recent call last):
-        ...
-        phable.scram.NotFoundError: Auth token not found in the 'WWW-Authenticate' \
-header:
-        This is an invalid input!
-    """
-
-    exclude_msg = "authToken="
-    s = re.search(f"({exclude_msg})[^,]+", auth_header)
-
-    if s is None:
-        raise NotFoundError(
-            f"Auth token not found in the 'WWW-Authenticate' header:\n{auth_header}"
-        )
-
-    return s.group(0)[len(exclude_msg) :]
-
-
 def _to_custom_hex(x: int, length: int) -> str:
     """
     Convert an integer x to hexadecimal string representation without a
@@ -387,7 +381,7 @@ def _to_custom_hex(x: int, length: int) -> str:
     return x_hex
 
 
-def _gen_nonce() -> str:
+def gen_nonce() -> str:
     """Generate a nonce."""
     # Notes:
     #   getrandbits() defines a random 64 bit integer

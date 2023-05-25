@@ -4,10 +4,22 @@ import ssl
 import urllib.error
 import urllib.parse
 import urllib.request
+from dataclasses import dataclass
 from email.message import Message
 from typing import Any, NamedTuple, Optional
 
+from phable.kinds import Grid
+from phable.parser.json import json_to_grid
+
 logger = logging.getLogger(__name__)
+
+# TODO:  Rethink except grid when json.JSONDecodeError
+# TODO:  Can we simplify this?  Maybe get rid of http module altogether?
+
+
+@dataclass
+class InvalidCloseError(Exception):
+    help_msg: str
 
 
 class Response(NamedTuple):
@@ -18,16 +30,22 @@ class Response(NamedTuple):
     status: int
     error_count: int = 0
 
-    def json(self) -> Any:
+    def to_grid(self) -> Grid:
         """
         Decode body's JSON.
         Returns:
-            Pythonic representation of the JSON object
+            Haystack Grid
         """
-        try:
-            output = json.loads(self.body)
-        except json.JSONDecodeError:
-            output = {}  # Previously was: ""
+        output = json_to_grid(json.loads(self.body))
+        # TODO:  Raise a json to grid parsing error if parsing fails
+
+        # try:
+        #     output = json_to_grid(json.loads(self.body))
+        # # TODO:  verify this code below is valid
+        # except json.JSONDecodeError:
+        #     output = Grid(
+        #         meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]
+        #     )  # Previously was: ""
         return output
 
 

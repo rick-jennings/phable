@@ -10,18 +10,18 @@ import pandas as pd
 
 import phable.kinds as kinds
 from phable.kinds import (
-    Number,
-    Marker,
-    Remove,
     NA,
-    Ref,
-    Date,
-    Time,
-    DateTime,
-    Uri,
     Coordinate,
-    XStr,
+    Date,
+    DateTime,
+    Marker,
+    Number,
+    Ref,
+    Remove,
     Symbol,
+    Time,
+    Uri,
+    XStr,
 )
 
 logger = logging.getLogger(__name__)

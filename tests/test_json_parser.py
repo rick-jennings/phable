@@ -6,7 +6,7 @@ from zoneinfo import available_timezones
 import pytest
 
 import phable.kinds as kinds
-from phable.json_parser import (
+from phable.parser.json import (
     NotFoundError,
     _build_iana_tz,
     _parse_coord,
