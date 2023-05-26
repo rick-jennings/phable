@@ -35,7 +35,7 @@ class Number:
     val: float
     unit: Optional[str] = None
 
-    def __repr__(self):
+    def __str__(self):
         return f"{self.val}{self.unit}"
 
 
@@ -48,7 +48,7 @@ class Marker:
             Marker.__instance = object.__new__(cls)
         return Marker.__instance
 
-    def __repr__(self):
+    def __str__(self):
         return "\u2713"
 
 
@@ -61,7 +61,7 @@ class Remove:
             Remove.__instance = object.__new__(cls)
         return Remove.__instance
 
-    def __repr__(self):
+    def __str__(self):
         return "remove"
 
 
@@ -74,7 +74,7 @@ class NA:
             NA.__instance = object.__new__(cls)
         return NA.__instance
 
-    def __repr__(self):
+    def __str__(self):
         return "NA"
 
 
@@ -85,7 +85,7 @@ class Ref:
     val: str
     dis: Optional[str] = None
 
-    def __repr__(self) -> str:
+    def __str__(self) -> str:
         return self.dis
 
 
@@ -93,7 +93,7 @@ class Ref:
 class Date:
     val: date
 
-    def __repr__(self):
+    def __str__(self):
         return self.val.isoformat()
 
 
@@ -101,10 +101,10 @@ class Date:
 class Time:
     val: time
 
-    # def __repr__(self):
+    # def __str__(self):
     #     return time.strftime(self.val, "%H:%M:%S%p")
 
-    def __repr__(self):
+    def __str__(self):
         return self.val.isoformat()
 
 
@@ -122,10 +122,10 @@ class DateTime:
     val: datetime
     tz: Optional[str]
 
-    # def __repr__(self):
+    # def __str__(self):
     #     return datetime.strftime(self.val, "%d-%b-%Y %a %H:%M:%S%p %Z")
 
-    def __repr__(self):
+    def __str__(self):
         return self.val.isoformat()
 
 
@@ -139,7 +139,7 @@ class Coordinate:
     lat: float
     lng: float
 
-    def __repr__(self):
+    def __str__(self):
         return f"C({self.lat},{self.lng})"
 
 
