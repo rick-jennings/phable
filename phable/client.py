@@ -30,12 +30,10 @@ class Client:
         uri: str,
         username: str,
         password: str,
-        format: str = "application/json",
     ):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
-        self.format: str = format
 
     # ----------------------------------------------------------------------------------
     # execute the scram auth scheme to get a valid auth token from the server
@@ -150,13 +148,12 @@ class Client:
 
     def call(self, op: str, grid: Grid) -> Grid:
         url = f"{self.uri}/{op}"
-        format = self.format
 
         data = grid.to_json()
 
         _std_headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
-            "Accept": format,
+            "Accept": "application/json",
         }
 
         response = request(url=url, data=data, headers=_std_headers, method="POST")
