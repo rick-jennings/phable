@@ -56,7 +56,7 @@ def test_context_manager(hc: Client):
         assert "web-" in auth_token
 
         # verify the about op pre-close
-        assert hc.about().rows[0]["vendorName"] == "SkyFoundry"
+        assert hc.about()["vendorName"] == "SkyFoundry"
 
     # TODO:  verify the auth token used after close generates
     # 403 error specifically
@@ -72,7 +72,7 @@ def test_context_manager(hc: Client):
 def test_about_op(hc: Client):
     hc.open()
     # verify the about op pre-close
-    assert hc.about().rows[0]["vendorName"] == "SkyFoundry"
+    assert hc.about()["vendorName"] == "SkyFoundry"
 
     # close the auth session
     hc.close()

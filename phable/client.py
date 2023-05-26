@@ -1,5 +1,5 @@
 import logging
-from typing import Optional
+from typing import Optional, Any
 
 from phable.http import request
 from phable.kinds import Grid, Ref
@@ -98,13 +98,13 @@ class Client:
     # standard Haystack ops
     # ----------------------------------------------------------------------------------
 
-    def about(self) -> Grid:
+    def about(self) -> dict[str, Any]:
         """
         Executes the Haystack about op, which queries basic information about
         the server.
         """
         grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[])
-        return self.call("about", grid)
+        return self.call("about", grid).rows[0]
 
     def close(self) -> Grid:
         """
