@@ -2,8 +2,8 @@ import json
 import logging
 from datetime import datetime
 
-from phable.parser.json import grid_to_pandas, parse_kinds
 from phable.kinds import Grid
+from phable.parser.json import grid_to_pandas, parse_kinds
 
 logger = logging.getLogger(__name__)
 

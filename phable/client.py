@@ -1,21 +1,20 @@
 import logging
-from typing import Optional, Any
+from typing import Any, Optional
 
-from phable.http import request
-from phable.kinds import Grid, Ref
 from phable.auth.scram import (
-    HelloCallResult,
     FirstCallResult,
+    HelloCallResult,
     first_call_headers,
+    gen_nonce,
     hello_call_headers,
     last_call_headers,
-    parse_hello_result,
     parse_first_result,
+    parse_hello_result,
     parse_last_result,
-    gen_nonce,
 )
-
-from phable.exceptions import InvalidCloseError, IncorrectHttpStatus
+from phable.exceptions import IncorrectHttpStatus, InvalidCloseError, UnknownRecError
+from phable.http import request
+from phable.kinds import Grid, Ref
 
 logger = logging.getLogger(__name__)
 
@@ -120,11 +119,60 @@ class Client:
         return call_result
 
     def read(self, filter: str, limit: Optional[int] = None) -> Grid:
+        """Read by filter
+
+        Args:
+            filter (str): _description_
+            limit (Optional[int], optional): _description_. Defaults to None.
+
+        Returns:
+            Grid: _description_
+        """
         if limit is None:
             grid = Grid.to_grid({"filter": filter})
         else:
             grid = Grid.to_grid({"filter": filter, "limit": limit})
         return self.call("read", grid)
+
+    def read_by_id(self, id: Ref) -> dict[str, Any]:
+        """Read by id
+
+        Args:
+            id (Ref): _description_
+
+        Returns:
+            dict[str, Any]: _description_
+        """
+        grid = Grid.to_grid({"id": {"_kind": "ref", "val": id.val}})
+        response = self.call("read", grid)
+
+        # verify the rec was found
+        if response.cols[0]["name"] == "empty":
+            raise UnknownRecError(f"Unable to locate id {id.val} on the server.")
+
+        return response.rows[0]
+
+    def read_by_ids(self, ids: list[Ref]) -> Grid:
+        """Read by ids
+
+        Args:
+            ids (list[Ref]): _description_
+
+        Returns:
+            Grid: _description_
+        """
+        parsed_ids = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+        grid = Grid.to_grid(parsed_ids)
+        response = self.call("read", grid)
+
+        # verify the recs were found
+        if len(response.rows) == 0:
+            raise UnknownRecError("Unable to locate any of the ids on the server.")
+        for row in response.rows:
+            if len(row) == 0:
+                raise UnknownRecError("Unable to locate one or more ids on the server.")
+
+        return response
 
     def his_read(self, ref: Ref, range: str) -> Grid:
         grid = Grid.to_grid({"id": {"_kind": "ref", "val": ref.val}, "range": range})

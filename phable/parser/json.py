@@ -8,21 +8,8 @@ from zoneinfo import ZoneInfo, available_timezones
 
 import pandas as pd
 
-from phable.kinds import (
-    Grid,
-    NA,
-    Coordinate,
-    Date,
-    DateTime,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Time,
-    Uri,
-    XStr,
-)
+from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
+                          Ref, Remove, Symbol, Time, Uri, XStr)
 
 logger = logging.getLogger(__name__)
 

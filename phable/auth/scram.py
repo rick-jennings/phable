@@ -8,7 +8,7 @@ from dataclasses import dataclass
 from hashlib import pbkdf2_hmac
 from random import getrandbits
 from time import time_ns
-from typing import Optional, Any
+from typing import Any, Optional
 
 from phable.http import Response
 

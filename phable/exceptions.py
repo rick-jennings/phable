@@ -2,6 +2,11 @@ from dataclasses import dataclass
 
 
 @dataclass
+class UnknownRecError(Exception):
+    help_msg: str
+
+
+@dataclass
 class NotFoundError(Exception):
     help_msg: str
 

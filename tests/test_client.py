@@ -1,13 +1,16 @@
 import logging
 import sys
-from phable.kinds import Marker, Number, Grid
+
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus
+from phable.exceptions import UnknownRecError
+from phable.kinds import Grid, Marker, Number, Ref
 
 logger = logging.getLogger(__name__)
 
-# Note:  These tests are made using SkySpark as the Haystack server
+# Note 1:  These tests are made using SkySpark as the Haystack server
+# Note 2:  Fix "p:demo:r:2bf586e4-7cd2c9c4".  Maybe make some fake rec/his and use throughout test script.
 
 
 @pytest.fixture
@@ -90,6 +93,47 @@ def test_read_point(hc: Client):
             'point and siteRef->dis=="Carytown" and equipRef->siteMeter and power'
         )
     assert isinstance(grid.rows[0]["power"], Marker)
+
+
+def test_read_by_id(hc: Client):
+    # Test a valid Ref
+    with hc:
+        response = hc.read_by_id(Ref("p:demo:r:2bf586e4-7cd2c9c4"))
+    assert response["navName"] == "Test-Point"
+
+    # Test an invalid Ref
+    with pytest.raises(UnknownRecError):
+        with hc:
+            response = hc.read_by_id(Ref("invalid-id"))
+
+
+# TODO:  Come up with a better test than this
+def test_read_by_ids(hc: Client):
+    # Test valid Refs
+    with hc:
+        response = hc.read_by_ids(
+            [Ref("p:demo:r:2bf586e4-7cd2c9c4"), Ref("p:demo:r:2bae2387-576dd9b9")]
+        )
+
+    for row in response.rows:
+        assert row["tz"] == "New_York"
+
+    # Test invalid Refs
+    with pytest.raises(UnknownRecError):
+        with hc:
+            response = hc.read_by_ids(
+                [Ref("p:demo:r:2bf586e4-7cd2c9c4"), Ref("invalid-id")]
+            )
+
+    with pytest.raises(UnknownRecError):
+        with hc:
+            response = hc.read_by_ids(
+                [Ref("invalid-id"), Ref("p:demo:r:2bf586e4-7cd2c9c4")]
+            )
+
+    with pytest.raises(UnknownRecError):
+        with hc:
+            response = hc.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
 # TODO:  Change the date used in the test to be relative.
