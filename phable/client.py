@@ -101,8 +101,7 @@ class Client:
         Executes the Haystack about op, which queries basic information about
         the server.
         """
-        grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[])
-        return self.call("about", grid).rows[0]
+        return self.call("about").rows[0]
 
     def close(self) -> Grid:
         """
@@ -111,8 +110,7 @@ class Client:
 
         Note:  The close op may have side effects so we need to use HTTP POST.
         """
-        grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[])
-        call_result = self.call("close", grid)
+        call_result = self.call("close")
 
         if call_result.cols[0]["name"] != "empty":
             raise InvalidCloseError(
@@ -146,17 +144,19 @@ class Client:
     # base to Haystack and all other ops
     # ----------------------------------------------------------------------------------
 
-    def call(self, op: str, grid: Grid) -> Grid:
-        url = f"{self.uri}/{op}"
-
-        data = grid.to_json()
-
-        _std_headers = {
+    def call(
+        self,
+        op: str,
+        grid: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
+    ) -> Grid:
+        headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
             "Accept": "application/json",
         }
 
-        response = request(url=url, data=data, headers=_std_headers, method="POST")
+        response = request(
+            url=f"{self.uri}/{op}", data=grid.to_json(), headers=headers, method="POST"
+        )
 
         if response.status != 200:
             raise IncorrectHttpStatus(
