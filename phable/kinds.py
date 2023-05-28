@@ -80,6 +80,7 @@ class NA:
 
 # TODO: Determine if I need make_handle func on Ref()
 # TODO:  Should dis in Ref be mandatory?
+# TODO:  Improve human readability
 @dataclass(frozen=True, slots=True)
 class Ref:
     val: str
@@ -133,6 +134,9 @@ class DateTime:
 class Uri:
     val: str
 
+    def __str__(self):
+        return self.val
+
 
 @dataclass(frozen=True, slots=True)
 class Coordinate:
@@ -148,7 +152,13 @@ class XStr:
     type: str
     val: str
 
+    def __str__(self):
+        return f"({self.type}, {self.val})"
+
 
 @dataclass(frozen=True, slots=True)
 class Symbol:
     val: str
+
+    def __str__(self):
+        return f"^{self.val}"
