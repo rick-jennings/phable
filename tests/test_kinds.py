@@ -1,8 +1,24 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, date, time, timezone
 
-from phable.kinds import Grid
+from phable.kinds import (
+    NA,
+    Coordinate,
+    Date,
+    DateTime,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Time,
+    Uri,
+    XStr,
+)
+
+
 from phable.parser.json import grid_to_pandas, parse_kinds
 
 logger = logging.getLogger(__name__)
@@ -19,6 +35,27 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+
+
+def test_kinds_human_display():
+    assert str(Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[])) == "Grid"
+    assert str(Number(90.5, "kW")) == "90.5kW"
+    assert str(Marker()) == "\u2713"
+    assert str(Remove()) == "remove"
+    assert str(NA()) == "NA"
+    assert str(Ref("@foo", "Carytown")) == "Carytown"
+    assert str(Date(date(2021, 1, 4))) == "2021-01-04"
+    assert str(Time(time(hour=14, minute=59, second=0))) == "14:59:00"
+
+    test_dt = datetime(2022, 6, 4, 0, 15, 20, tzinfo=timezone.utc)
+    assert str(DateTime(test_dt)) == "2022-06-04T00:15:20+00:00"
+
+    assert str(Uri("http://www.localhost:8080")) == "http://www.localhost:8080"
+
+    assert str(Coordinate(39.154824, -77.209002)) == "C(39.154824, -77.209002)"
+
+    assert str(XStr("Color", "red")) == "(Color, red)"
+    assert str(Symbol("elec-meter")) == "^elec-meter"
 
 
 def test_misc():

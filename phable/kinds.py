@@ -29,6 +29,9 @@ class Grid:
             "rows": self.rows,
         }
 
+    def __str__(self):
+        return "Grid"
+
 
 @dataclass(frozen=True, slots=True)
 class Number:
@@ -121,7 +124,7 @@ class DateTime:
     """
 
     val: datetime
-    tz: Optional[str]
+    tz: Optional[str] = None
 
     # def __str__(self):
     #     return datetime.strftime(self.val, "%d-%b-%Y %a %H:%M:%S%p %Z")
@@ -144,7 +147,7 @@ class Coordinate:
     lng: float
 
     def __str__(self):
-        return f"C({self.lat},{self.lng})"
+        return f"C({self.lat}, {self.lng})"
 
 
 @dataclass(frozen=True, slots=True)
