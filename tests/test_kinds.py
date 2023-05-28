@@ -36,22 +36,19 @@ def test_misc():
     df = grid_to_pandas(hg)
 
     # test first timestamp pandas df
-    assert df[df.columns[0]].iloc[0] == datetime.fromisoformat(
+    assert df[df.columns[0]].iloc[0].val == datetime.fromisoformat(
         "2023-03-13T23:45:00-04:00"
     )
-    # assert df[df.columns[1]].iloc[0] == 94.0
-    assert df["Jacksonville ElecMeter-Main kW"].iloc[0] == 94.0
-    assert df["Cleveland ElecMeter-Main kW"].iloc[0] == 206.0
+    assert df["p:demo:r:2bae2387-d7707510"].iloc[0].val == 94.0
+    assert df["p:demo:r:2bae2387-974f9223"].iloc[0].val == 206.0
     assert "Timestamp" in df.columns
-    assert "Jacksonville ElecMeter-Main kW" in df.columns
-    assert "Cleveland ElecMeter-Main kW" in df.columns
 
     # test first timestamp pandas df
-    assert df["Timestamp"].iloc[0] == datetime.fromisoformat(
+    assert df["Timestamp"].iloc[0].val == datetime.fromisoformat(
         "2023-03-13T23:45:00-04:00"
     )
-    assert df["Jacksonville ElecMeter-Main kW"].iloc[0] == 94.0
-    assert df["Cleveland ElecMeter-Main kW"].iloc[0] == 206.0
+    assert df["p:demo:r:2bae2387-d7707510"].iloc[0].val == 94.0
+    assert df["p:demo:r:2bae2387-974f9223"].iloc[0].val == 206.0
 
 
 # def test_ts_x():

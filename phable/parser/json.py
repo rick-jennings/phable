@@ -8,8 +8,21 @@ from zoneinfo import ZoneInfo, available_timezones
 
 import pandas as pd
 
-from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
-                          Ref, Remove, Symbol, Time, Uri, XStr)
+from phable.kinds import (
+    NA,
+    Coordinate,
+    Date,
+    DateTime,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Time,
+    Uri,
+    XStr,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,13 +67,13 @@ def _parse_layer(new_d: dict[str, Any]) -> None:
                 new_d[x] = to_kind(new_d[x])
 
 
-# TODO :  Support pandas without requiring pandas dependency
+# TODO :  Map Haystack kinds in DF to Pandas types
 def grid_to_pandas(g: Grid) -> pd.DataFrame:
     # initialize the pandas df
     col_names = [col_grid["name"] for col_grid in g.cols]
     df = pd.DataFrame(data=g.rows, columns=col_names)
 
-    # find a map for column names - we want something more readable
+    # make column names involving timeseries data more human readable
     name_map = {}
     for col in g.cols:
         if col["name"] == "ts":
@@ -68,18 +81,10 @@ def grid_to_pandas(g: Grid) -> pd.DataFrame:
 
         if "meta" in col.keys():
             if "id" in col["meta"].keys():
-                name_map[col["name"]] = col["meta"]["id"].dis
+                name_map[col["name"]] = col["meta"]["id"].val
 
     # rename the columns in the df to be easier to read
     df = df.rename(columns=name_map)
-
-    # convert kind dataclass objects to types supported by Pandas
-    for col in df.columns:
-        x = df[col].iloc[0]
-        if isinstance(x, DateTime):
-            df[col] = df[col].apply(lambda x: x.val)  # .astype(datetime)
-        if isinstance(x, Number):
-            df[col] = df[col].apply(lambda x: x.val).astype(float)
 
     return df
 
