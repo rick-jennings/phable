@@ -11,6 +11,26 @@ class Grid:
     cols: list[dict[str, Any]]
     rows: list[dict[str, Any]]
 
+    @property
+    def col_rename_map(self) -> dict[str, str]:
+        rename_map: dict[str, str] = {}
+        for col in self.cols:
+            ori_col_name = col["name"]
+
+            # refer cols named "ts" to "Timestamp"
+            if ori_col_name == "ts":
+                new_col_name = "Timestamp"
+
+            # use Ref id for name of cols representing points
+            elif "meta" in col.keys() and "id" in col["meta"].keys():
+                new_col_name = col["meta"]["id"].val
+
+            else:
+                new_col_name = ori_col_name
+
+            rename_map[ori_col_name] = new_col_name
+        return rename_map
+
     @staticmethod
     def to_grid(rows: dict[str, Any] | list[dict[str, Any]]) -> Grid:
         if isinstance(rows, dict):

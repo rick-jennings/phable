@@ -5,7 +5,8 @@
 # Import dependencies
 from phable.client import Client
 from phable.kinds import Grid
-from phable.parser.json import grid_to_pandas
+import pandas as pd
+
 
 # define these settings specific for your use case
 # Reminder:  Probably secure your login credentials!!!
@@ -31,7 +32,7 @@ with Client(uri, username, password) as hc:
     response_grid = hc.eval(request_grid)
 
 # convert response grid to pandas df and convert to csv
-df = grid_to_pandas(response_grid)
+df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
 df.to_csv("example1.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -39,9 +40,9 @@ df.to_csv("example1.csv", index=False)
 # --------------------------------------------------------------------------------------
 
 with Client(uri, username, password) as hc:
-    grid = hc.read("site")
+    response_grid = hc.read("site")
 
-df = grid_to_pandas(grid)
+df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
 df.to_csv("example2.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -49,9 +50,9 @@ df.to_csv("example2.csv", index=False)
 # --------------------------------------------------------------------------------------
 
 with Client(uri, username, password) as hc:
-    grid = hc.read("equip")
+    response_grid = hc.read("equip")
 
-df = grid_to_pandas(grid)
+df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
 df.to_csv("example3.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -59,8 +60,7 @@ df.to_csv("example3.csv", index=False)
 # --------------------------------------------------------------------------------------
 
 with Client(uri, username, password) as hc:
-    grid = hc.read("point")
+    response_grid = hc.read("point")
 
-# print(f"Here is the Example #4 grid!\n{grid}")
-df = grid_to_pandas(grid)
+df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
 df.to_csv("example4.csv", index=False)

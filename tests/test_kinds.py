@@ -1,6 +1,7 @@
 import json
 import logging
 from datetime import datetime, date, time, timezone
+import pandas as pd
 
 from phable.kinds import (
     NA,
@@ -19,7 +20,7 @@ from phable.kinds import (
 )
 
 
-from phable.parser.json import grid_to_pandas, parse_kinds
+from phable.parser.json import _parse_kinds
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +63,7 @@ def test_misc():
     with open("tests/json_test_data1.json") as f:
         ts_test = json.load(f)
 
-    ts_test = parse_kinds(ts_test)
+    ts_test = _parse_kinds(ts_test)
 
     meta = ts_test["meta"]
     cols = ts_test["cols"]
@@ -70,7 +71,7 @@ def test_misc():
 
     hg = Grid(meta, cols, rows)
 
-    df = grid_to_pandas(hg)
+    df = pd.DataFrame(data=hg.rows).rename(columns=hg.col_rename_map)
 
     # test first timestamp pandas df
     assert df[df.columns[0]].iloc[0].val == datetime.fromisoformat(

@@ -9,7 +9,6 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pandas = "^2.0.0"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -18,6 +17,7 @@ flake8 = "^6.0.0"
 mypy = "^1.1.1"
 pytest = "^7.3.0"
 isort = "^5.12.0"
+pandas = "^2.0.1"
 
 [build-system]
 requires = ["poetry-core"]
