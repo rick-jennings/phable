@@ -36,3 +36,13 @@ print(f"Here are details about the Haystack Server:\n{about_grid}")
 ```
 
 **More examples coming soon!**
+
+TODO:
+-----------
+- Decide whether or not to add Haystack Bool, Str, List, Dict kinds
+    - Note:  For now we assume the Python equivalent types map 1-to-1
+- Review how to better support conversion of Python Grid to Pandas
+- Authenticate the server by checking the validity of the server final
+  message
+- Refactor tests to not be restricted to a specific server
+- Verify that the Haystack Kind objects print correctly

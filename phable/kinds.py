@@ -5,6 +5,10 @@ from datetime import date, datetime, time
 from typing import Any, Optional
 
 
+# Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be their Python
+# type equivalents.  We may reevaluate this decision in the future.
+
+
 @dataclass(frozen=True, slots=True)
 class Grid:
     meta: dict[str, Any]
