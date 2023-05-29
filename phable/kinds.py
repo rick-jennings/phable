@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import date, datetime, time
 from typing import Any, Optional
 
-
 # Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be their Python
 # type equivalents.  We may reevaluate this decision in the future.
 

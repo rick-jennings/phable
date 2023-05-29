@@ -10,7 +10,7 @@ from random import getrandbits
 from time import time_ns
 from typing import Any, Optional
 
-from phable.http import Response
+from phable.http import HttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +57,7 @@ def hello_call_headers(username: str) -> dict[str, str]:
     return headers
 
 
-def parse_hello_result(resp: Response) -> HelloCallResult:
+def parse_hello_result(resp: HttpResponse) -> HelloCallResult:
     """
     Save server's response data as class attributes to be able to get other
     request messages.
@@ -84,7 +84,7 @@ def first_call_headers(
     return headers
 
 
-def parse_first_result(first_result: Response) -> FirstCallResult:
+def parse_first_result(first_result: HttpResponse) -> FirstCallResult:
     auth_header = first_result.headers["WWW-Authenticate"]
     r, s, i = _parse_scram_data(auth_header)
     return FirstCallResult(r, s, i)
@@ -154,7 +154,7 @@ def last_call_headers(
     return headers
 
 
-def parse_last_result(resp: Response) -> str:
+def parse_last_result(resp: HttpResponse) -> str:
     """Parses the auth token from the contents of a 'WWW-Authenticate' header.
 
     Args:

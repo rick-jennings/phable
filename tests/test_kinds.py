@@ -1,25 +1,11 @@
 import json
 import logging
-from datetime import datetime, date, time, timezone
+from datetime import date, datetime, time, timezone
+
 import pandas as pd
 
-from phable.kinds import (
-    NA,
-    Coordinate,
-    Date,
-    DateTime,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Time,
-    Uri,
-    XStr,
-)
-
-
+from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
+                          Ref, Remove, Symbol, Time, Uri, XStr)
 from phable.parser.json import _parse_kinds
 
 logger = logging.getLogger(__name__)

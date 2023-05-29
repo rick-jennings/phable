@@ -46,3 +46,4 @@ TODO:
   message
 - Refactor tests to not be restricted to a specific server
 - Verify that the Haystack Kind objects print correctly
+- Confirm if its okay to POST for scram auth and to send an empty grid as data

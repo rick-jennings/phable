@@ -6,23 +6,8 @@ from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
 from phable.exceptions import NotFoundError
-
-
-from phable.kinds import (
-    NA,
-    Coordinate,
-    Date,
-    DateTime,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Time,
-    Uri,
-    XStr,
-)
+from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
+                          Ref, Remove, Symbol, Time, Uri, XStr)
 
 logger = logging.getLogger(__name__)
 

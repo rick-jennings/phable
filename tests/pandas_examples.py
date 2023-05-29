@@ -2,11 +2,11 @@
 
 # Let's fetch some data from a Haystack Server!
 
+import pandas as pd
+
 # Import dependencies
 from phable.client import Client
 from phable.kinds import Grid
-import pandas as pd
-
 
 # define these settings specific for your use case
 # Reminder:  Probably secure your login credentials!!!

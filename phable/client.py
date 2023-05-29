@@ -1,18 +1,13 @@
 import logging
 from typing import Any, Optional
 
-from phable.auth.scram import (
-    FirstCallResult,
-    HelloCallResult,
-    first_call_headers,
-    gen_nonce,
-    hello_call_headers,
-    last_call_headers,
-    parse_first_result,
-    parse_hello_result,
-    parse_last_result,
-)
-from phable.exceptions import IncorrectHttpStatus, InvalidCloseError, UnknownRecError
+from phable.auth.scram import (FirstCallResult, HelloCallResult,
+                               first_call_headers, gen_nonce,
+                               hello_call_headers, last_call_headers,
+                               parse_first_result, parse_hello_result,
+                               parse_last_result)
+from phable.exceptions import (IncorrectHttpStatus, InvalidCloseError,
+                               UnknownRecError)
 from phable.http import request
 from phable.kinds import Grid, Ref
 
@@ -209,9 +204,7 @@ class Client:
             "rows": grid.rows,
         }
 
-        response = request(
-            url=f"{self.uri}/{op}", data=data, headers=headers, method="POST"
-        )
+        response = request(url=f"{self.uri}/{op}", data=data, headers=headers)
 
         if response.status != 200:
             raise IncorrectHttpStatus(
@@ -219,7 +212,7 @@ class Client:
             )
 
         # convert the response to a Haystack Grid
-        response = response.to_grid()
+        response = response.grid
 
         # log errors and where there is incomplete data
         if "err" in response.meta.keys():

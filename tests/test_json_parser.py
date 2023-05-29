@@ -4,23 +4,12 @@ from datetime import date, datetime, time
 import pytest
 
 import phable.kinds as kinds
-from phable.parser.json import (
-    NotFoundError,
-    _build_iana_tz,
-    _parse_coord,
-    _parse_date,
-    _parse_date_time,
-    _parse_marker,
-    _parse_na,
-    _parse_number,
-    _parse_ref,
-    _parse_remove,
-    _parse_symbol,
-    _parse_time,
-    _parse_uri,
-    _parse_xstr,
-    _haystack_to_iana_tz,
-)
+from phable.parser.json import (NotFoundError, _build_iana_tz,
+                                _haystack_to_iana_tz, _parse_coord,
+                                _parse_date, _parse_date_time, _parse_marker,
+                                _parse_na, _parse_number, _parse_ref,
+                                _parse_remove, _parse_symbol, _parse_time,
+                                _parse_uri, _parse_xstr)
 
 logger = logging.getLogger(__name__)
 
