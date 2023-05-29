@@ -202,8 +202,15 @@ class Client:
             "Accept": "application/json",
         }
 
+        data = {
+            "_kind": "grid",
+            "meta": grid.meta,
+            "cols": grid.cols,
+            "rows": grid.rows,
+        }
+
         response = request(
-            url=f"{self.uri}/{op}", data=grid.to_json(), headers=headers, method="POST"
+            url=f"{self.uri}/{op}", data=data, headers=headers, method="POST"
         )
 
         if response.status != 200:

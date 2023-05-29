@@ -41,14 +41,6 @@ class Grid:
 
         return Grid(meta=meta, cols=cols, rows=rows)
 
-    def to_json(self: Grid) -> dict[str, Any]:
-        return {
-            "_kind": "grid",
-            "meta": self.meta,
-            "cols": self.cols,
-            "rows": self.rows,
-        }
-
     def __str__(self):
         return "Grid"
 
