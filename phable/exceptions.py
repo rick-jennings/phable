@@ -19,3 +19,11 @@ class IncorrectHttpStatus(Exception):
 @dataclass
 class InvalidCloseError(Exception):
     help_msg: str
+
+
+@dataclass
+class ServerSignatureNotEqualError(Exception):
+    """Raised when the ServerSignature value sent by the server does not equal the
+    ServerSignature computed by the client."""
+
+    pass
