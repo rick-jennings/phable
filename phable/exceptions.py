@@ -1,9 +1,21 @@
 from dataclasses import dataclass
 
+# TODO: Need to improve exceptions throughout Phable!
+
+
+@dataclass
+class ScramAuthError(Exception):
+    pass
+
 
 @dataclass
 class UnknownRecError(Exception):
     help_msg: str
+
+
+@dataclass
+class JsonParseError(Exception):
+    pass
 
 
 @dataclass

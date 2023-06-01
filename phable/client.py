@@ -2,17 +2,20 @@ import logging
 from typing import Any, Optional
 
 from phable.auth.scram import (
-    FirstCallResult,
-    HelloCallResult,
-    first_call_headers,
-    gen_nonce,
-    hello_call_headers,
-    final_call_headers,
-    parse_first_result,
-    parse_hello_result,
-    parse_final_result,
+    c1_bare,
+    parse_hello_call_result,
+    parse_final_call_result,
+    Scram,
+    to_base64,
+    parse_first_call_result,
 )
-from phable.exceptions import IncorrectHttpStatus, InvalidCloseError, UnknownRecError
+from phable.exceptions import (
+    IncorrectHttpStatus,
+    InvalidCloseError,
+    UnknownRecError,
+    ServerSignatureNotEqualError,
+    ScramAuthError,
+)
 from phable.http import request
 from phable.kinds import Grid, Ref
 
@@ -34,51 +37,93 @@ class Client:
         self.username: str = username
         self._password: str = password
 
+        # attributes for scram auth
+        self.handshake_token: str
+        self.hash: str
+        self.c1_bare: str
+        self.s_nonce: str
+        self.salt: str
+        self.iter_count: int
+        self._auth_token: str
+
     # ----------------------------------------------------------------------------------
     # execute the scram auth scheme to get a valid auth token from the server
     # ----------------------------------------------------------------------------------
 
     def open(self) -> None:
+        """Initiates and executes the SCRAM authentication exchange with the server.
+        Upon a successful exchange an auth token provided by the server is assigned to
+        the _auth_token attribute of this class which may be used in future requests to
+        the server by other class methods.
+        """
         try:
-            hello_result = self._hello_call()
-            c1_bare = f"n={self.username},r={gen_nonce()}"
-            first_result = self._first_call(hello_result, c1_bare)
-            self._auth_token = self._last_call(hello_result, c1_bare, first_result)
+            self._hello_call()
+            self.c1_bare = c1_bare(self.username)
+            self._first_call()
+            self._final_call()
         except Exception:
             logger.critical("Unable to scram authenticate with the Haystack Server.")
-            raise
+            raise ScramAuthError
 
-    def _hello_call(self) -> HelloCallResult:
-        hello_headers = hello_call_headers(self.username)
-        hello_result = request(self.uri + "/about", headers=hello_headers)
+    def _hello_call(self) -> None:
+        """Defines and sends the HELLO message to the server and processes the server's
+        response according to Project Haystack's SCRAM auth instructions."""
 
-        return parse_hello_result(hello_result)
+        headers = {"Authorization": f"HELLO username={to_base64(self.username)}"}
+        response = request(self.uri + "/about", headers=headers)
 
-    def _first_call(
-        self, hello_result: HelloCallResult, c1_bare: str
-    ) -> FirstCallResult:
-        first_headers = first_call_headers(hello_result, c1_bare)
-        first_result = request(
+        auth_header = response.headers["WWW-Authenticate"]
+        self.handshake_token, self.hash = parse_hello_call_result(auth_header)
+
+    def _first_call(self) -> None:
+        """Defines and sends the "client-first-message" to the server and processes the
+        server's response according to RFC5802."""
+
+        gs2_header = "n,,"
+        headers = {
+            "Authorization": f"scram handshakeToken={self.handshake_token}, "
+            f"hash={self.hash}, data={to_base64(gs2_header+self.c1_bare)}"
+        }
+        response = request(
             self.uri + "/about",
-            headers=first_headers,
+            headers=headers,
         )
 
-        return parse_first_result(first_result)
+        auth_header = response.headers["WWW-Authenticate"]
+        self.s_nonce, self.salt, self.iter_count = parse_first_call_result(auth_header)
 
-    def _last_call(
-        self,
-        hello_result: HelloCallResult,
-        c1_bare: str,
-        first_result: FirstCallResult,
-    ) -> str:
-        server_signature, last_headers = final_call_headers(
-            self._password,
-            hello_result,
-            c1_bare,
-            first_result,
+    def _final_call(self) -> None:
+        """Defines and sends the "client-final-message" to the server and processes the
+        server's response according to RFC5802.
+
+        If the SCRAM authentication exchange was successful then the auth token parsed
+        from the server's response is assigned to the _auth_token attribute in this
+        class, which may be used in future requests to the server.
+
+        Raises a ServerSignatureNotEqualError if the client's computed ServerSignature
+        does not match the one received by the server.
+        """
+        sc = Scram(
+            password=self._password,
+            hash=self.hash,
+            handshake_token=self.handshake_token,
+            c1_bare=self.c1_bare,
+            s_nonce=self.s_nonce,
+            salt=self.salt,
+            iter_count=self.iter_count,
         )
-        last_result = request(self.uri + "/about", headers=last_headers)
-        return parse_final_result(last_result, server_signature)
+        headers = {
+            "Authorization": (
+                f"scram handshaketoken={self.handshake_token},"
+                f"data={sc.client_final_message}"
+            )
+        }
+        response = request(self.uri + "/about", headers=headers)
+
+        self._auth_token, server_signature = parse_final_call_result(response)
+
+        if server_signature != sc.server_signature:
+            raise ServerSignatureNotEqualError
 
     # ----------------------------------------------------------------------------------
     # define an optional context manager

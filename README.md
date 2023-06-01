@@ -47,3 +47,4 @@ TODO:
 - Refactor tests to not be restricted to a specific server
 - If applicable, improve how the Haystack Kind objects are printed
 - Improve exceptions module
+- Run additional scram tests defined in RFC5802
