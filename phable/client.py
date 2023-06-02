@@ -38,12 +38,12 @@ class Client:
         self._password: str = password
 
         # attributes for scram auth
-        self.handshake_token: str
-        self.hash: str
-        self.c1_bare: str
-        self.s_nonce: str
-        self.salt: str
-        self.iter_count: int
+        self._handshake_token: str
+        self._hash: str
+        self._c1_bare: str
+        self._s_nonce: str
+        self._salt: str
+        self._iter_count: int
         self._auth_token: str
 
     # ----------------------------------------------------------------------------------
@@ -58,7 +58,7 @@ class Client:
         """
         try:
             self._hello_call()
-            self.c1_bare = c1_bare(self.username)
+            self._c1_bare = c1_bare(self.username)
             self._first_call()
             self._final_call()
         except Exception:
@@ -72,7 +72,7 @@ class Client:
         headers = {"Authorization": f"HELLO username={to_base64(self.username)}"}
         response = request(self.uri + "/about", headers=headers, method="GET")
 
-        self.handshake_token, self.hash = parse_hello_call_result(response)
+        self._handshake_token, self._hash = parse_hello_call_result(response)
 
     def _first_call(self) -> None:
         """Defines and sends the "client-first-message" to the server and processes the
@@ -80,11 +80,11 @@ class Client:
 
         gs2_header = "n,,"
         headers = {
-            "Authorization": f"scram handshakeToken={self.handshake_token}, "
-            f"hash={self.hash}, data={to_base64(gs2_header+self.c1_bare)}"
+            "Authorization": f"scram handshakeToken={self._handshake_token}, "
+            f"hash={self._hash}, data={to_base64(gs2_header+self._c1_bare)}"
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
-        self.s_nonce, self.salt, self.iter_count = parse_first_call_result(response)
+        self._s_nonce, self._salt, self._iter_count = parse_first_call_result(response)
 
     def _final_call(self) -> None:
         """Defines and sends the "client-final-message" to the server and processes the
@@ -99,16 +99,16 @@ class Client:
         """
         sc = Scram(
             password=self._password,
-            hash=self.hash,
-            handshake_token=self.handshake_token,
-            c1_bare=self.c1_bare,
-            s_nonce=self.s_nonce,
-            salt=self.salt,
-            iter_count=self.iter_count,
+            hash=self._hash,
+            handshake_token=self._handshake_token,
+            c1_bare=self._c1_bare,
+            s_nonce=self._s_nonce,
+            salt=self._salt,
+            iter_count=self._iter_count,
         )
         headers = {
             "Authorization": (
-                f"scram handshaketoken={self.handshake_token},"
+                f"scram handshaketoken={self._handshake_token},"
                 f"data={sc.client_final_message}"
             )
         }
