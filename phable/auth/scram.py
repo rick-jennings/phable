@@ -83,14 +83,16 @@ class Scram:
     @property
     def client_final_message(self) -> str:
         client_final = self.client_final_no_proof + ",p=" + self.client_proof
-        # return client_final
         return to_base64(client_final)
 
 
-def parse_hello_call_result(auth_header: str) -> tuple[str, str]:
+def parse_hello_call_result(hello_call_result: HttpResponse) -> tuple[str, str]:
     """Parses the handshake token and hash from the 'WWW-Authenticate' header in the
     server generated HELLO message.
     """
+
+    auth_header = hello_call_result.headers["WWW-Authenticate"]
+
     # find the handshake token
     exclude_msg = "handshakeToken="
     s = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
@@ -124,11 +126,12 @@ def parse_hello_call_result(auth_header: str) -> tuple[str, str]:
     return handshake_token, hash
 
 
-def parse_first_call_result(auth_header: str) -> tuple[str, str, int]:
+def parse_first_call_result(first_call_result: HttpResponse) -> tuple[str, str, int]:
     """Parses the server nonce, salt, and iteration count from the 'WWW-Authenticate'
     header in the "server-first-message".
     """
 
+    auth_header = first_call_result.headers["WWW-Authenticate"]
     exclude_msg = "scram data="
     scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
 

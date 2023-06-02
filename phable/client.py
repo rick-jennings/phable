@@ -72,8 +72,7 @@ class Client:
         headers = {"Authorization": f"HELLO username={to_base64(self.username)}"}
         response = request(self.uri + "/about", headers=headers, method="GET")
 
-        auth_header = response.headers["WWW-Authenticate"]
-        self.handshake_token, self.hash = parse_hello_call_result(auth_header)
+        self.handshake_token, self.hash = parse_hello_call_result(response)
 
     def _first_call(self) -> None:
         """Defines and sends the "client-first-message" to the server and processes the
@@ -85,9 +84,7 @@ class Client:
             f"hash={self.hash}, data={to_base64(gs2_header+self.c1_bare)}"
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
-
-        auth_header = response.headers["WWW-Authenticate"]
-        self.s_nonce, self.salt, self.iter_count = parse_first_call_result(auth_header)
+        self.s_nonce, self.salt, self.iter_count = parse_first_call_result(response)
 
     def _final_call(self) -> None:
         """Defines and sends the "client-final-message" to the server and processes the
