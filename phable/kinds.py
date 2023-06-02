@@ -39,7 +39,14 @@ class Grid:
         if isinstance(rows, dict):
             rows = [rows]
 
-        cols = [{"name": name} for name in rows[0].keys()]
+        # might be able to find a nicer way to do this
+        col_names: list[str] = []
+        for row in rows:
+            for col_name in row.keys():
+                if col_name not in col_names:
+                    col_names.append(col_name)
+
+        cols = [{"name": name} for name in col_names]
         meta = {"ver": "3.0"}
 
         return Grid(meta=meta, cols=cols, rows=rows)

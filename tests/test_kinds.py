@@ -4,8 +4,21 @@ from datetime import date, datetime, time, timezone
 
 import pandas as pd
 
-from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
-                          Ref, Remove, Symbol, Time, Uri, XStr)
+from phable.kinds import (
+    NA,
+    Coordinate,
+    Date,
+    DateTime,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Time,
+    Uri,
+    XStr,
+)
 from phable.parser.json import _parse_kinds
 
 logger = logging.getLogger(__name__)
@@ -22,6 +35,32 @@ logger = logging.getLogger(__name__)
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
 # ------------------------------------------------------------------------------
+
+
+def test_grid():
+    # test #1
+    rows = [
+        {"ts": "some_time", "v0": "50kW"},
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+
+    # test #2
+    rows = [
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+
+    # test #3
+    rows = [
+        {"ts": "some_time", "v0": "45kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
 
 
 def test_kinds_human_display():
