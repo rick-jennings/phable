@@ -135,19 +135,11 @@ class Client:
     # ----------------------------------------------------------------------------------
 
     def about(self) -> dict[str, Any]:
-        """
-        Executes the Haystack about op, which queries basic information about
-        the server.
-        """
+        """Query basic information about the server."""
         return self.call("about").rows[0]
 
     def close(self) -> Grid:
-        """
-        Executes the Haystack close op, which closes the active
-        authentication session.
-
-        Note:  The close op may have side effects so we need to use HTTP POST.
-        """
+        """Close the connection to the Haystack server."""
         call_result = self.call("close")
 
         if call_result.cols[0]["name"] != "empty":
@@ -158,15 +150,7 @@ class Client:
         return call_result
 
     def read(self, filter: str, limit: Optional[int] = None) -> Grid:
-        """Read by filter
-
-        Args:
-            filter (str): _description_
-            limit (Optional[int], optional): _description_. Defaults to None.
-
-        Returns:
-            Grid: _description_
-        """
+        """Read a record that matches a given filter.  Apply an optional limit."""
         if limit is None:
             grid = Grid.to_grid({"filter": filter})
         else:
@@ -174,14 +158,7 @@ class Client:
         return self.call("read", grid)
 
     def read_by_id(self, id: Ref) -> dict[str, Any]:
-        """Read by id
-
-        Args:
-            id (Ref): _description_
-
-        Returns:
-            dict[str, Any]: _description_
-        """
+        """Read a record by its id."""
         grid = Grid.to_grid({"id": {"_kind": "ref", "val": id.val}})
         response = self.call("read", grid)
 
@@ -192,14 +169,7 @@ class Client:
         return response.rows[0]
 
     def read_by_ids(self, ids: list[Ref]) -> Grid:
-        """Read by ids
-
-        Args:
-            ids (list[Ref]): _description_
-
-        Returns:
-            Grid: _description_
-        """
+        """Read records by their ids."""
         parsed_ids = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
         grid = Grid.to_grid(parsed_ids)
         response = self.call("read", grid)
@@ -214,6 +184,7 @@ class Client:
         return response
 
     def his_read(self, ids: Ref | list[Ref], range: str) -> Grid:
+        """Read history data on selected records for the given range."""
         if isinstance(ids, Ref):
             grid = Grid.to_grid(
                 {"id": {"_kind": "ref", "val": ids.val}, "range": range}
@@ -227,6 +198,15 @@ class Client:
         return self.call("hisRead", grid)
 
     def his_write(self, his_grid: Grid) -> Grid:
+        """Write history data to records on the Haystack server.
+
+        A Haystack Grid object defined in phable.kinds will need to be initialized as
+        an arg. See reference below for more details on how to define the his_grid arg.
+        https://project-haystack.org/doc/docHaystack/Ops#hisWrite
+
+        Note:  Future Phable versions may apply a breaking change to this func to make
+        it easier.
+        """
         return self.call("hisWrite", his_grid)
 
     # ----------------------------------------------------------------------------------
@@ -234,6 +214,7 @@ class Client:
     # ----------------------------------------------------------------------------------
 
     def eval(self, grid: Grid) -> Grid:
+        """Evaluates an expression."""
         return self.call("eval", grid)
 
     # ----------------------------------------------------------------------------------
