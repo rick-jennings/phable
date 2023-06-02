@@ -5,7 +5,7 @@ import pytest
 
 from phable.client import Client, IncorrectHttpStatus
 from phable.exceptions import UnknownRecError
-from phable.kinds import Grid, Marker, Number, Ref
+from phable.kinds import Grid, Marker, Number, Ref, DateTime
 
 logger = logging.getLogger(__name__)
 
@@ -146,13 +146,33 @@ def test_his_read(hc: Client):
             'point and siteRef->dis=="Carytown" and equipRef->siteMeter and power'
         )
         point_ref = point_grid.rows[0]["id"]
-
         # get the his
         his_grid = hc.his_read(point_ref, "2023-05-02")
 
-    assert isinstance(his_grid.rows[0]["val"], Number)
-    assert his_grid.rows[0]["val"].unit == "kW"
-    assert his_grid.rows[0]["val"].val >= 0
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+
+
+def test_batch_his_read(hc: Client):
+    with hc:
+        ids = [
+            Ref("p:demo:r:2bae2387-974f9223"),
+            Ref("p:demo:r:2bae2387-f2e61159"),
+            Ref("p:demo:r:2bae2387-d7707510"),
+            Ref("p:demo:r:2bae2387-ed0ce5b7"),
+        ]
+        his_grid = hc.his_read(ids, "2023-05-02")
+
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[0]], DateTime)
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert isinstance(his_grid.rows[0][cols[4]], Number)
+    assert his_grid.rows[0][cols[4]].unit == "kW"
+    assert his_grid.rows[0][cols[4]].val >= 0
 
 
 # TODO:  Manually create a point using the eval op since we know the ids will change

@@ -219,8 +219,17 @@ class Client:
 
         return response
 
-    def his_read(self, ref: Ref, range: str) -> Grid:
-        grid = Grid.to_grid({"id": {"_kind": "ref", "val": ref.val}, "range": range})
+    def his_read(self, ids: Ref | list[Ref], range: str) -> Grid:
+        if isinstance(ids, Ref):
+            grid = Grid.to_grid(
+                {"id": {"_kind": "ref", "val": ids.val}, "range": range}
+            )
+        else:
+            meta = {"ver": "3.0", "range": range}
+            cols = [{"name": "id"}]
+            rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+            grid = Grid(meta, cols, rows)
+
         return self.call("hisRead", grid)
 
     def his_write(self, his_grid: Grid) -> Grid:
@@ -253,7 +262,6 @@ class Client:
             "cols": grid.cols,
             "rows": grid.rows,
         }
-
         response = request(url=f"{self.uri}/{op}", data=data, headers=headers)
 
         if response.status != 200:
