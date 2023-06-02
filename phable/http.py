@@ -30,11 +30,10 @@ def request(
     url: str,
     data: Optional[dict[str, Any]] = None,
     headers: Optional[dict[str, Any]] = None,
+    method: str = "GET",
     error_count: int = 0,
 ) -> HttpResponse:
-    """
-    Perform HTTP request.  Only POST is supported for security reasons.
-    """
+    """Performs an HTTP request."""
     if not url.startswith("http"):
         raise urllib.error.URLError("Incorrect and possibly insecure protocol in url")
     headers = headers or {}
@@ -44,7 +43,7 @@ def request(
     headers["Content-Type"] = "application/json; charset=UTF-8"
 
     httprequest = urllib.request.Request(
-        url, data=request_data, headers=headers, method="POST"
+        url, data=request_data, headers=headers, method=method
     )
 
     try:

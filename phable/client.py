@@ -70,7 +70,7 @@ class Client:
         response according to Project Haystack's SCRAM auth instructions."""
 
         headers = {"Authorization": f"HELLO username={to_base64(self.username)}"}
-        response = request(self.uri + "/about", headers=headers)
+        response = request(self.uri + "/about", headers=headers, method="GET")
 
         auth_header = response.headers["WWW-Authenticate"]
         self.handshake_token, self.hash = parse_hello_call_result(auth_header)
@@ -84,10 +84,7 @@ class Client:
             "Authorization": f"scram handshakeToken={self.handshake_token}, "
             f"hash={self.hash}, data={to_base64(gs2_header+self.c1_bare)}"
         }
-        response = request(
-            self.uri + "/about",
-            headers=headers,
-        )
+        response = request(self.uri + "/about", headers=headers, method="GET")
 
         auth_header = response.headers["WWW-Authenticate"]
         self.s_nonce, self.salt, self.iter_count = parse_first_call_result(auth_header)
@@ -118,7 +115,7 @@ class Client:
                 f"data={sc.client_final_message}"
             )
         }
-        response = request(self.uri + "/about", headers=headers)
+        response = request(self.uri + "/about", headers=headers, method="GET")
 
         self._auth_token, server_signature = parse_final_call_result(response)
 
@@ -262,7 +259,10 @@ class Client:
             "cols": grid.cols,
             "rows": grid.rows,
         }
-        response = request(url=f"{self.uri}/{op}", data=data, headers=headers)
+
+        response = request(
+            url=f"{self.uri}/{op}", data=data, headers=headers, method="POST"
+        )
 
         if response.status != 200:
             raise IncorrectHttpStatus(
