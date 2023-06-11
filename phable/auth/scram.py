@@ -160,9 +160,9 @@ def parse_first_call_result(first_call_result: HttpResponse) -> tuple[str, str, 
         )
 
     return (
-        s_nonce.replace("r=", ""),
-        salt.replace("s=", ""),
-        int(iteration_count.replace("i=", "")),
+        s_nonce.replace("r=", "", 1),
+        salt.replace("s=", "", 1),
+        int(iteration_count.replace("i=", "", 1)),
     )
 
 
@@ -188,7 +188,7 @@ def parse_final_call_result(resp: HttpResponse) -> tuple[str, str]:
 
     data = s2.group(0)[len(exclude_msg2) :]
 
-    server_signature = _from_base64(data).replace("v=", "")
+    server_signature = _from_base64(data).replace("v=", "", 1)
 
     return auth_token, server_signature
 
