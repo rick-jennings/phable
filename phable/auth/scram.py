@@ -160,9 +160,9 @@ def parse_first_call_result(first_call_result: HttpResponse) -> tuple[str, str, 
         )
 
     return (
-        s_nonce.replace("r=", ""),
-        salt.replace("s=", ""),
-        int(iteration_count.replace("i=", "")),
+        s_nonce.replace("r=", "", 1),
+        salt.replace("s=", "", 1),
+        int(iteration_count.replace("i=", "", 1)),
     )
 
 
