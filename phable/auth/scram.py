@@ -12,14 +12,13 @@ Note:   HTTP messages are not sent by code within this module.  The Scram class 
 import hashlib
 import hmac
 import re
-from base64 import urlsafe_b64decode, urlsafe_b64encode, b64encode
+from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
-from hashlib import pbkdf2_hmac
 from functools import cached_property
-from phable.exceptions import NotFoundError
+from hashlib import pbkdf2_hmac
 from uuid import uuid4
 
-
+from phable.exceptions import NotFoundError
 from phable.http import HttpResponse
 
 

@@ -1,13 +1,9 @@
-from phable.auth.scram import (
-    parse_hello_call_result,
-    parse_first_call_result,
-    to_base64,
-    _from_base64,
-    _to_bytes,
-)
-from phable.exceptions import NotFoundError
 import pytest
 
+from phable.auth.scram import (_from_base64, _to_bytes,
+                               parse_first_call_result,
+                               parse_hello_call_result, to_base64)
+from phable.exceptions import NotFoundError
 
 # def test__parse_hello_call_result():
 #     data = "scram data=cj0xODI2YzEwY2VlZDMxYWNjOWYyYmFiY2IxMDAzZ\

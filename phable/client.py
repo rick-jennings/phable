@@ -1,21 +1,12 @@
 import logging
 from typing import Any, Optional
 
-from phable.auth.scram import (
-    c1_bare,
-    parse_hello_call_result,
-    parse_final_call_result,
-    Scram,
-    to_base64,
-    parse_first_call_result,
-)
-from phable.exceptions import (
-    IncorrectHttpStatus,
-    InvalidCloseError,
-    UnknownRecError,
-    ServerSignatureNotEqualError,
-    ScramAuthError,
-)
+from phable.auth.scram import (Scram, c1_bare, parse_final_call_result,
+                               parse_first_call_result,
+                               parse_hello_call_result, to_base64)
+from phable.exceptions import (IncorrectHttpStatus, InvalidCloseError,
+                               ScramAuthError, ServerSignatureNotEqualError,
+                               UnknownRecError)
 from phable.http import request
 from phable.kinds import Grid, Ref
 

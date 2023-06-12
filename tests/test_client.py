@@ -5,7 +5,7 @@ import pytest
 
 from phable.client import Client, IncorrectHttpStatus
 from phable.exceptions import UnknownRecError
-from phable.kinds import Grid, Marker, Number, Ref, DateTime
+from phable.kinds import DateTime, Grid, Marker, Number, Ref
 
 logger = logging.getLogger(__name__)
 
