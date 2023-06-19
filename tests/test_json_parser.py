@@ -4,7 +4,7 @@ from datetime import date, datetime, time
 import pytest
 
 import phable.kinds as kinds
-from phable.parser.json import (NotFoundError, _build_iana_tz,
+from phable.parser.json import (NotFoundError, 
                                 _haystack_to_iana_tz, _parse_coord,
                                 _parse_date, _parse_date_time, _parse_marker,
                                 _parse_na, _parse_number, _parse_ref,
@@ -110,7 +110,7 @@ def test__parse_date_time():
 
 
 def test__build_iana_tz():
-    assert _build_iana_tz("New_York") == "America/New_York"
+    assert _haystack_to_iana_tz("New_York").key == "America/New_York"
 
     with pytest.raises(NotFoundError):
-        assert _build_iana_tz("New_Yorkabc") == "America/New_York"
+        assert _haystack_to_iana_tz("New_Yorkabc").key == "America/New_York"

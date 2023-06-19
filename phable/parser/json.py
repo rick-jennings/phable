@@ -11,6 +11,11 @@ from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
 
 logger = logging.getLogger(__name__)
 
+_haystack_tz_cache: dict[str, ZoneInfo] = {}
+for timezone in available_timezones():
+    haystack_tz = timezone.split("/", 1)[-1]
+    _haystack_tz_cache[haystack_tz] = ZoneInfo(timezone)
+
 
 def json_to_grid(d: dict[str, Any]) -> Grid:
     _parse_kinds(d)
@@ -138,21 +143,11 @@ def _parse_time(d: dict[str, str]):
         raise
 
 
-def _build_iana_tz(haystack_tz: str) -> str:
-    for iana_tz in available_timezones():
-        if "/" + haystack_tz in iana_tz:
-            return iana_tz
-
-    raise NotFoundError(f"Can't locate the city {haystack_tz} in the IANA database")
-
-
 def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
-    if haystack_tz in available_timezones():
-        iana_tz = haystack_tz
-    else:
-        iana_tz = _build_iana_tz(haystack_tz)
-
-    return ZoneInfo(iana_tz)
+    zone_info = _haystack_tz_cache.get(haystack_tz)
+    if zone_info is None:
+        raise NotFoundError(f"Can't locate the city {haystack_tz} in the IANA database")
+    return zone_info
 
 
 def _parse_date_time(d: dict[str, str]):
