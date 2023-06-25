@@ -35,7 +35,9 @@ def request(
 ) -> HttpResponse:
     """Performs an HTTP request."""
     if not url.startswith("http"):
-        raise urllib.error.URLError("Incorrect and possibly insecure protocol in url")
+        raise urllib.error.URLError(
+            "Incorrect and possibly insecure protocol in url"
+        )
     headers = headers or {}
     data = data or {}
 

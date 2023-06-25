@@ -112,7 +112,10 @@ def test_read_by_ids(hc: Client):
     # Test valid Refs
     with hc:
         response = hc.read_by_ids(
-            [Ref("p:demo:r:2c26ff0c-d04a5b02"), Ref("p:demo:r:2c26ff0c-0b8c49a1")]
+            [
+                Ref("p:demo:r:2c26ff0c-d04a5b02"),
+                Ref("p:demo:r:2c26ff0c-0b8c49a1"),
+            ]
         )
 
     for row in response.rows:

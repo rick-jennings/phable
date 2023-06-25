@@ -31,3 +31,12 @@ log_format = "[%(levelname)s]: %(message)s"
 log_cli_format = "[%(levelname)s]: %(message)s"
 log_date_format = "%Y-%m-%d %H:%M:%S"
 log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+
+[tool.isort]
+profile = "black"
+
+[tool.pylint.format]
+max-line-length = "79"
+
+[tool.black]
+line-length = 79

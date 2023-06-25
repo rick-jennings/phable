@@ -4,11 +4,22 @@ from datetime import date, datetime, time
 import pytest
 
 import phable.kinds as kinds
-from phable.parser.json import (NotFoundError, _haystack_to_iana_tz, _parse_coord,
-                                _parse_date, _parse_date_time, _parse_marker,
-                                _parse_na, _parse_number, _parse_ref,
-                                _parse_remove, _parse_symbol, _parse_time,
-                                _parse_uri, _parse_xstr)
+from phable.parser.json import (
+    NotFoundError,
+    _haystack_to_iana_tz,
+    _parse_coord,
+    _parse_date,
+    _parse_date_time,
+    _parse_marker,
+    _parse_na,
+    _parse_number,
+    _parse_ref,
+    _parse_remove,
+    _parse_symbol,
+    _parse_time,
+    _parse_uri,
+    _parse_xstr,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -83,11 +94,19 @@ def test__parse_time():
 
 def test__parse_date_time():
     with pytest.raises(KeyError):
-        x = {"_kind": "dateTime", "val1": "2023-06-20T23:45:00-04:00", "tz": "New_York"}
+        x = {
+            "_kind": "dateTime",
+            "val1": "2023-06-20T23:45:00-04:00",
+            "tz": "New_York",
+        }
         _parse_date_time(x)
 
     with pytest.raises(KeyError):
-        y = {"_kind": "dateTime", "val": "2023-06-20T23:45:00-04:00", "tz1": "New_York"}
+        y = {
+            "_kind": "dateTime",
+            "val": "2023-06-20T23:45:00-04:00",
+            "tz1": "New_York",
+        }
         _parse_date_time(y)
 
     with pytest.raises(ValueError):
@@ -98,11 +117,19 @@ def test__parse_date_time():
         }
         _parse_date_time(z)
 
-    a = {"_kind": "dateTime", "val": "2023-06-20T23:45:00-04:00", "tz": "New_York"}
+    a = {
+        "_kind": "dateTime",
+        "val": "2023-06-20T23:45:00-04:00",
+        "tz": "New_York",
+    }
     assert _parse_date_time(a) == kinds.DateTime(
         datetime.fromisoformat(a["val"]), "New_York"
     )
 
-    b = {"_kind": "dateTime", "val": "2023-06-20T23:45:00-04:00", "tz": "New_Yorkabc"}
+    b = {
+        "_kind": "dateTime",
+        "val": "2023-06-20T23:45:00-04:00",
+        "tz": "New_Yorkabc",
+    }
     with pytest.raises(NotFoundError):
         _parse_date_time(b)

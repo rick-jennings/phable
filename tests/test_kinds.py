@@ -4,8 +4,21 @@ from datetime import date, datetime, time, timezone
 
 import pandas as pd
 
-from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
-                          Ref, Remove, Symbol, Time, Uri, XStr)
+from phable.kinds import (
+    NA,
+    Coordinate,
+    Date,
+    DateTime,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Time,
+    Uri,
+    XStr,
+)
 from phable.parser.json import _parse_kinds
 
 logger = logging.getLogger(__name__)
@@ -51,7 +64,10 @@ def test_grid():
 
 
 def test_kinds_human_display():
-    assert str(Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[])) == "Grid"
+    assert (
+        str(Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]))
+        == "Grid"
+    )
     assert str(Number(90.5, "kW")) == "90.5kW"
     assert str(Marker()) == "\u2713"
     assert str(Remove()) == "remove"

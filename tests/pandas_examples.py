@@ -32,7 +32,9 @@ with Client(uri, username, password) as hc:
     response_grid = hc.eval(request_grid)
 
 # convert response grid to pandas df and convert to csv
-df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
+df = pd.DataFrame(data=response_grid.rows).rename(
+    columns=response_grid.col_rename_map
+)
 df.to_csv("example1.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -42,7 +44,9 @@ df.to_csv("example1.csv", index=False)
 with Client(uri, username, password) as hc:
     response_grid = hc.read("site")
 
-df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
+df = pd.DataFrame(data=response_grid.rows).rename(
+    columns=response_grid.col_rename_map
+)
 df.to_csv("example2.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -52,7 +56,9 @@ df.to_csv("example2.csv", index=False)
 with Client(uri, username, password) as hc:
     response_grid = hc.read("equip")
 
-df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
+df = pd.DataFrame(data=response_grid.rows).rename(
+    columns=response_grid.col_rename_map
+)
 df.to_csv("example3.csv", index=False)
 
 # --------------------------------------------------------------------------------------
@@ -62,5 +68,7 @@ df.to_csv("example3.csv", index=False)
 with Client(uri, username, password) as hc:
     response_grid = hc.read("point")
 
-df = pd.DataFrame(data=response_grid.rows).rename(columns=response_grid.col_rename_map)
+df = pd.DataFrame(data=response_grid.rows).rename(
+    columns=response_grid.col_rename_map
+)
 df.to_csv("example4.csv", index=False)

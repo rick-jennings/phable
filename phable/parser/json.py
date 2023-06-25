@@ -2,13 +2,26 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, time
+from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
-from functools import lru_cache
 
 from phable.exceptions import NotFoundError
-from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
-                          Ref, Remove, Symbol, Time, Uri, XStr)
+from phable.kinds import (
+    NA,
+    Coordinate,
+    Date,
+    DateTime,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Time,
+    Uri,
+    XStr,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +99,9 @@ def _parse_number(d: dict[str, str]) -> Number:
         )
         raise
     except ValueError:
-        logger.debug(f"Unable to parse the 'val' key's value into a float:\n{d}")
+        logger.debug(
+            f"Unable to parse the 'val' key's value into a float:\n{d}"
+        )
         raise
 
 
@@ -122,7 +137,9 @@ def _parse_date(d: dict[str, str]):
         )
         raise
     except ValueError:
-        logger.debug(f"Unable to parse the 'val' key's value into a date:\n{d}")
+        logger.debug(
+            f"Unable to parse the 'val' key's value into a date:\n{d}"
+        )
         raise
 
 
@@ -135,7 +152,9 @@ def _parse_time(d: dict[str, str]):
         )
         raise
     except ValueError:
-        logger.debug(f"Unable to parse the 'val' key's value into a time:\n{d}")
+        logger.debug(
+            f"Unable to parse the 'val' key's value into a time:\n{d}"
+        )
         raise
 
 
@@ -146,7 +165,9 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
             return ZoneInfo(iana_tz)
 
     # future: maybe return None instead of raising error?
-    raise NotFoundError(f"Can't locate the city {haystack_tz} in the IANA database")
+    raise NotFoundError(
+        f"Can't locate the city {haystack_tz} in the IANA database"
+    )
 
 
 def _parse_date_time(d: dict[str, str]):

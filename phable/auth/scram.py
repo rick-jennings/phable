@@ -36,7 +36,9 @@ class Scram:
 
     @cached_property
     def _salted_password(self) -> bytes:
-        return _salted_password(self.salt, self.iter_count, self.hash, self.password)
+        return _salted_password(
+            self.salt, self.iter_count, self.hash, self.password
+        )
 
     @property
     def client_key(self) -> bytes:
@@ -61,7 +63,9 @@ class Scram:
 
     @property
     def client_signature(self) -> bytes:
-        return _hmac(self.stored_key, self.auth_message.encode("utf-8"), self.hash)
+        return _hmac(
+            self.stored_key, self.auth_message.encode("utf-8"), self.hash
+        )
 
     @property
     def client_proof(self) -> str:
@@ -85,7 +89,9 @@ class Scram:
         return to_base64(client_final)
 
 
-def parse_hello_call_result(hello_call_result: HttpResponse) -> tuple[str, str]:
+def parse_hello_call_result(
+    hello_call_result: HttpResponse,
+) -> tuple[str, str]:
     """Parses the handshake token and hash from the 'WWW-Authenticate' header in the
     server generated HELLO message.
     """
@@ -125,7 +131,9 @@ def parse_hello_call_result(hello_call_result: HttpResponse) -> tuple[str, str]:
     return handshake_token, hash
 
 
-def parse_first_call_result(first_call_result: HttpResponse) -> tuple[str, str, int]:
+def parse_first_call_result(
+    first_call_result: HttpResponse,
+) -> tuple[str, str, int]:
     """Parses the server nonce, salt, and iteration count from the 'WWW-Authenticate'
     header in the "server-first-message".
     """
@@ -140,7 +148,9 @@ def parse_first_call_result(first_call_result: HttpResponse) -> tuple[str, str, 
         )
 
     decoded_scram_data = _from_base64(scram_data.group(0)[len(exclude_msg) :])
-    s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(",")
+    s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(
+        ","
+    )
 
     if "r=" not in s_nonce:
         raise NotFoundError(
@@ -228,7 +238,9 @@ def _salted_password(
     salt: str, iterations: int, hash_func: str, password: str
 ) -> bytes:
     """Generates a salted password according to RFC5802."""
-    dk = pbkdf2_hmac(hash_func, password.encode(), urlsafe_b64decode(salt), iterations)
+    dk = pbkdf2_hmac(
+        hash_func, password.encode(), urlsafe_b64decode(salt), iterations
+    )
     return dk
 
 

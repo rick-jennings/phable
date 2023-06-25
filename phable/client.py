@@ -1,12 +1,21 @@
 import logging
 from typing import Any, Optional
 
-from phable.auth.scram import (Scram, c1_bare, parse_final_call_result,
-                               parse_first_call_result,
-                               parse_hello_call_result, to_base64)
-from phable.exceptions import (IncorrectHttpStatus, InvalidCloseError,
-                               ScramAuthError, ServerSignatureNotEqualError,
-                               UnknownRecError)
+from phable.auth.scram import (
+    Scram,
+    c1_bare,
+    parse_final_call_result,
+    parse_first_call_result,
+    parse_hello_call_result,
+    to_base64,
+)
+from phable.exceptions import (
+    IncorrectHttpStatus,
+    InvalidCloseError,
+    ScramAuthError,
+    ServerSignatureNotEqualError,
+    UnknownRecError,
+)
 from phable.http import request
 from phable.kinds import Grid, Ref
 
@@ -53,14 +62,18 @@ class Client:
             self._first_call()
             self._final_call()
         except Exception:
-            logger.critical("Unable to scram authenticate with the Haystack Server.")
+            logger.critical(
+                "Unable to scram authenticate with the Haystack Server."
+            )
             raise ScramAuthError
 
     def _hello_call(self) -> None:
         """Defines and sends the HELLO message to the server and processes the server's
         response according to Project Haystack's SCRAM auth instructions."""
 
-        headers = {"Authorization": f"HELLO username={to_base64(self.username)}"}
+        headers = {
+            "Authorization": f"HELLO username={to_base64(self.username)}"
+        }
         response = request(self.uri + "/about", headers=headers, method="GET")
 
         self._handshake_token, self._hash = parse_hello_call_result(response)
@@ -75,7 +88,9 @@ class Client:
             f"hash={self._hash}, data={to_base64(gs2_header+self._c1_bare)}"
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
-        self._s_nonce, self._salt, self._iter_count = parse_first_call_result(response)
+        self._s_nonce, self._salt, self._iter_count = parse_first_call_result(
+            response
+        )
 
     def _final_call(self) -> None:
         """Defines and sends the "client-final-message" to the server and processes the
@@ -155,7 +170,9 @@ class Client:
 
         # verify the rec was found
         if response.cols[0]["name"] == "empty":
-            raise UnknownRecError(f"Unable to locate id {id.val} on the server.")
+            raise UnknownRecError(
+                f"Unable to locate id {id.val} on the server."
+            )
 
         return response.rows[0]
 
@@ -167,10 +184,14 @@ class Client:
 
         # verify the recs were found
         if len(response.rows) == 0:
-            raise UnknownRecError("Unable to locate any of the ids on the server.")
+            raise UnknownRecError(
+                "Unable to locate any of the ids on the server."
+            )
         for row in response.rows:
             if len(row) == 0:
-                raise UnknownRecError("Unable to locate one or more ids on the server.")
+                raise UnknownRecError(
+                    "Unable to locate one or more ids on the server."
+                )
 
         return response
 
@@ -215,7 +236,9 @@ class Client:
     def call(
         self,
         op: str,
-        grid: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
+        grid: Grid = Grid(
+            meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]
+        ),
     ) -> Grid:
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
