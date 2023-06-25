@@ -4,6 +4,7 @@ import logging
 from datetime import date, datetime, time
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
+from functools import lru_cache
 
 from phable.exceptions import NotFoundError
 from phable.kinds import (NA, Coordinate, Date, DateTime, Grid, Marker, Number,
@@ -138,21 +139,14 @@ def _parse_time(d: dict[str, str]):
         raise
 
 
-def _build_iana_tz(haystack_tz: str) -> str:
-    for iana_tz in available_timezones():
-        if "/" + haystack_tz in iana_tz:
-            return iana_tz
-
-    raise NotFoundError(f"Can't locate the city {haystack_tz} in the IANA database")
-
-
+@lru_cache(maxsize=16)
 def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
-    if haystack_tz in available_timezones():
-        iana_tz = haystack_tz
-    else:
-        iana_tz = _build_iana_tz(haystack_tz)
+    for iana_tz in available_timezones():
+        if "/" + haystack_tz in iana_tz or haystack_tz == iana_tz:
+            return ZoneInfo(iana_tz)
 
-    return ZoneInfo(iana_tz)
+    # future: maybe return None instead of raising error?
+    raise NotFoundError(f"Can't locate the city {haystack_tz} in the IANA database")
 
 
 def _parse_date_time(d: dict[str, str]):

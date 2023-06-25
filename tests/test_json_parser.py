@@ -4,8 +4,7 @@ from datetime import date, datetime, time
 import pytest
 
 import phable.kinds as kinds
-from phable.parser.json import (NotFoundError, _build_iana_tz,
-                                _haystack_to_iana_tz, _parse_coord,
+from phable.parser.json import (NotFoundError, _haystack_to_iana_tz, _parse_coord,
                                 _parse_date, _parse_date_time, _parse_marker,
                                 _parse_na, _parse_number, _parse_ref,
                                 _parse_remove, _parse_symbol, _parse_time,
@@ -107,10 +106,3 @@ def test__parse_date_time():
     b = {"_kind": "dateTime", "val": "2023-06-20T23:45:00-04:00", "tz": "New_Yorkabc"}
     with pytest.raises(NotFoundError):
         _parse_date_time(b)
-
-
-def test__build_iana_tz():
-    assert _build_iana_tz("New_York") == "America/New_York"
-
-    with pytest.raises(NotFoundError):
-        assert _build_iana_tz("New_Yorkabc") == "America/New_York"

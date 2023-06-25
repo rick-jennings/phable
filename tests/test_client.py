@@ -98,8 +98,8 @@ def test_read_point(hc: Client):
 def test_read_by_id(hc: Client):
     # Test a valid Ref
     with hc:
-        response = hc.read_by_id(Ref("p:demo:r:2bf586e4-7cd2c9c4"))
-    assert response["navName"] == "Test-Point"
+        response = hc.read_by_id(Ref("p:demo:r:2c26ff0c-d04a5b02"))
+    assert response["navName"] == "kW"
 
     # Test an invalid Ref
     with pytest.raises(UnknownRecError):
@@ -112,7 +112,7 @@ def test_read_by_ids(hc: Client):
     # Test valid Refs
     with hc:
         response = hc.read_by_ids(
-            [Ref("p:demo:r:2bf586e4-7cd2c9c4"), Ref("p:demo:r:2bae2387-576dd9b9")]
+            [Ref("p:demo:r:2c26ff0c-d04a5b02"), Ref("p:demo:r:2c26ff0c-0b8c49a1")]
         )
 
     for row in response.rows:
@@ -122,13 +122,13 @@ def test_read_by_ids(hc: Client):
     with pytest.raises(UnknownRecError):
         with hc:
             response = hc.read_by_ids(
-                [Ref("p:demo:r:2bf586e4-7cd2c9c4"), Ref("invalid-id")]
+                [Ref("p:demo:r:2c26ff0c-d04a5b02"), Ref("invalid-id")]
             )
 
     with pytest.raises(UnknownRecError):
         with hc:
             response = hc.read_by_ids(
-                [Ref("invalid-id"), Ref("p:demo:r:2bf586e4-7cd2c9c4")]
+                [Ref("invalid-id"), Ref("p:demo:r:2c26ff0c-0b8c49a1")]
             )
 
     with pytest.raises(UnknownRecError):
@@ -158,10 +158,10 @@ def test_his_read(hc: Client):
 def test_batch_his_read(hc: Client):
     with hc:
         ids = [
-            Ref("p:demo:r:2bae2387-974f9223"),
-            Ref("p:demo:r:2bae2387-f2e61159"),
-            Ref("p:demo:r:2bae2387-d7707510"),
-            Ref("p:demo:r:2bae2387-ed0ce5b7"),
+            Ref("p:demo:r:2c26ff0c-d04a5b02"),
+            Ref("p:demo:r:2c26ff0c-0b8c49a1"),
+            Ref("p:demo:r:2c26ff0c-7fdb626d"),
+            Ref("p:demo:r:2c26ff0c-1773db74"),
         ]
         his_grid = hc.his_read(ids, "2023-05-02")
 
@@ -182,7 +182,7 @@ def test_his_write(hc: Client):
         his_grid = Grid(
             meta={
                 "ver": "3.0",
-                "id": {"_kind": "ref", "val": "p:demo:r:2bf586e4-7cd2c9c4"},
+                "id": {"_kind": "ref", "val": "p:demo:r:2c2b5ffb-97770806"},
             },
             cols=[{"name": "ts"}, {"name": "val"}],
             rows=[
