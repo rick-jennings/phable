@@ -21,7 +21,7 @@ from typing import Any
 import pandas as pd
 
 # define these settings specific to your use case
-# Reminder:  Probably secure your login credentials!!!
+# Reminder:  Properly secure your login credentials!!!
 uri = "http://localhost:8080/api/demo"
 username = "su"
 password = "su"
