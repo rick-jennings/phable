@@ -31,6 +31,71 @@ def json_to_grid(d: dict[str, Any]) -> Grid:
     return Grid(meta=d["meta"], cols=d["cols"], rows=d["rows"])
 
 
+def create_his_write_grid(
+    ids: Ref | list[Ref], data: list[dict[str, Any]]
+) -> Grid:
+    """
+    Note:  The order of the ids are important!
+    """
+    meta: dict[str, str | dict[str, str]] = {"ver": "3.0"}
+    cols: list[dict[str, Any]] = [{"name": "ts"}]
+    if isinstance(ids, Ref):
+        meta["id"] = _ref_to_json(ids)
+        cols.append({"name": "val"})
+    else:
+        for count, id in enumerate(ids):
+            cols.append(
+                {"name": "v" + str(count), "meta": {"id": _ref_to_json(id)}}
+            )
+
+    # TODO: traverse the rows and parse to JSON!
+    rows: list[dict[str, str | dict[str, str]]] = []
+    for row in data:
+        if len(row) > len(cols):
+            # TODO:  improve this exception
+            raise Exception
+        rows.append(_parse_row_to_json(row))
+
+    return Grid(meta, cols, rows)
+
+
+def _parse_row_to_json(row: dict[str, Any]) -> dict[str, str | dict[str, str]]:
+    parsed_row: dict[str, str | dict[str, str]] = {}
+    for key in row.keys():
+        val = row[key]
+        if isinstance(val, DateTime):
+            parsed_row[key] = _datetime_to_json(val)
+        elif isinstance(row[key], Number):
+            parsed_row[key] = _number_to_json(val)
+        elif isinstance(row[key], str):
+            parsed_row[key] = val
+        else:
+            # TODO: create a unique exception for this case
+            raise Exception
+    return parsed_row
+
+
+def _number_to_json(num: Number) -> dict[str, str | float]:
+    json = {"_kind": "number", "val": num.val}
+    if num.unit is not None:
+        json["unit"] = num.unit
+    return json
+
+
+def _datetime_to_json(date_time: DateTime) -> dict[str, str]:
+    json = {"_kind": "dateTime", "val": date_time.val.isoformat()}
+    if date_time.tz is not None:
+        json["tz"] = date_time.tz
+    return json
+
+
+def _ref_to_json(ref: Ref) -> dict[str, str]:
+    json = {"_kind": "ref", "val": ref.val}
+    if ref.dis is not None:
+        json["dis"] = ref.dis
+    return json
+
+
 def _parse_kinds(d: dict[str, Any]):
     """Traverse JSON and convert where needed to Haystack kinds.
 

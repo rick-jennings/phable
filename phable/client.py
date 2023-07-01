@@ -18,9 +18,12 @@ from phable.exceptions import (
 )
 from phable.http import request
 from phable.kinds import Grid, Ref
+from phable.parser.json import create_his_write_grid
 
 logger = logging.getLogger(__name__)
 
+
+# TODO: Consider not using Grid parameter to call method in certain cases
 
 class Client:
     """
@@ -46,9 +49,9 @@ class Client:
         self._iter_count: int
         self._auth_token: str
 
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # execute the scram auth scheme to get a valid auth token from the server
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def open(self) -> None:
         """Initiates and executes the SCRAM authentication exchange with the server.
@@ -125,9 +128,9 @@ class Client:
         if server_signature != sc.server_signature:
             raise ServerSignatureNotEqualError
 
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # define an optional context manager
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def __enter__(self):
         self.open()
@@ -136,9 +139,9 @@ class Client:
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
 
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # standard Haystack ops
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server."""
@@ -209,7 +212,7 @@ class Client:
 
         return self.call("hisRead", grid)
 
-    def his_write(self, his_grid: Grid) -> Grid:
+    def his_write(self, ids: Ref | list[Ref], data: list[dict[str, Any]]) -> Grid:
         """Write history data to records on the Haystack server.
 
         A Haystack Grid object defined in phable.kinds will need to be initialized as
@@ -219,19 +222,20 @@ class Client:
         Note:  Future Phable versions may apply a breaking change to this func to make
         it easier.
         """
+        his_grid = create_his_write_grid(ids, data)
         return self.call("hisWrite", his_grid)
 
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # other ops
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def eval(self, grid: Grid) -> Grid:
         """Evaluates an expression."""
         return self.call("eval", grid)
 
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
     # base to Haystack and all other ops
-    # ----------------------------------------------------------------------------------
+    # -------------------------------------------------------------------------
 
     def call(
         self,

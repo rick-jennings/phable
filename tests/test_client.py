@@ -6,6 +6,8 @@ import pytest
 from phable.client import Client, IncorrectHttpStatus
 from phable.exceptions import UnknownRecError
 from phable.kinds import DateTime, Grid, Marker, Number, Ref
+from datetime import datetime, date
+from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
@@ -22,9 +24,9 @@ def hc() -> Client:
     return Client(uri, username, password)
 
 
-# --------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # auth tests
-# --------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def test_open(hc: Client):
@@ -67,9 +69,9 @@ def test_context_manager(hc: Client):
         hc.about()
 
 
-# --------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 # haystack op tests
-# --------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
 
 
 def test_about_op(hc: Client):
@@ -180,26 +182,61 @@ def test_batch_his_read(hc: Client):
 
 # TODO:  Manually create a point using the eval op since we know the ids will change
 # NOTE:  This code below is temporary and will eventually break!
-def test_his_write(hc: Client):
-    with hc:
-        his_grid = Grid(
-            meta={
-                "ver": "3.0",
-                "id": {"_kind": "ref", "val": "p:demo:r:2c2b5ffb-97770806"},
-            },
-            cols=[{"name": "ts"}, {"name": "val"}],
-            rows=[
-                {
-                    "ts": {
-                        "_kind": "dateTime",
-                        "val": "2023-05-01T00:00:00-05:00",
-                        "tz": "New_York",
-                    },
-                    "val": {"_kind": "number", "val": 89, "unit": "kW"},
-                }
-            ],
-        )
-        grid = hc.his_write(his_grid)
+def test_single_his_write(hc: Client):
+    # with hc:
+        # his_grid = Grid(
+        #     meta={
+        #         "ver": "3.0",
+        #         "id": {"_kind": "ref", "val": "p:demo:r:2c2b5ffb-97770806"},
+        #     },
+        #     cols=[{"name": "ts"}, {"name": "val"}],
+        #     rows=[
+        #         {
+        #             "ts": {
+        #                 "_kind": "dateTime",
+        #                 "val": "2023-05-01T00:00:00-05:00",
+        #                 "tz": "New_York",
+        #             },
+        #             "val": {"_kind": "number", "val": 89, "unit": "kW"},
+        #         }
+        #     ],
+        # )
+        # grid = hc.his_write(his_grid)
 
-    assert "err" not in grid.meta.keys()
+    ts_now = datetime.now(ZoneInfo("America/New_York"))
+
+    data = [
+        {
+            "ts": DateTime(
+                ts_now, "New_York"
+            ),
+            "val": Number(72.2),
+        },
+        {
+            "ts": DateTime(
+                ts_now, "New_York"
+            ),
+            "val": Number(76.3),
+        },
+    ]
+
+    with hc:
+        response_grid = hc.his_write(Ref("p:demo:r:2c2b5ffb-97770806"), data)
+
+    assert "err" not in response_grid.meta.keys()
+
+    with hc:
+        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), date.today().isoformat() + ".." + date(2023,7,2).isoformat())
+        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), date.today().isoformat())
+
+        range = "{2023-06-15,2023-07-01}}"
+
+        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"),"{" + ts_now.isoformat() + "}")
+
+        response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), range)
+
+    # now check that the record just created is there
+
+    print("TRY THIS!!!")
+    print(response_grid)
     # TODO:  Now read what was written and verify it is correct

@@ -3,6 +3,7 @@ from datetime import date, datetime, time
 
 import pytest
 
+from zoneinfo import ZoneInfo
 import phable.kinds as kinds
 from phable.parser.json import (
     NotFoundError,
@@ -19,10 +20,161 @@ from phable.parser.json import (
     _parse_time,
     _parse_uri,
     _parse_xstr,
+    _number_to_json,
+    _datetime_to_json,
+    _ref_to_json,
+    create_his_write_grid,
 )
 
 logger = logging.getLogger(__name__)
 
+
+# -----------------------------------------------------------------------------
+# new hisWrite related tests
+# -----------------------------------------------------------------------------
+
+def test_create_single_his_write_grid():
+    meta = {"ver": "3.0", "id": {"_kind": "ref", "val": "hisId"}}
+    cols = [{"name": "ts"}, {"name": "val"}]
+    rows_haystack = [
+        {
+            "ts": kinds.DateTime(
+                datetime.fromisoformat("2012-04-21T08:30:00-04:00"), "New_York"
+            ),
+            "val": kinds.Number(72.2),
+        },
+        {
+            "ts": kinds.DateTime(
+                datetime.fromisoformat("2012-04-21T08:45:00-04:00"), "New_York"
+            ),
+            "val": kinds.Number(76.3),
+        },
+    ]
+    rows_json = [
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2012-04-21T08:30:00-04:00",
+                "tz": "New_York",
+            },
+            "val": _number_to_json(kinds.Number(72.2)),
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2012-04-21T08:45:00-04:00",
+                "tz": "New_York",
+            },
+            "val": _number_to_json(kinds.Number(76.3)),
+        },
+    ]
+
+    assert create_his_write_grid(kinds.Ref("hisId"), rows_haystack) == kinds.Grid(
+        meta, cols, rows_json
+    )
+
+
+def test_create_batch_his_write_grid():
+    meta = {"ver": "3.0"}
+    cols = [
+        {"name": "ts"},
+        {"name": "v0", "meta": {"id": {"_kind": "ref", "val": "hisA"}}},
+        {"name": "v1", "meta": {"id": {"_kind": "ref", "val": "hisB"}}},
+    ]
+    rows_haystack = [
+        {
+            "ts": kinds.DateTime(
+                datetime.fromisoformat("2012-04-21T08:30:00-04:00"),
+                "New_York",
+            ),
+            "v0": kinds.Number(72.2),
+            "v1": kinds.Number(10),
+        },
+        {
+            "ts": kinds.DateTime(
+                datetime.fromisoformat("2012-04-21T08:45:00-04:00"),
+                "New_York",
+            ),
+            "v0": kinds.Number(76.3),
+        },
+        {
+            "ts": kinds.DateTime(
+                datetime.fromisoformat("2012-04-21T09:00:00-04:00"),
+                "New_York",
+            ),
+            "v1": kinds.Number(12),
+        },
+    ]
+    rows_json = [
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2012-04-21T08:30:00-04:00",
+                "tz": "New_York",
+            },
+            "v0": _number_to_json(kinds.Number(72.2)),
+            "v1": _number_to_json(kinds.Number(10)),
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2012-04-21T08:45:00-04:00",
+                "tz": "New_York",
+            },
+            "v0": _number_to_json(kinds.Number(76.3)),
+        },
+        {
+            "ts": {
+                "_kind": "dateTime",
+                "val": "2012-04-21T09:00:00-04:00",
+                "tz": "New_York",
+            },
+            "v1": _number_to_json(kinds.Number(12)),
+        },
+    ]
+
+    test_grid = create_his_write_grid(
+        [kinds.Ref("hisA"), kinds.Ref("hisB")], rows_haystack
+    )
+
+    assert test_grid == kinds.Grid(meta, cols, rows_json)
+
+
+def test__number_to_json():
+    x = kinds.Number(20, "kW")
+    assert _number_to_json(x) == {"_kind": "number", "val": 20, "unit": "kW"}
+
+    y = kinds.Number(20)
+    assert _number_to_json(y) == {"_kind": "number", "val": 20}
+
+
+def test__datetime_to_json():
+    now = datetime.now(ZoneInfo("America/New_York"))
+    assert _datetime_to_json(kinds.DateTime(now)) == {
+        "_kind": "dateTime",
+        "val": now.isoformat(),
+    }
+
+    assert _datetime_to_json(kinds.DateTime(now, "New_York")) == {
+        "_kind": "dateTime",
+        "val": now.isoformat(),
+        "tz": "New_York",
+    }
+
+
+def test__ref_to_json():
+    ref_id = "abc1234"
+    assert _ref_to_json(kinds.Ref(ref_id)) == {"_kind": "ref", "val": ref_id}
+
+    assert _ref_to_json(kinds.Ref(ref_id, "Carytown")) == {
+        "_kind": "ref",
+        "val": ref_id,
+        "dis": "Carytown",
+    }
+
+# -----------------------------------------------------------------------------
+# END:  new hisWrite related tests
+# -----------------------------------------------------------------------------
 
 def test__parse_number():
     with pytest.raises(KeyError):
