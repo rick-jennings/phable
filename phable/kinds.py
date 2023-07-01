@@ -57,8 +57,8 @@ class Grid:
 
 @dataclass(frozen=True, slots=True)
 class Number:
-    val: float
-    unit: Optional[str] = None
+    val: int
+    unit: str | None = None
 
     def __str__(self):
         return f"{self.val}{self.unit}"
@@ -109,7 +109,7 @@ class NA:
 @dataclass(frozen=True, slots=True)
 class Ref:
     val: str
-    dis: Optional[str] = None
+    dis: str | None = None
 
     def __str__(self) -> str:
         return self.dis
