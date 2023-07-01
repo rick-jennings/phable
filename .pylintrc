@@ -1,5 +1,0 @@
-[MASTER]
-docstring-min-length=10
-disable=missing-function-docstring,missing-class-docstring,missing-module-docstring
-[FORMAT]
-good_names=i,j,x,y,id

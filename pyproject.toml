@@ -38,5 +38,12 @@ profile = "black"
 [tool.pylint.format]
 max-line-length = "79"
 
+[tool.pylint."MESSAGES CONTROL"]
+disable = [
+    "missing-class-docstring",
+    "missing-function-docstring",
+    "missing-module-docstring",
+]
+
 [tool.black]
 line-length = 79
