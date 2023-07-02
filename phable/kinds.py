@@ -57,7 +57,7 @@ class Grid:
 
 @dataclass(frozen=True, slots=True)
 class Number:
-    val: int
+    val: int | float
     unit: str | None = None
 
     def __str__(self):
