@@ -69,6 +69,8 @@ def _parse_row_to_json(row: dict[str, Any]) -> dict[str, str | dict[str, str]]:
             parsed_row[key] = _number_to_json(val)
         elif isinstance(row[key], str):
             parsed_row[key] = val
+        elif isinstance(row[key], bool):
+            parsed_row[key] = val
         else:
             # TODO: create a unique exception for this case
             raise Exception
