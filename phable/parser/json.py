@@ -66,7 +66,7 @@ def _parse_row_to_json(row: dict[str, Any]) -> dict[str, str | dict[str, str]]:
         if isinstance(val, DateTime):
             parsed_row[key] = _datetime_to_json(val)
         elif isinstance(row[key], Number):
-            parsed_row[key] = _number_to_json(val)
+            parsed_row[key] = _number_to_json(val)  # type: ignore
         elif isinstance(row[key], str):
             parsed_row[key] = val
         elif isinstance(row[key], bool):
@@ -162,7 +162,8 @@ def _parse_number(d: dict[str, str]) -> Number:
         return Number(float(d["val"]), unit)
     except KeyError:
         logger.debug(
-            f"Received this input which did not have the expected 'val' key:\n{d}"
+            "Received this input which did not have the expected 'val' "
+            f"key:\n{d}"
         )
         raise
     except ValueError:
@@ -190,7 +191,8 @@ def _parse_ref(d: dict[str, str]) -> Ref:
         return Ref(d["val"], dis)
     except KeyError:
         logger.debug(
-            f"Received this input which did not have the expected 'val' key:\n{d}"
+            "Received this input which did not have the expected 'val' key:\n"
+            f"{d}"
         )
         raise
 
@@ -200,7 +202,8 @@ def _parse_date(d: dict[str, str]):
         return Date(date.fromisoformat(d["val"]))
     except KeyError:
         logger.debug(
-            f"Received this input which did not have the expected 'val' key:\n{d}"
+            "Received this input which did not have the expected 'val' key:\n"
+            f"{d}"
         )
         raise
     except ValueError:
@@ -215,7 +218,8 @@ def _parse_time(d: dict[str, str]):
         return Time(time.fromisoformat(d["val"]))
     except KeyError:
         logger.debug(
-            f"Received this input which did not have the expected 'val' key:\n{d}"
+            "Received this input which did not have the expected 'val' key:\n"
+            f"{d}"
         )
         raise
     except ValueError:
@@ -245,8 +249,8 @@ def _parse_date_time(d: dict[str, str]):
         return DateTime(dt, haystack_tz)
     except KeyError:
         logger.debug(
-            "Received this input which did not have the expected 'val' or 'tz' key:"
-            + f"\n{d}"
+            "Received this input which did not have the expected 'val' or 'tz'"
+            f"key:\n{d}"
         )
         raise
     except ValueError:

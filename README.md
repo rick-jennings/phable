@@ -74,3 +74,7 @@ print(f"Results from batch hisRead example:\n{to_pandas(batch_his_read_example)}
 Breaking Changes
 ----------------
 Phable is a new open-source project.  The early focus of this project is to find the best practices for using modern Python with a Haystack server.  This may lead to breaking changes in newer Phable versions.  However, in the future we do plan to have more stable releases and updates of Phable.
+
+TODO
+----
+- Reevaluate wherever # type: ignore is applied

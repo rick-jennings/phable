@@ -25,9 +25,11 @@ logger = logging.getLogger(__name__)
 
 # TODO: Consider not using Grid parameter to call method in certain cases
 
+
 class Client:
     """
-    A client interface to a Haystack Server used for authentication and Haystack ops.
+    A client interface to a Haystack Server used for authentication and
+    Haystack ops.
     """
 
     def __init__(
@@ -54,9 +56,10 @@ class Client:
     # -------------------------------------------------------------------------
 
     def open(self) -> None:
-        """Initiates and executes the SCRAM authentication exchange with the server.
-        Upon a successful exchange an auth token provided by the server is assigned to
-        the _auth_token attribute of this class which may be used in future requests to
+        """Initiates and executes the SCRAM authentication exchange with the
+        server. Upon a successful exchange an auth token provided by the
+        server is assigned to the _auth_token attribute of this class which
+        may be used in future requests to
         the server by other class methods.
         """
         try:
@@ -71,8 +74,9 @@ class Client:
             raise ScramAuthError
 
     def _hello_call(self) -> None:
-        """Defines and sends the HELLO message to the server and processes the server's
-        response according to Project Haystack's SCRAM auth instructions."""
+        """Defines and sends the HELLO message to the server and processes the
+        server's response according to Project Haystack's SCRAM auth
+        instructions."""
 
         headers = {
             "Authorization": f"HELLO username={to_base64(self.username)}"
@@ -82,8 +86,8 @@ class Client:
         self._handshake_token, self._hash = parse_hello_call_result(response)
 
     def _first_call(self) -> None:
-        """Defines and sends the "client-first-message" to the server and processes the
-        server's response according to RFC5802."""
+        """Defines and sends the "client-first-message" to the server and
+        processes the server's response according to RFC5802."""
 
         gs2_header = "n,,"
         headers = {
@@ -96,15 +100,16 @@ class Client:
         )
 
     def _final_call(self) -> None:
-        """Defines and sends the "client-final-message" to the server and processes the
-        server's response according to RFC5802.
+        """Defines and sends the "client-final-message" to the server and
+        processes the server's response according to RFC5802.
 
-        If the SCRAM authentication exchange was successful then the auth token parsed
-        from the server's response is assigned to the _auth_token attribute in this
-        class, which may be used in future requests to the server.
+        If the SCRAM authentication exchange was successful then the auth
+        token parsed from the server's response is assigned to the _auth_token
+        attribute in this class, which may be used in future requests to the
+        server.
 
-        Raises a ServerSignatureNotEqualError if the client's computed ServerSignature
-        does not match the one received by the server.
+        Raises a ServerSignatureNotEqualError if the client's computed
+        ServerSignature does not match the one received by the server.
         """
         sc = Scram(
             password=self._password,
@@ -136,7 +141,7 @@ class Client:
         self.open()
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):  # type: ignore
         self.close()
 
     # -------------------------------------------------------------------------
@@ -153,13 +158,15 @@ class Client:
 
         if call_result.cols[0]["name"] != "empty":
             raise InvalidCloseError(
-                f"Expected an empty grid response and instead received:\n{call_result}"
+                "Expected an empty grid response and instead received:"
+                f"\n{call_result}"
             )
 
         return call_result
 
     def read(self, filter: str, limit: Optional[int] = None) -> Grid:
-        """Read a record that matches a given filter.  Apply an optional limit."""
+        """Read a record that matches a given filter.  Apply an optional limit.
+        """
         if limit is None:
             grid = Grid.to_grid({"filter": filter})
         else:
@@ -212,14 +219,18 @@ class Client:
 
         return self.call("hisRead", grid)
 
-    def his_write(self, ids: Ref | list[Ref], data: list[dict[str, Any]]) -> Grid:
+    def his_write(
+        self, ids: Ref | list[Ref], data: list[dict[str, Any]]
+    ) -> Grid:
         """Write history data to records on the Haystack server.
 
-        A Haystack Grid object defined in phable.kinds will need to be initialized as
-        an arg. See reference below for more details on how to define the his_grid arg.
+        A Haystack Grid object defined in phable.kinds will need to be
+        initialized as an arg. See reference below for more details on how to
+        define the his_grid arg.
         https://project-haystack.org/doc/docHaystack/Ops#hisWrite
 
-        Note:  Future Phable versions may apply a breaking change to this func to make
+        Note:  Future Phable versions may apply a breaking change to this func
+        to make
         it easier.
         """
         his_grid = create_his_write_grid(ids, data)
@@ -272,13 +283,15 @@ class Client:
         if "err" in response.meta.keys():
             error_dis = response.meta["dis"]
             logger.debug(
-                f"The server returned an error grid with this message:\n{error_dis}"
+                "The server returned an error grid with this message:"
+                f"\n{error_dis}"
             )
 
         if "incomplete" in response.meta.keys():
             incomplete_dis = response.meta["incomplete"]
             logger.debug(
-                f"Incomplete data was returned for these reasons:\n{incomplete_dis}"
+                "Incomplete data was returned for these reasons:"
+                f"\n{incomplete_dis}"
             )
 
         return response
