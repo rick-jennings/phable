@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 # Note 2:  These tests create pt records on the server with the pytest tag.
 #          Probably you will want to manually delete these test pt recs.
 
+
 @pytest.fixture
 def hc() -> Client:
     uri = "http://localhost:8080/api/demo"
