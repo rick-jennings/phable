@@ -15,10 +15,13 @@ $ pip install phable
 Basic Usage Examples
 --------------------
 ```python
-from phable.client import Client
-from phable.kinds import Grid, Ref
+from datetime import date
 from typing import Any
+
 import pandas as pd
+
+from phable.client import Client
+from phable.kinds import Grid
 
 # define these settings specific to your use case
 # Reminder:  Properly secure your login credentials!!!
@@ -35,41 +38,58 @@ def to_pandas(grid: Grid) -> pd.DataFrame:
 # open a session, execute queries, and simply close
 # session with the context manager
 with Client(uri, username, password) as ph:
+    # fetch info about the Haystack server
     about_example: dict[str, Any] = ph.about()
-    read_example: Grid = ph.read("site")
 
-    # Note: make sure to adapt the Ref IDs to ones that are valid
-    # on your server!
-    read_by_id_example: dict[str, Any] = ph.read_by_id(
-        Ref("p:demo:r:2bae2387-576dd9b9")
-    )
-    read_by_ids_example: Grid = ph.read_by_ids(
-        [Ref("p:demo:r:2bae2387-576dd9b9"), Ref("p:demo:r:2bae2387-cd79dce9")]
-    )
+    # fetch a rec
+    read_example: Grid = ph.read("point and power and equipRef->siteMeter")
+
+    # find the ids for two recs in read_example
+    rec_id1 = read_example.rows[0]["id"]
+    rec_id2 = read_example.rows[1]["id"]
+
+    # fetch recs using Ref IDs
+    read_by_id_example: dict[str, Any] = ph.read_by_id(rec_id1)
+    read_by_ids_example: Grid = ph.read_by_ids([rec_id1, rec_id2])
 
     # single hisRead
     single_his_read_example: Grid = ph.his_read(
-        Ref("p:demo:r:2bae2387-d7707510"), "2023-05-02"
+        rec_id1, date.today().isoformat()
     )
 
     # batch hisRead
     batch_his_read_example: Grid = ph.his_read(
-        [Ref("p:demo:r:2bae2387-d7707510"), Ref("p:demo:r:2bae2387-ed0ce5b7")],
-        "2023-05-02",
+        [rec_id1, rec_id2], date.today().isoformat()
     )
 
-# Now print the results!
-# Note: Converting Haystack Grids to Pandas DataFrames for better print display and to
-#       show how the conversion to Pandas works.  Keep in mind that the Haystack kinds
-#       are preserved within the Pandas DataFrame.  You may want to convert Haystack
-#       kind objects, especially Haystack Numbers, to other more optimal data types
-#       within Pandas.
+
+"""
+Now print the results!
+
+Note:
+-----
+Converting Haystack Grids to Pandas DataFrames for better print display and to
+show how the conversion to Pandas works.  Keep in mind that the Haystack kinds
+are preserved within the Pandas DataFrame.  You may want to convert Haystack
+kind objects, especially Haystack Numbers, to other more optimal data types
+within Pandas.
+"""
+
 print(f"Results from about example:\n{about_example}\n")
 print(f"Results from read example:\n{to_pandas(read_example)}\n")
 print(f"Results from read by id example:\n{read_by_id_example}\n")
-print(f"Results from single hisRead example:\n{to_pandas(single_his_read_example)}\n")
-print(f"Results from batch hisRead example:\n{to_pandas(batch_his_read_example)}\n")
+print(
+    "Results from single hisRead example:"
+    f"\n{to_pandas(single_his_read_example)}\n"
+)
+print(
+    "Results from batch hisRead example:"
+    f"\n{to_pandas(batch_his_read_example)}\n"
+)
 ```
+
+Review the test code for more examples.  Here is a link to an example on how to perform a hisWrite op on a single data point:
+https://github.com/rick-jennings/phable/blob/main/tests/test_client.py#L184
 
 Breaking Changes
 ----------------
