@@ -164,9 +164,8 @@ class Client:
 
         return call_result
 
-    def read(self, filter: str, limit: Optional[int] = None) -> Grid:
-        """Read a record that matches a given filter.  Apply an optional limit.
-        """
+    def read(self, filter: str, limit: int | None = None) -> Grid:
+        """Read a record that matches a given filter.  Apply an optional limit."""
         if limit is None:
             grid = Grid.to_grid({"filter": filter})
         else:

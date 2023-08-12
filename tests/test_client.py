@@ -1,19 +1,19 @@
 import logging
 import sys
+from datetime import date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus
 from phable.exceptions import UnknownRecError
 from phable.kinds import DateTime, Grid, Marker, Number, Ref
-from datetime import datetime, date
-from zoneinfo import ZoneInfo
 
 logger = logging.getLogger(__name__)
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
-# Note 2:  Fix "p:demo:r:2bf586e4-7cd2c9c4".  Maybe make some fake rec/his and use throughout test script.
-
+# Note 2:  These tests create pt records on the server with the pytest tag.
+#          Probably you will want to manually delete these test pt recs.
 
 @pytest.fixture
 def hc() -> Client:
@@ -92,7 +92,8 @@ def test_read_site(hc: Client):
 def test_read_point(hc: Client):
     with hc:
         grid = hc.read(
-            'point and siteRef->dis=="Carytown" and equipRef->siteMeter and power'
+            """point and siteRef->dis=="Carytown" and """
+            """equipRef->siteMeter and power"""
         )
     assert isinstance(grid.rows[0]["power"], Marker)
 
@@ -100,7 +101,8 @@ def test_read_point(hc: Client):
 def test_read_by_id(hc: Client):
     # Test a valid Ref
     with hc:
-        response = hc.read_by_id(Ref("p:demo:r:2c26ff0c-d04a5b02"))
+        id1 = hc.read("point and power and equipRef->siteMeter").rows[0]["id"]
+        response = hc.read_by_id(id1)
     assert response["navName"] == "kW"
 
     # Test an invalid Ref
@@ -113,12 +115,11 @@ def test_read_by_id(hc: Client):
 def test_read_by_ids(hc: Client):
     # Test valid Refs
     with hc:
-        response = hc.read_by_ids(
-            [
-                Ref("p:demo:r:2c26ff0c-d04a5b02"),
-                Ref("p:demo:r:2c26ff0c-0b8c49a1"),
-            ]
-        )
+        ids = hc.read("point and power and equipRef->siteMeter")
+        id1 = ids.rows[0]["id"]
+        id2 = ids.rows[1]["id"]
+
+        response = hc.read_by_ids([id1, id2])
 
     for row in response.rows:
         assert row["tz"] == "New_York"
@@ -141,18 +142,16 @@ def test_read_by_ids(hc: Client):
             response = hc.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-# TODO:  Change the date used in the test to be relative.
-# TODO:  Find some better data value checks
-# NOTE:  This code below is temporary and will eventually break!
 def test_his_read(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
-            'point and siteRef->dis=="Carytown" and equipRef->siteMeter and power'
+            """point and siteRef->dis=="Carytown" and """
+            """equipRef->siteMeter and power"""
         )
         point_ref = point_grid.rows[0]["id"]
         # get the his
-        his_grid = hc.his_read(point_ref, "2023-05-02")
+        his_grid = hc.his_read(point_ref, date.today().isoformat())
 
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
@@ -162,13 +161,14 @@ def test_his_read(hc: Client):
 
 def test_batch_his_read(hc: Client):
     with hc:
-        ids = [
-            Ref("p:demo:r:2c26ff0c-d04a5b02"),
-            Ref("p:demo:r:2c26ff0c-0b8c49a1"),
-            Ref("p:demo:r:2c26ff0c-7fdb626d"),
-            Ref("p:demo:r:2c26ff0c-1773db74"),
-        ]
-        his_grid = hc.his_read(ids, "2023-05-02")
+        ids = hc.read("point and power and equipRef->siteMeter")
+        id1 = ids.rows[0]["id"]
+        id2 = ids.rows[1]["id"]
+        id3 = ids.rows[2]["id"]
+        id4 = ids.rows[3]["id"]
+
+        ids = [id1, id2, id3, id4]
+        his_grid = hc.his_read(ids, date.today().isoformat())
 
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[0]], DateTime)
@@ -180,63 +180,46 @@ def test_batch_his_read(hc: Client):
     assert his_grid.rows[0][cols[4]].val >= 0
 
 
-# TODO:  Manually create a point using the eval op since we know the ids will change
-# NOTE:  This code below is temporary and will eventually break!
 def test_single_his_write(hc: Client):
-    # with hc:
-        # his_grid = Grid(
-        #     meta={
-        #         "ver": "3.0",
-        #         "id": {"_kind": "ref", "val": "p:demo:r:2c2b5ffb-97770806"},
-        #     },
-        #     cols=[{"name": "ts"}, {"name": "val"}],
-        #     rows=[
-        #         {
-        #             "ts": {
-        #                 "_kind": "dateTime",
-        #                 "val": "2023-05-01T00:00:00-05:00",
-        #                 "tz": "New_York",
-        #             },
-        #             "val": {"_kind": "number", "val": 89, "unit": "kW"},
-        #         }
-        #     ],
-        # )
-        # grid = hc.his_write(his_grid)
-
     ts_now = datetime.now(ZoneInfo("America/New_York"))
 
     data = [
         {
-            "ts": DateTime(
-                ts_now, "New_York"
-            ),
+            "ts": DateTime(ts_now - timedelta(seconds=30), "New_York"),
             "val": Number(72.2),
         },
         {
-            "ts": DateTime(
-                ts_now, "New_York"
-            ),
+            "ts": DateTime(ts_now, "New_York"),
             "val": Number(76.3),
         },
     ]
 
     with hc:
-        response_grid = hc.his_write(Ref("p:demo:r:2c2b5ffb-97770806"), data)
+        # create a test point on the Haystack server and fetch the Ref ID
+        axon_expr = """
+            diff(null, {pytest, point, his, tz: "New_York",
+                        kind: "Number"}, {add}).commit
+        """
+        test_pt_id = hc.eval(Grid.to_grid({"expr": axon_expr})).rows[0]["id"]
+
+        # write the his data to the test pt
+        response_grid = hc.his_write(test_pt_id, data)
 
     assert "err" not in response_grid.meta.keys()
 
     with hc:
-        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), date.today().isoformat() + ".." + date(2023,7,2).isoformat())
-        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), date.today().isoformat())
+        # start_date = (date.today() - timedelta(days=6)).isoformat()
+        # end_date = date.today().isoformat()
+        # range = "{2023-06-15,2023-07-01}}"
+        # range = f"{{{start_date},{end_date}}}" + "}"
+        range = "today"
 
-        range = "{2023-06-15,2023-07-01}}"
+        response_grid = hc.his_read(test_pt_id, range)
 
-        # response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"),"{" + ts_now.isoformat() + "}")
+    assert response_grid.rows[0]["val"] == 72.19999694824219
+    assert response_grid.rows[1]["val"] == 76.30000305175781
 
-        response_grid = hc.his_read(Ref("p:demo:r:2c2b5ffb-97770806"), range)
-
-    # now check that the record just created is there
-
-    print("TRY THIS!!!")
-    print(response_grid)
-    # TODO:  Now read what was written and verify it is correct
+    # # delete the point rec from the server
+    # rec = f"readById(@{test_pt_id.val})"
+    # axon_expr = f"commit(diff({rec}, null, {{remove}}))"
+    # hc.eval(Grid.to_grid({"expr": axon_expr}))

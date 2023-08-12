@@ -1,13 +1,15 @@
 import logging
 from datetime import date, datetime, time
+from zoneinfo import ZoneInfo
 
 import pytest
 
-from zoneinfo import ZoneInfo
 import phable.kinds as kinds
 from phable.parser.json import (
     NotFoundError,
+    _datetime_to_json,
     _haystack_to_iana_tz,
+    _number_to_json,
     _parse_coord,
     _parse_date,
     _parse_date_time,
@@ -20,8 +22,6 @@ from phable.parser.json import (
     _parse_time,
     _parse_uri,
     _parse_xstr,
-    _number_to_json,
-    _datetime_to_json,
     _ref_to_json,
     create_his_write_grid,
 )
@@ -32,6 +32,7 @@ logger = logging.getLogger(__name__)
 # -----------------------------------------------------------------------------
 # new hisWrite related tests
 # -----------------------------------------------------------------------------
+
 
 def test_create_single_his_write_grid():
     meta = {"ver": "3.0", "id": {"_kind": "ref", "val": "hisId"}}
@@ -69,9 +70,9 @@ def test_create_single_his_write_grid():
         },
     ]
 
-    assert create_his_write_grid(kinds.Ref("hisId"), rows_haystack) == kinds.Grid(
-        meta, cols, rows_json
-    )
+    assert create_his_write_grid(
+        kinds.Ref("hisId"), rows_haystack
+    ) == kinds.Grid(meta, cols, rows_json)
 
 
 def test_create_batch_his_write_grid():
@@ -172,9 +173,11 @@ def test__ref_to_json():
         "dis": "Carytown",
     }
 
+
 # -----------------------------------------------------------------------------
 # END:  new hisWrite related tests
 # -----------------------------------------------------------------------------
+
 
 def test__parse_number():
     with pytest.raises(KeyError):
