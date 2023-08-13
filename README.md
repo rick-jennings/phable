@@ -98,3 +98,5 @@ Phable is a new open-source project.  The early focus of this project is to find
 TODO
 ----
 - Reevaluate wherever # type: ignore is applied
+- Add better validation to Uri kind
+- Reconsider the use of singleton for Marker(), Remove(), and NA()

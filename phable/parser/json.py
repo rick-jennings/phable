@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 from datetime import date, datetime, time
+from decimal import Decimal, getcontext
 from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
@@ -263,8 +264,9 @@ def _parse_uri(d: dict[str, str]):
 
 
 def _parse_coord(d: dict[str, str]):
-    lat = float(d["lat"])
-    lng = float(d["lng"])
+    getcontext().prec = 6
+    lat = Decimal(d["lat"])
+    lng = Decimal(d["lng"])
     return Coordinate(lat, lng)
 
 

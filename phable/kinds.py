@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import date, datetime, time
+from decimal import Decimal, getcontext
 from typing import Any, Optional
 
-# Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be their Python
-# type equivalents.  We may reevaluate this decision in the future.
+# Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be
+# their Python type equivalents.  We may reevaluate this decision in the
+# future.
 
 
 @dataclass(frozen=True, slots=True)
@@ -39,7 +41,6 @@ class Grid:
         if isinstance(rows, dict):
             rows = [rows]
 
-        # might be able to find a nicer way to do this
         col_names: list[str] = []
         for row in rows:
             for col_name in row.keys():
@@ -52,7 +53,7 @@ class Grid:
         return Grid(meta=meta, cols=cols, rows=rows)
 
     def __str__(self):
-        return "Grid"
+        return "Haystack Grid"
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,8 +61,18 @@ class Number:
     val: int | float
     unit: str | None = None
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, int | float):  # type: ignore
+            raise TypeError("Val should be of type int or float")
+
+        if not isinstance(self.unit, str | None):
+            raise TypeError("Unit should be of type str or None")
+
     def __str__(self):
-        return f"{self.val}{self.unit}"
+        if self.unit is not None:
+            return f"{self.val}{self.unit}"
+        else:
+            return f"{self.val}"
 
 
 # Marker() is a singleton
@@ -103,21 +114,32 @@ class NA:
         return "NA"
 
 
-# TODO: Determine if I need make_handle func on Ref()
-# TODO:  Should dis in Ref be mandatory?
-# TODO:  Improve human readability
 @dataclass(frozen=True, slots=True)
 class Ref:
     val: str
     dis: str | None = None
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, str):  # type: ignore
+            raise TypeError("Val should be of type str")
+
+        if not isinstance(self.dis, str | None):
+            raise TypeError("Dis should be of type str or None")
+
     def __str__(self) -> str:
-        return self.dis
+        if self.dis is not None:
+            return self.dis
+        else:
+            return f"@{self.val}"
 
 
 @dataclass(frozen=True, slots=True)
 class Date:
     val: date
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, date):  # type: ignore
+            raise TypeError("Val should be of type date")
 
     def __str__(self):
         return self.val.isoformat()
@@ -127,37 +149,45 @@ class Date:
 class Time:
     val: time
 
-    # def __str__(self):
-    #     return time.strftime(self.val, "%H:%M:%S%p")
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, time):  # type: ignore
+            raise TypeError("Val should be of type time")
 
     def __str__(self):
         return self.val.isoformat()
 
 
-# TODO:
-# - See if we can expose a nicer time zone display to end user
-# - Map Haystack tz to IANA time zone database tz
-# https://docs.python.org/3/library/zoneinfo.html#zoneinfo.ZoneInfo.key
 @dataclass(frozen=True, slots=True)
 class DateTime:
-    """
-    Note:  tz attribute is the just the city name from the IANA database according to
-    Haystack.
-    """
-
     val: datetime
-    tz: Optional[str] = None
+    tz: Optional[str] = None  # city name from IANA database
 
-    # def __str__(self):
-    #     return datetime.strftime(self.val, "%d-%b-%Y %a %H:%M:%S%p %Z")
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, datetime):  # type: ignore
+            raise TypeError("Val should be of type datetime")
 
-    def __str__(self):
-        return self.val.isoformat()
+        if not isinstance(self.tz, str | None):
+            raise TypeError("tz should be of type str or None")
+
+    def __str__(self) -> str:
+        if self.val.microsecond == 0:
+            display = self.val.isoformat(timespec="seconds")
+        else:
+            display = self.val.isoformat(timespec="milliseconds")
+
+        if self.tz is not None:
+            return display + f" {self.tz}"
+        else:
+            return display
 
 
 @dataclass(frozen=True, slots=True)
 class Uri:
     val: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, str):  # type: ignore
+            raise TypeError("Val should be of type str")
 
     def __str__(self):
         return self.val
@@ -165,10 +195,18 @@ class Uri:
 
 @dataclass(frozen=True, slots=True)
 class Coordinate:
-    lat: float
-    lng: float
+    lat: Decimal
+    lng: Decimal
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.lat, Decimal):  # type: ignore
+            raise TypeError("Lat should be of type Decimal")
+
+        if not isinstance(self.lng, Decimal):  # type: ignore
+            raise TypeError("Lng should be of type Decimal")
 
     def __str__(self):
+        getcontext().prec = 6
         return f"C({self.lat}, {self.lng})"
 
 
@@ -177,6 +215,13 @@ class XStr:
     type: str
     val: str
 
+    def __post_init__(self) -> None:
+        if not isinstance(self.type, str):  # type: ignore
+            raise TypeError("Type should be of type str")
+
+        if not isinstance(self.val, str):  # type: ignore
+            raise TypeError("Val should be of type str")
+
     def __str__(self):
         return f"({self.type}, {self.val})"
 
@@ -184,6 +229,10 @@ class XStr:
 @dataclass(frozen=True, slots=True)
 class Symbol:
     val: str
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.val, str):  # type: ignore
+            raise TypeError("Val should be of type str")
 
     def __str__(self):
         return f"^{self.val}"

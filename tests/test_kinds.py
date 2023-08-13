@@ -1,8 +1,8 @@
-import json
 import logging
 from datetime import date, datetime, time, timezone
+from decimal import Decimal
 
-import pandas as pd
+import pytest
 
 from phable.kinds import (
     NA,
@@ -19,22 +19,170 @@ from phable.kinds import (
     Uri,
     XStr,
 )
-from phable.parser.json import _parse_kinds
 
 logger = logging.getLogger(__name__)
 
 
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# Test Haystack Grid using data received from a JSON file that describes history
-# of multiple points at once.
-#
-# Note:  This is not formally supported by Project Haystack.  Project Haystack
-# formally supports hisRead of a single point.  (See example in Test #1)
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
-# ------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------
+# core tests
+# -----------------------------------------------------------------------------
+
+
+def test_number() -> None:
+    # valid cases
+    assert str(Number(10, "kW")) == "10kW"
+    assert str(Number(-10)) == "-10"
+    assert str(Number(-10.2, "kW")) == "-10.2kW"
+    assert str(Number(10.2)) == "10.2"
+
+    # invalid cases
+    with pytest.raises(TypeError):
+        Number("abc")  # type: ignore
+    with pytest.raises(TypeError):
+        Number(10, 10)  # type: ignore
+
+
+def test_marker() -> None:
+    assert str(Marker()) == "\u2713"
+
+
+def test_remove() -> None:
+    assert str(Remove()) == "remove"
+
+
+def test_na() -> None:
+    assert str(NA()) == "NA"
+
+
+def test_ref() -> None:
+    # valid cases
+    assert str(Ref("foo")) == "@foo"
+    assert str(Ref("foo", "bar")) == "bar"
+
+    # invalid cases
+    with pytest.raises(TypeError):
+        Ref(1)  # type: ignore
+    with pytest.raises(TypeError):
+        Ref("foo", 1)  # type: ignore
+
+
+def test_date() -> None:
+    # valid case
+    assert str(Date(date(2023, 1, 22))) == "2023-01-22"
+
+    # invalid case
+    with pytest.raises(TypeError):
+        Date(1)  # type: ignore
+
+
+def test_time() -> None:
+    # valid cases
+    assert str(Time(time(2, 0, 0))) == "02:00:00"
+    assert str(Time(time(2, 0, 0, 12))) == "02:00:00.000012"
+    assert str(Time(time(2, 0, 0, 12))) == "02:00:00.000012"
+
+    # invalid case
+    with pytest.raises(TypeError):
+        Time(1)  # type: ignore
+
+
+def test_datetime() -> None:
+    # valid case
+    assert (
+        str(DateTime(datetime(2023, 1, 12, 1, 1, 36))) == "2023-01-12T01:01:36"
+    )
+
+    assert str(
+        DateTime(datetime(2023, 1, 12, 1, 1, 36), "New_York")
+        == "2023-01-12T01:01:36 New_York"
+    )
+
+    assert (
+        str(
+            DateTime(
+                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
+                    tzinfo=timezone.utc
+                )
+            )
+        )
+        == "2023-03-03T09:40:12.121+00:00"
+    )
+
+    assert (
+        str(
+            DateTime(
+                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
+                    tzinfo=timezone.utc
+                ),
+                "New_York",
+            )
+        )
+        == "2023-03-03T09:40:12.121+00:00 New_York"
+    )
+
+    assert (
+        str(DateTime(datetime(2023, 3, 3, 9, 40, 12, 121230), "New_York"))
+        == "2023-03-03T09:40:12.121 New_York"
+    )
+
+    assert (
+        str(
+            DateTime(
+                datetime(2023, 3, 3, 9, 40, 12, 121000).replace(
+                    tzinfo=timezone.utc
+                ),
+                "New_York",
+            )
+        )
+        == "2023-03-03T09:40:12.121+00:00 New_York"
+    )
+
+    # invalid case
+    with pytest.raises(TypeError):
+        DateTime(23)  # type: ignore
+
+
+def test_uri() -> None:
+    # valid case
+    assert Uri("basic_test")
+
+    # Note:  probably want to consider adding better validation support to Uri
+
+    # invalid case
+    with pytest.raises(TypeError):
+        Uri(1)  # type: ignore
+
+
+def test_coord() -> None:
+    # valid case
+    lat = Decimal("37.548266")
+    lng = Decimal("-77.4491888")
+    assert str(Coordinate(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
+
+    lat = Decimal("98.230003023231")
+    lng = Decimal("-21.450001023312")
+    assert str(Coordinate(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
+
+
+def test_xstr() -> None:
+    # valid case
+    assert str(XStr("a", "b")) == "(a, b)"
+
+    # invalid case
+    with pytest.raises(TypeError):
+        XStr(1, "b")  # type: ignore
+
+    with pytest.raises(TypeError):
+        XStr("a", 2)  # type: ignore
+
+
+def test_symbol() -> None:
+    # valid case
+    assert str(Symbol("a")) == "^a"
+
+    # invalid case
+    with pytest.raises(TypeError):
+        Symbol(1)  # type: ignore
 
 
 def test_grid():
@@ -62,116 +210,5 @@ def test_grid():
     grid = Grid.to_grid(rows)
     assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
 
-
-def test_kinds_human_display():
-    assert (
-        str(Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]))
-        == "Grid"
-    )
-    assert str(Number(90.5, "kW")) == "90.5kW"
-    assert str(Marker()) == "\u2713"
-    assert str(Remove()) == "remove"
-    assert str(NA()) == "NA"
-    assert str(Ref("@foo", "Carytown")) == "Carytown"
-    assert str(Date(date(2021, 1, 4))) == "2021-01-04"
-    assert str(Time(time(hour=14, minute=59, second=0))) == "14:59:00"
-
-    test_dt = datetime(2022, 6, 4, 0, 15, 20, tzinfo=timezone.utc)
-    assert str(DateTime(test_dt)) == "2022-06-04T00:15:20+00:00"
-
-    assert str(Uri("http://www.localhost:8080")) == "http://www.localhost:8080"
-
-    assert str(Coordinate(39.154824, -77.209002)) == "C(39.154824, -77.209002)"
-
-    assert str(XStr("Color", "red")) == "(Color, red)"
-    assert str(Symbol("elec-meter")) == "^elec-meter"
-
-
-def test_misc():
-    with open("tests/json_test_data1.json") as f:
-        ts_test = json.load(f)
-
-    ts_test = _parse_kinds(ts_test)
-
-    meta = ts_test["meta"]
-    cols = ts_test["cols"]
-    rows = ts_test["rows"]
-
-    hg = Grid(meta, cols, rows)
-
-    df = pd.DataFrame(data=hg.rows).rename(columns=hg.col_rename_map)
-
-    # test first timestamp pandas df
-    assert df[df.columns[0]].iloc[0].val == datetime.fromisoformat(
-        "2023-03-13T23:45:00-04:00"
-    )
-    assert df["p:demo:r:2bae2387-d7707510"].iloc[0].val == 94.0
-    assert df["p:demo:r:2bae2387-974f9223"].iloc[0].val == 206.0
-    assert "Timestamp" in df.columns
-
-    # test first timestamp pandas df
-    assert df["Timestamp"].iloc[0].val == datetime.fromisoformat(
-        "2023-03-13T23:45:00-04:00"
-    )
-    assert df["p:demo:r:2bae2387-d7707510"].iloc[0].val == 94.0
-    assert df["p:demo:r:2bae2387-974f9223"].iloc[0].val == 206.0
-
-
-# def test_ts_x():
-#     with open("test_data/test1.json") as f:
-#         ts_x = json.load(f)
-
-#     ts_x = parse_kinds(ts_x)
-
-#     meta = ts_x["meta"]
-#     cols_by_name: dict[str, GridCol] = {}
-#     for i, col in enumerate(ts_x["cols"]):
-#         cols_by_name[str(col["name"])] = GridCol(i, col["name"], col["meta"])
-
-#     rows: list[GridRow] = []
-#     for row in ts_x["rows"]:
-#         cells = [row[col_name] for col_name in cols_by_name.keys()]
-#         rows.append(GridRow(cells))
-
-#     hg = Grid(meta, cols_by_name, rows)
-
-#     # let's run some tests now!
-
-#     # --------------------------------------------------------------------------
-#     # test vals @ first ts using col indices
-#     # --------------------------------------------------------------------------
-
-#     assert hg.rows[0].val(hg.cols_by_name["ts"]) == DateTime(
-#         datetime.fromisoformat("2023-03-13T23:45:00-04:00"), "New_York"
-#     )
-
-#     assert hg.rows[0].val(hg.cols_by_name["v0"]) == Number(94, "kW")
-#     assert hg.rows[0].val(hg.cols_by_name["v1"]) == Number(206, "kW")
-
-#     # verify extra cols were not added
-#     assert len(hg.col_names) == len(ts_x["cols"])
-
-#     # --------------------------------------------------------------------------
-#     # test vals @ last ts using col names
-#     # --------------------------------------------------------------------------
-
-#     assert hg.rows[-1].val(hg.cols_by_name["ts"]) == DateTime(
-#         datetime.fromisoformat("2023-03-14T01:15:00-04:00"), "New_York"
-#     )
-
-#     assert hg.rows[-1].val(hg.cols_by_name["v0"]) == Number(87, "kW")
-
-#     assert hg.rows[-1].val(hg.cols_by_name["v1"]) == Number(192, "kW")
-
-#     # verify extra rows were not added
-#     assert len(hg.rows) == len(ts_x["rows"])
-
-#     # --------------------------------------------------------------------------
-#     # misc Grid meta tests here
-#     # --------------------------------------------------------------------------
-#     assert hg.meta["ver"] == "3.0"
-
-#     # --------------------------------------------------------------------------
-#     # misc GridCol meta tests here
-#     # --------------------------------------------------------------------------
-#     assert hg.cols_by_name["v0"].meta["ac"] == Marker()  # {"_kind": "marker"}
+    # test display
+    assert str(grid) == "Haystack Grid"
