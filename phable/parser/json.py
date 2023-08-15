@@ -1,11 +1,11 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal, getcontext
 from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
-from dataclasses import dataclass
 
 from phable.kinds import (
     NA,

@@ -5,6 +5,7 @@ import pytest
 
 import phable.kinds as kinds
 from phable.parser.json import (
+    IanaCityNotFoundError,
     _datetime_to_json,
     _haystack_to_iana_tz,
     _number_to_json,
@@ -22,7 +23,6 @@ from phable.parser.json import (
     _parse_xstr,
     _ref_to_json,
     create_his_write_grid,
-    IanaCityNotFoundError
 )
 
 
