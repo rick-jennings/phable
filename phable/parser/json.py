@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import logging
 from datetime import date, datetime, time
 from decimal import Decimal, getcontext
 from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
+from dataclasses import dataclass
 
-from phable.exceptions import NotFoundError
 from phable.kinds import (
     NA,
     Coordinate,
@@ -24,8 +23,6 @@ from phable.kinds import (
     XStr,
 )
 
-logger = logging.getLogger(__name__)
-
 
 def json_to_grid(d: dict[str, Any]) -> Grid:
     _parse_kinds(d)
@@ -35,9 +32,7 @@ def json_to_grid(d: dict[str, Any]) -> Grid:
 def create_his_write_grid(
     ids: Ref | list[Ref], data: list[dict[str, Any]]
 ) -> Grid:
-    """
-    Note:  The order of the ids are important!
-    """
+    # Note:  The order of the ids is important!
     meta: dict[str, str | dict[str, str]] = {"ver": "3.0"}
     cols: list[dict[str, Any]] = [{"name": "ts"}]
     if isinstance(ids, Ref):
@@ -100,16 +95,7 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
 
 
 def _parse_kinds(d: dict[str, Any]):
-    """Traverse JSON and convert where needed to Haystack kinds.
-
-    Args:
-        d (dict[str, Any]): _description_
-
-    Returns:
-        _type_: _description_
-    """
-
-    # input d is a mutable object, so we want to modify a copy of it
+    """Traverse JSON and convert where needed to Haystack kinds."""
     new_d = d.copy()
 
     # parse grid meta
@@ -135,8 +121,6 @@ def _parse_layer(new_d: dict[str, Any]) -> None:
 
 
 def _to_kind(d: dict[str, str]):
-    # test to make sure d is a Dict
-
     parse_map = {
         "number": _parse_number,
         "marker": _parse_marker,
@@ -158,20 +142,12 @@ def _to_kind(d: dict[str, str]):
 
 def _parse_number(d: dict[str, str]) -> Number:
     unit = d.get("unit", None)
+    num = float(d["val"])
 
-    try:
-        return Number(float(d["val"]), unit)
-    except KeyError:
-        logger.debug(
-            "Received this input which did not have the expected 'val' "
-            f"key:\n{d}"
-        )
-        raise
-    except ValueError:
-        logger.debug(
-            f"Unable to parse the 'val' key's value into a float:\n{d}"
-        )
-        raise
+    if num % 1 == 0:
+        num = int(num)
+
+    return Number(num, unit)
 
 
 def _parse_marker(d: dict[str, str]) -> Marker:
@@ -187,47 +163,21 @@ def _parse_na(d: dict[str, str]) -> NA:
 
 
 def _parse_ref(d: dict[str, str]) -> Ref:
-    try:
-        dis = d.get("dis", None)
-        return Ref(d["val"], dis)
-    except KeyError:
-        logger.debug(
-            "Received this input which did not have the expected 'val' key:\n"
-            f"{d}"
-        )
-        raise
+    dis = d.get("dis", None)
+    return Ref(d["val"], dis)
 
 
 def _parse_date(d: dict[str, str]):
-    try:
-        return Date(date.fromisoformat(d["val"]))
-    except KeyError:
-        logger.debug(
-            "Received this input which did not have the expected 'val' key:\n"
-            f"{d}"
-        )
-        raise
-    except ValueError:
-        logger.debug(
-            f"Unable to parse the 'val' key's value into a date:\n{d}"
-        )
-        raise
+    return Date(date.fromisoformat(d["val"]))
 
 
 def _parse_time(d: dict[str, str]):
-    try:
-        return Time(time.fromisoformat(d["val"]))
-    except KeyError:
-        logger.debug(
-            "Received this input which did not have the expected 'val' key:\n"
-            f"{d}"
-        )
-        raise
-    except ValueError:
-        logger.debug(
-            f"Unable to parse the 'val' key's value into a time:\n{d}"
-        )
-        raise
+    return Time(time.fromisoformat(d["val"]))
+
+
+@dataclass
+class IanaCityNotFoundError(Exception):
+    help_msg: str
 
 
 @lru_cache(maxsize=16)
@@ -236,27 +186,16 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
         if "/" + haystack_tz in iana_tz or haystack_tz == iana_tz:
             return ZoneInfo(iana_tz)
 
-    # future: maybe return None instead of raising error?
-    raise NotFoundError(
+    raise IanaCityNotFoundError(
         f"Can't locate the city {haystack_tz} in the IANA database"
     )
 
 
 def _parse_date_time(d: dict[str, str]):
-    try:
-        haystack_tz: str = d["tz"]
-        iana_tz: ZoneInfo = _haystack_to_iana_tz(haystack_tz)
-        dt = datetime.fromisoformat(d["val"]).astimezone(iana_tz)
-        return DateTime(dt, haystack_tz)
-    except KeyError:
-        logger.debug(
-            "Received this input which did not have the expected 'val' or 'tz'"
-            f"key:\n{d}"
-        )
-        raise
-    except ValueError:
-        logger.debug(f"Unable to parse the 'val' or 'tz' key value:\n{d}")
-        raise
+    haystack_tz: str = d["tz"]
+    iana_tz: ZoneInfo = _haystack_to_iana_tz(haystack_tz)
+    dt = datetime.fromisoformat(d["val"]).astimezone(iana_tz)
+    return DateTime(dt, haystack_tz)
 
 
 def _parse_uri(d: dict[str, str]):
@@ -267,7 +206,7 @@ def _parse_coord(d: dict[str, str]):
     getcontext().prec = 6
     lat = Decimal(d["lat"])
     lng = Decimal(d["lng"])
-    return Coordinate(lat, lng)
+    return Coordinate(lat, lng)  # type: ignore
 
 
 def _parse_xstr(d: dict[str, str]):

@@ -1,4 +1,3 @@
-import logging
 from datetime import date, datetime, time
 from zoneinfo import ZoneInfo
 
@@ -6,7 +5,6 @@ import pytest
 
 import phable.kinds as kinds
 from phable.parser.json import (
-    NotFoundError,
     _datetime_to_json,
     _haystack_to_iana_tz,
     _number_to_json,
@@ -24,14 +22,8 @@ from phable.parser.json import (
     _parse_xstr,
     _ref_to_json,
     create_his_write_grid,
+    IanaCityNotFoundError
 )
-
-logger = logging.getLogger(__name__)
-
-
-# -----------------------------------------------------------------------------
-# new hisWrite related tests
-# -----------------------------------------------------------------------------
 
 
 def test_create_single_his_write_grid():
@@ -174,11 +166,6 @@ def test__ref_to_json():
     }
 
 
-# -----------------------------------------------------------------------------
-# END:  new hisWrite related tests
-# -----------------------------------------------------------------------------
-
-
 def test__parse_number():
     with pytest.raises(KeyError):
         x = {"unit": "kW"}
@@ -286,5 +273,5 @@ def test__parse_date_time():
         "val": "2023-06-20T23:45:00-04:00",
         "tz": "New_Yorkabc",
     }
-    with pytest.raises(NotFoundError):
+    with pytest.raises(IanaCityNotFoundError):
         _parse_date_time(b)
