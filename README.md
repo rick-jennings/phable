@@ -91,6 +91,34 @@ print(
 Review the test code for more examples.  Here is a link to an example on how to perform a hisWrite op on a single data point:
 https://github.com/rick-jennings/phable/blob/main/tests/test_client.py#L184
 
+Async Usage Example
+-------------------
+```python
+import asyncio
+from phable.client import Client
+
+
+# define these settings specific to your use case
+# Reminder:  Properly secure your login credentials!!!
+async def main() -> None:
+    uri = "http://localhost:8080/api/demo"
+    username = "su"
+    password = "su"
+    ph = Client(uri, username, password)
+
+    ph.open()
+    read1 = asyncio.to_thread(ph.read, "power and point")
+    read2 = asyncio.to_thread(ph.read, "energy and point")
+    read1, read2 = await asyncio.gather(read1, read2)
+    ph.close()
+
+    print(read1.rows)
+    print(read2.rows)
+
+if __name__ == "__main__":
+    asyncio.run(main())
+```
+
 Breaking Changes
 ----------------
 Phable is a new open-source project.  The early focus of this project is to find the best practices for using modern Python with a Haystack server.  This may lead to breaking changes in newer Phable versions.  However, in the future we do plan to have more stable releases and updates of Phable.
@@ -100,3 +128,4 @@ TODO
 - Reevaluate wherever # type: ignore is applied
 - Add better validation to Uri kind
 - Reconsider the use of singleton for Marker(), Remove(), and NA()
+- Consider using Pydantic v2 for Haystack Kind objects
