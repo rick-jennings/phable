@@ -1,15 +1,10 @@
-import logging
-import sys
 from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.client import Client, IncorrectHttpStatus
-from phable.exceptions import UnknownRecError
+from phable.client import Client, IncorrectHttpStatus, UnknownRecError
 from phable.kinds import DateTime, Grid, Marker, Number, Ref
-
-logger = logging.getLogger(__name__)
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
 # Note 2:  These tests create pt records on the server with the pytest tag.

@@ -1,5 +1,4 @@
 import json
-import logging
 import ssl
 import urllib.error
 import urllib.parse
@@ -10,8 +9,6 @@ from typing import Any, Optional
 
 from phable.kinds import Grid
 from phable.parser.json import json_to_grid
-
-logger = logging.getLogger(__name__)
 
 
 @dataclass

@@ -4,9 +4,9 @@ This module implements client-side logic and support for the following:
     1. Initiation of an authentication exchange according to Project Haystack
     2. SCRAM authentication according to RFC5802
 
-Note:   HTTP messages are not sent by code within this module.  The Scram class and
-        functions defined in this module are used in HTTP messages sent and received by
-        the Client class in `phable.client.py`.
+Note:   HTTP messages are not sent by code within this module.  The Scram
+class and functions defined in this module are used in HTTP messages sent and
+received by the Client class in `phable.client.py`.
 """
 
 import hashlib
@@ -18,8 +18,12 @@ from functools import cached_property
 from hashlib import pbkdf2_hmac
 from uuid import uuid4
 
-from phable.exceptions import NotFoundError
 from phable.http import HttpResponse
+
+
+@dataclass
+class NotFoundError(Exception):
+    help_msg: str
 
 
 @dataclass(frozen=True)
@@ -92,8 +96,8 @@ class Scram:
 def parse_hello_call_result(
     hello_call_result: HttpResponse,
 ) -> tuple[str, str]:
-    """Parses the handshake token and hash from the 'WWW-Authenticate' header in the
-    server generated HELLO message.
+    """Parses the handshake token and hash from the 'WWW-Authenticate' header
+    in the server generated HELLO message.
     """
 
     auth_header = hello_call_result.headers["WWW-Authenticate"]
@@ -118,7 +122,8 @@ def parse_hello_call_result(
 
     if s is None:
         raise NotFoundError(
-            f"Hash method not found in the 'WWW-Authenticate' header:\n{auth_header}"
+            "Hash method not found in the 'WWW-Authenticate' header:"
+            f"\n{auth_header}"
         )
 
     s_new = s.group(0)[len(exclude_msg) :]
@@ -134,8 +139,8 @@ def parse_hello_call_result(
 def parse_first_call_result(
     first_call_result: HttpResponse,
 ) -> tuple[str, str, int]:
-    """Parses the server nonce, salt, and iteration count from the 'WWW-Authenticate'
-    header in the "server-first-message".
+    """Parses the server nonce, salt, and iteration count from the
+    'WWW-Authenticate' header in the "server-first-message".
     """
 
     auth_header = first_call_result.headers["WWW-Authenticate"]
@@ -144,7 +149,8 @@ def parse_first_call_result(
 
     if scram_data is None:
         raise NotFoundError(
-            f"Scram data not found in the 'WWW-Authenticate' header:\n{auth_header}"
+            "Scram data not found in the 'WWW-Authenticate' header:"
+            f"\n{auth_header}"
         )
 
     decoded_scram_data = _from_base64(scram_data.group(0)[len(exclude_msg) :])
@@ -154,7 +160,8 @@ def parse_first_call_result(
 
     if "r=" not in s_nonce:
         raise NotFoundError(
-            f"Server nonce not found in the 'WWW-Authenticate' header:\n{auth_header}"
+            "Server nonce not found in the 'WWW-Authenticate' header:"
+            f"\n{auth_header}"
         )
     elif "s=" not in salt:
         raise NotFoundError(
@@ -187,7 +194,8 @@ def parse_final_call_result(resp: HttpResponse) -> tuple[str, str]:
 
     if s1 is None:
         raise NotFoundError(
-            f"Auth token not found in the 'WWW-Authenticate' header:\n{auth_header}"
+            "Auth token not found in the 'WWW-Authenticate' header:"
+            f"\n{auth_header}"
         )
 
     auth_token = s1.group(0)[len(exclude_msg1) :]
@@ -195,7 +203,7 @@ def parse_final_call_result(resp: HttpResponse) -> tuple[str, str]:
     exclude_msg2 = "data="
     s2 = re.search(f"({exclude_msg2})[^,]+", auth_header)
 
-    data = s2.group(0)[len(exclude_msg2) :]
+    data = s2.group(0)[len(exclude_msg2) :]  # type: ignore
 
     server_signature = _from_base64(data).replace("v=", "", 1)
 

@@ -1,5 +1,6 @@
 import logging
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 from phable.auth.scram import (
     Scram,
@@ -9,13 +10,6 @@ from phable.auth.scram import (
     parse_hello_call_result,
     to_base64,
 )
-from phable.exceptions import (
-    IncorrectHttpStatus,
-    InvalidCloseError,
-    ScramAuthError,
-    ServerSignatureNotEqualError,
-    UnknownRecError,
-)
 from phable.http import request
 from phable.kinds import Grid, Ref
 from phable.parser.json import create_his_write_grid
@@ -23,12 +17,39 @@ from phable.parser.json import create_his_write_grid
 logger = logging.getLogger(__name__)
 
 
+@dataclass
+class IncorrectHttpStatus(Exception):
+    help_msg: str
+
+
+@dataclass
+class InvalidCloseError(Exception):
+    help_msg: str
+
+
+@dataclass
+class ScramAuthError(Exception):
+    pass
+
+
+@dataclass
+class ServerSignatureNotEqualError(Exception):
+    """Raised when the ServerSignature value sent by the server does not equal
+    the ServerSignature computed by the client."""
+
+    pass
+
+
+@dataclass
+class UnknownRecError(Exception):
+    help_msg: str
+
+
 # TODO: Consider not using Grid parameter to call method in certain cases
 
 
 class Client:
-    """
-    A client interface to a Haystack Server used for authentication and
+    """A client interface to a Haystack Server used for authentication and
     Haystack ops.
     """
 
