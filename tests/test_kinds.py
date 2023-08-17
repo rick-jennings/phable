@@ -6,7 +6,7 @@ import pytest
 
 from phable.kinds import (
     NA,
-    Coordinate,
+    Coord,
     Date,
     DateSpan,
     DateTime,
@@ -275,11 +275,11 @@ def test_coord() -> None:
     # valid case
     lat = Decimal("37.548266")
     lng = Decimal("-77.4491888")
-    assert str(Coordinate(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
+    assert str(Coord(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
 
     lat = Decimal("98.230003023231")
     lng = Decimal("-21.450001023312")
-    assert str(Coordinate(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
+    assert str(Coord(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
 
 
 def test_xstr() -> None:

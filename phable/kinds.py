@@ -225,7 +225,7 @@ class Uri:
 
 
 @dataclass(frozen=True, slots=True)
-class Coordinate:
+class Coord:
     lat: Decimal
     lng: Decimal
 

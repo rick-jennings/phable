@@ -9,7 +9,7 @@ from zoneinfo import ZoneInfo, available_timezones
 
 from phable.kinds import (
     NA,
-    Coordinate,
+    Coord,
     Date,
     DateTime,
     Grid,
@@ -206,7 +206,7 @@ def _parse_coord(d: dict[str, str]):
     getcontext().prec = 6
     lat = Decimal(d["lat"])
     lng = Decimal(d["lng"])
-    return Coordinate(lat, lng)  # type: ignore
+    return Coord(lat, lng)  # type: ignore
 
 
 def _parse_xstr(d: dict[str, str]):
