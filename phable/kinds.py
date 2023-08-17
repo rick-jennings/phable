@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal, getcontext
-from typing import Any, Optional
+from typing import Any
 
 # Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be
 # their Python type equivalents.  We may reevaluate this decision in the
@@ -160,7 +160,7 @@ class Time:
 @dataclass(frozen=True, slots=True)
 class DateTime:
     val: datetime
-    tz: Optional[str] = None  # city name from IANA database
+    tz: str | None = None  # city name from IANA database
 
     def __post_init__(self) -> None:
         if not isinstance(self.val, datetime):  # type: ignore
@@ -168,6 +168,9 @@ class DateTime:
 
         if not isinstance(self.tz, str | None):
             raise TypeError("tz should be of type str or None")
+
+        # TODO: validate the tz attribute lines up with tzinfo in val
+        #       and that tzinfo in val is present
 
     def __str__(self) -> str:
         if self.val.microsecond == 0:
@@ -236,3 +239,51 @@ class Symbol:
 
     def __str__(self):
         return f"^{self.val}"
+
+
+# -----------------------------------------------------------------------------
+# additional kinds not supported by Project Haystack
+# -----------------------------------------------------------------------------
+
+@dataclass(frozen=True, slots=True)
+class DateSpan:
+    start: Date
+    end: Date
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.start, Date):  # type: ignore
+            raise TypeError("Start should be of type Date")
+
+        if not isinstance(self.end, Date):  # type: ignore
+            raise TypeError("End should be of type Date")
+
+    def __str__(self) -> str:
+        return f"{self.start},{self.end}"
+
+
+# this is an exception and not a kind data structure
+@dataclass
+class SpanTzMismatchError(Exception):
+    help_msg: str
+
+
+@dataclass(frozen=True, slots=True)
+class DateTimeSpan:
+    start: DateTime
+    end: DateTime
+
+    def __post_init__(self) -> None:
+        if not isinstance(self.start, DateTime):  # type: ignore
+            raise TypeError("Start should be of type DateTime")
+
+        if not isinstance(self.end, DateTime):  # type: ignore
+            raise TypeError("End should be of type DateTime")
+
+        if not self.start.tz == self.end.tz:
+            raise SpanTzMismatchError(
+                f"Start DateTime uses the {self.start.tz} tz "
+                f"while end DateTime uses the {self.end.tz} tz."
+            )
+
+    def __str__(self) -> str:
+        return f"{self.start},{self.end}"

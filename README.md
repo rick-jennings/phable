@@ -129,3 +129,4 @@ TODO
 - Add better validation to Uri kind
 - Reconsider the use of singleton for Marker(), Remove(), and NA()
 - Consider using Pydantic v2 for Haystack Kind objects
+- Add date range support

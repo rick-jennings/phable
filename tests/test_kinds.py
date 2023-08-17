@@ -1,4 +1,3 @@
-import logging
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
 
@@ -9,6 +8,9 @@ from phable.kinds import (
     Coordinate,
     Date,
     DateTime,
+    DateSpan,
+    DateTimeSpan,
+    SpanTzMismatchError,
     Grid,
     Marker,
     Number,
@@ -20,12 +22,38 @@ from phable.kinds import (
     XStr,
 )
 
-logger = logging.getLogger(__name__)
-
 
 # -----------------------------------------------------------------------------
-# core tests
+# Haystack kind tests
 # -----------------------------------------------------------------------------
+
+def test_grid():
+    # test #1
+    rows = [
+        {"ts": "some_time", "v0": "50kW"},
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+
+    # test #2
+    rows = [
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+
+    # test #3
+    rows = [
+        {"ts": "some_time", "v0": "45kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
+
+    # test display
+    assert str(grid) == "Haystack Grid"
 
 
 def test_number() -> None:
@@ -185,30 +213,60 @@ def test_symbol() -> None:
         Symbol(1)  # type: ignore
 
 
-def test_grid():
-    # test #1
-    rows = [
-        {"ts": "some_time", "v0": "50kW"},
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+# -----------------------------------------------------------------------------
+# tests for additional kinds not supported by Haystack
+# -----------------------------------------------------------------------------
 
-    # test #2
-    rows = [
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
-        {"ts": "some_time", "v0": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+def test_date_span() -> None:
+    # valid case
+    x = Date(date(2023, 1, 22))
+    y = Date(date(2023, 1, 25))
 
-    # test #3
-    rows = [
-        {"ts": "some_time", "v0": "45kW"},
-        {"ts": "some_time", "v0": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
+    assert str(DateSpan(x, y)) == "2023-01-22,2023-01-25"
 
-    # test display
-    assert str(grid) == "Haystack Grid"
+    # invalid case #1
+    with pytest.raises(TypeError):
+        DateSpan(1, y)  # type: ignore
+
+    # invalid case #2
+    with pytest.raises(TypeError):
+        DateSpan(x, 1)  # type: ignore
+
+
+def test_datetime_span() -> None:
+    # valid case
+    x = DateTime(
+                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
+                    tzinfo=timezone.utc
+                ),
+                "New_York"
+            )
+    y = DateTime(
+                datetime(2023, 3, 4, 9, 40, 12, 121230).replace(
+                    tzinfo=timezone.utc
+                ),
+                "New_York"
+            )
+
+    assert (str(DateTimeSpan(x, y)) ==
+            "2023-03-03T09:40:12.121+00:00 New_York,"
+            "2023-03-04T09:40:12.121+00:00 New_York")
+
+    # invalid case #1
+    with pytest.raises(TypeError):
+        DateTimeSpan(1, y)  # type: ignore
+
+    # invalid case #2
+    with pytest.raises(TypeError):
+        DateTimeSpan(x, 1)  # type: ignore
+
+    z = DateTime(
+                datetime(2023, 3, 4, 9, 40, 12, 121230).replace(
+                    tzinfo=timezone.utc
+                ),
+                "Los_Angeles"
+            )
+
+    # invalid case #3
+    with pytest.raises(SpanTzMismatchError):
+        DateTimeSpan(x, z)  # type: ignore
