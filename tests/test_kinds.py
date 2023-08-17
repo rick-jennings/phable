@@ -1,5 +1,6 @@
 from datetime import date, datetime, time, timezone
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -7,10 +8,9 @@ from phable.kinds import (
     NA,
     Coordinate,
     Date,
-    DateTime,
     DateSpan,
+    DateTime,
     DateTimeSpan,
-    SpanTzMismatchError,
     Grid,
     Marker,
     Number,
@@ -18,14 +18,16 @@ from phable.kinds import (
     Remove,
     Symbol,
     Time,
+    TimezoneInfoIncorrectError,
+    TimezoneMismatchError,
     Uri,
     XStr,
 )
 
-
 # -----------------------------------------------------------------------------
 # Haystack kind tests
 # -----------------------------------------------------------------------------
+
 
 def test_grid():
     # test #1
@@ -116,58 +118,146 @@ def test_time() -> None:
 
 def test_datetime() -> None:
     # valid case
-    assert (
-        str(DateTime(datetime(2023, 1, 12, 1, 1, 36))) == "2023-01-12T01:01:36"
-    )
-
-    assert str(
-        DateTime(datetime(2023, 1, 12, 1, 1, 36), "New_York")
-        == "2023-01-12T01:01:36 New_York"
-    )
 
     assert (
         str(
             DateTime(
-                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
-                    tzinfo=timezone.utc
-                )
-            )
-        )
-        == "2023-03-03T09:40:12.121+00:00"
-    )
-
-    assert (
-        str(
-            DateTime(
-                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
-                    tzinfo=timezone.utc
+                datetime(
+                    2023, 1, 12, 1, 1, 36, tzinfo=ZoneInfo("America/New_York")
                 ),
                 "New_York",
             )
         )
-        == "2023-03-03T09:40:12.121+00:00 New_York"
-    )
-
-    assert (
-        str(DateTime(datetime(2023, 3, 3, 9, 40, 12, 121230), "New_York"))
-        == "2023-03-03T09:40:12.121 New_York"
+        == "2023-01-12T01:01:36-05:00 New_York"
     )
 
     assert (
         str(
             DateTime(
-                datetime(2023, 3, 3, 9, 40, 12, 121000).replace(
-                    tzinfo=timezone.utc
+                datetime(
+                    2023,
+                    3,
+                    4,
+                    9,
+                    40,
+                    12,
+                    121230,
+                    tzinfo=ZoneInfo("America/New_York"),
                 ),
                 "New_York",
             )
         )
-        == "2023-03-03T09:40:12.121+00:00 New_York"
+        == "2023-03-04T09:40:12.121-05:00 New_York"
     )
 
-    # invalid case
+    assert (
+        str(
+            DateTime(
+                datetime(
+                    2023,
+                    3,
+                    5,
+                    9,
+                    40,
+                    12,
+                    121230,
+                    tzinfo=ZoneInfo("America/New_York"),
+                ),
+                "New_York",
+            )
+        )
+        == "2023-03-05T09:40:12.121-05:00 New_York"
+    )
+
+    assert (
+        str(
+            DateTime(
+                datetime(
+                    2023,
+                    2,
+                    3,
+                    9,
+                    40,
+                    12,
+                    121230,
+                    tzinfo=ZoneInfo("America/New_York"),
+                ),
+                "New_York",
+            )
+        )
+        == "2023-02-03T09:40:12.121-05:00 New_York"
+    )
+
+    assert (
+        str(
+            DateTime(
+                datetime(
+                    2023,
+                    3,
+                    3,
+                    9,
+                    40,
+                    12,
+                    121000,
+                    tzinfo=ZoneInfo("America/New_York"),
+                ),
+                "New_York",
+            )
+        )
+        == "2023-03-03T09:40:12.121-05:00 New_York"
+    )
+
+    # invalid case #1
     with pytest.raises(TypeError):
-        DateTime(23)  # type: ignore
+        DateTime(23, "New_York")  # type: ignore
+
+    # invalid case #2
+    with pytest.raises(TypeError):
+        DateTime(
+            datetime(
+                2023,
+                3,
+                3,
+                9,
+                40,
+                12,
+                121000,
+                tzinfo=ZoneInfo("America/New_York"),
+            ),
+            None,
+        )
+
+    # invalid case #3
+    with pytest.raises(TimezoneMismatchError):
+        DateTime(
+            datetime(
+                2023,
+                3,
+                3,
+                9,
+                40,
+                12,
+                121000,
+                tzinfo=ZoneInfo("America/New_York"),
+            ),
+            "Los_Angeles",
+        )
+
+    # invalid case #4
+    with pytest.raises(TimezoneInfoIncorrectError):
+        DateTime(
+            datetime(
+                2023,
+                3,
+                3,
+                9,
+                40,
+                12,
+                121000,
+                # tzinfo=ZoneInfo("America/Los_Angeles"),
+            ),
+            "Los_Angeles",
+        )
 
 
 def test_uri() -> None:
@@ -217,6 +307,7 @@ def test_symbol() -> None:
 # tests for additional kinds not supported by Haystack
 # -----------------------------------------------------------------------------
 
+
 def test_date_span() -> None:
     # valid case
     x = Date(date(2023, 1, 22))
@@ -236,21 +327,22 @@ def test_date_span() -> None:
 def test_datetime_span() -> None:
     # valid case
     x = DateTime(
-                datetime(2023, 3, 3, 9, 40, 12, 121230).replace(
-                    tzinfo=timezone.utc
-                ),
-                "New_York"
-            )
+        datetime(
+            2023, 3, 3, 9, 40, 12, 121230, tzinfo=ZoneInfo("America/New_York")
+        ),
+        "New_York",
+    )
     y = DateTime(
-                datetime(2023, 3, 4, 9, 40, 12, 121230).replace(
-                    tzinfo=timezone.utc
-                ),
-                "New_York"
-            )
+        datetime(
+            2023, 3, 4, 9, 40, 12, 121230, tzinfo=ZoneInfo("America/New_York")
+        ),
+        "New_York",
+    )
 
-    assert (str(DateTimeSpan(x, y)) ==
-            "2023-03-03T09:40:12.121+00:00 New_York,"
-            "2023-03-04T09:40:12.121+00:00 New_York")
+    assert (
+        str(DateTimeSpan(x, y)) == "2023-03-03T09:40:12.121-05:00 New_York,"
+        "2023-03-04T09:40:12.121-05:00 New_York"
+    )
 
     # invalid case #1
     with pytest.raises(TypeError):
@@ -261,12 +353,19 @@ def test_datetime_span() -> None:
         DateTimeSpan(x, 1)  # type: ignore
 
     z = DateTime(
-                datetime(2023, 3, 4, 9, 40, 12, 121230).replace(
-                    tzinfo=timezone.utc
-                ),
-                "Los_Angeles"
-            )
+        datetime(
+            2023,
+            3,
+            4,
+            9,
+            40,
+            12,
+            121230,
+            tzinfo=ZoneInfo("America/Los_Angeles"),
+        ),
+        "Los_Angeles",
+    )
 
     # invalid case #3
-    with pytest.raises(SpanTzMismatchError):
+    with pytest.raises(TimezoneMismatchError):
         DateTimeSpan(x, z)  # type: ignore

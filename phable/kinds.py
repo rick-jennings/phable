@@ -4,10 +4,31 @@ from dataclasses import dataclass
 from datetime import date, datetime, time
 from decimal import Decimal, getcontext
 from typing import Any
+from zoneinfo import available_timezones
 
 # Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be
 # their Python type equivalents.  We may reevaluate this decision in the
 # future.
+
+
+# -----------------------------------------------------------------------------
+# Custom exceptions raised within this module
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class TimezoneMismatchError(Exception):
+    help_msg: str
+
+
+@dataclass
+class TimezoneInfoIncorrectError(Exception):
+    help_msg: str
+
+
+# -----------------------------------------------------------------------------
+# Project Haystack supported kinds
+# -----------------------------------------------------------------------------
 
 
 @dataclass(frozen=True, slots=True)
@@ -160,17 +181,27 @@ class Time:
 @dataclass(frozen=True, slots=True)
 class DateTime:
     val: datetime
-    tz: str | None = None  # city name from IANA database
+    tz: str  # city name from IANA database
 
     def __post_init__(self) -> None:
         if not isinstance(self.val, datetime):  # type: ignore
             raise TypeError("Val should be of type datetime")
 
-        if not isinstance(self.tz, str | None):
-            raise TypeError("tz should be of type str or None")
+        if not isinstance(self.tz, str):  # type: ignore
+            raise TypeError("tz should be of type str")
 
-        # TODO: validate the tz attribute lines up with tzinfo in val
-        #       and that tzinfo in val is present
+        if not str(self.val.tzinfo) in available_timezones():
+            raise TimezoneInfoIncorrectError(
+                "The DateTime val attribute has tzinfo == "
+                f"{self.val.tzinfo}.  This is not an IANA timezone "
+                "which is required."
+            )
+
+        if self.tz not in str(self.val.tzinfo):
+            raise TimezoneMismatchError(
+                f"DateTime instance has tz attribute equal to {self.tz} and "
+                f"val attribute with tzinfo equal to {str(self.val.tzinfo)}"
+            )
 
     def __str__(self) -> str:
         if self.val.microsecond == 0:
@@ -178,10 +209,7 @@ class DateTime:
         else:
             display = self.val.isoformat(timespec="milliseconds")
 
-        if self.tz is not None:
-            return display + f" {self.tz}"
-        else:
-            return display
+        return f"{display} {self.tz}"
 
 
 @dataclass(frozen=True, slots=True)
@@ -245,6 +273,7 @@ class Symbol:
 # additional kinds not supported by Project Haystack
 # -----------------------------------------------------------------------------
 
+
 @dataclass(frozen=True, slots=True)
 class DateSpan:
     start: Date
@@ -261,12 +290,6 @@ class DateSpan:
         return f"{self.start},{self.end}"
 
 
-# this is an exception and not a kind data structure
-@dataclass
-class SpanTzMismatchError(Exception):
-    help_msg: str
-
-
 @dataclass(frozen=True, slots=True)
 class DateTimeSpan:
     start: DateTime
@@ -280,7 +303,7 @@ class DateTimeSpan:
             raise TypeError("End should be of type DateTime")
 
         if not self.start.tz == self.end.tz:
-            raise SpanTzMismatchError(
+            raise TimezoneMismatchError(
                 f"Start DateTime uses the {self.start.tz} tz "
                 f"while end DateTime uses the {self.end.tz} tz."
             )
