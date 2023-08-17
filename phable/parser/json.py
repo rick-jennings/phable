@@ -167,11 +167,11 @@ def _parse_ref(d: dict[str, str]) -> Ref:
     return Ref(d["val"], dis)
 
 
-def _parse_date(d: dict[str, str]):
+def _parse_date(d: dict[str, str]) -> Date:
     return Date(date.fromisoformat(d["val"]))
 
 
-def _parse_time(d: dict[str, str]):
+def _parse_time(d: dict[str, str]) -> Time:
     return Time(time.fromisoformat(d["val"]))
 
 
@@ -187,31 +187,31 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
             return ZoneInfo(iana_tz)
 
     raise IanaCityNotFoundError(
-        f"Can't locate the city {haystack_tz} in the IANA database"
+        f"Unable to locate the city {haystack_tz} in the IANA database"
     )
 
 
-def _parse_date_time(d: dict[str, str]):
+def _parse_date_time(d: dict[str, str]) -> DateTime:
     haystack_tz: str = d["tz"]
     iana_tz: ZoneInfo = _haystack_to_iana_tz(haystack_tz)
     dt = datetime.fromisoformat(d["val"]).astimezone(iana_tz)
     return DateTime(dt, haystack_tz)
 
 
-def _parse_uri(d: dict[str, str]):
+def _parse_uri(d: dict[str, str]) -> Uri:
     return Uri(d["val"])
 
 
-def _parse_coord(d: dict[str, str]):
+def _parse_coord(d: dict[str, str]) -> Coord:
     getcontext().prec = 6
     lat = Decimal(d["lat"])
     lng = Decimal(d["lng"])
     return Coord(lat, lng)  # type: ignore
 
 
-def _parse_xstr(d: dict[str, str]):
+def _parse_xstr(d: dict[str, str]) -> XStr:
     return XStr(d["type"], d["val"])
 
 
-def _parse_symbol(d: dict[str, str]):
+def _parse_symbol(d: dict[str, str]) -> Symbol:
     return Symbol(d["val"])
