@@ -4,7 +4,16 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus, UnknownRecError
-from phable.kinds import DateTime, Grid, Marker, Number, Ref
+from phable.kinds import (  # type: ignore
+    Date,
+    DateSpan,
+    DateTime,
+    DateTimeSpan,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+)
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
 # Note 2:  These tests create pt records on the server with the pytest tag.
@@ -146,13 +155,71 @@ def test_his_read(hc: Client):
             """equipRef->siteMeter and power"""
         )
         point_ref = point_grid.rows[0]["id"]
-        # get the his
-        his_grid = hc.his_read(point_ref, date.today().isoformat())
 
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
+        # get the his using Date as the range
+        range1 = Date(date.today() - timedelta(days=1))
+        his_grid1 = hc.his_read(point_ref, range1)
+
+        # get the his using DateTime as the range
+        range2 = DateTime(
+            (datetime.now() - timedelta(days=1)).replace(
+                tzinfo=ZoneInfo("America/New_York")
+            ),
+            "New_York",
+        )
+        his_grid2 = hc.his_read(point_ref, range2)
+
+        # get the his using DateSpan as the range
+        start3 = Date(date.today() - timedelta(days=7))
+        end3 = Date(date.today() - timedelta(days=1))
+        range3 = DateSpan(start3, end3)
+        his_grid3 = hc.his_read(point_ref, range3)
+
+        # get the his using DateTimeSpan as the range
+        start4 = DateTime(
+            (datetime.now() - timedelta(days=6)).replace(
+                tzinfo=ZoneInfo("America/New_York")
+            ),
+            "New_York",
+        )
+        end4 = DateTime(
+            (datetime.now() - timedelta(days=1)).replace(
+                tzinfo=ZoneInfo("America/New_York")
+            ),
+            "New_York",
+        )
+        range4 = DateTimeSpan(start4, end4)
+        his_grid4 = hc.his_read(point_ref, range4)
+
+    # check his_grid1
+    cols = [col["name"] for col in his_grid1.cols]
+    assert isinstance(his_grid1.rows[0][cols[1]], Number)
+    assert his_grid1.rows[0][cols[1]].unit == "kW"
+    assert his_grid1.rows[0][cols[1]].val >= 0
+    assert his_grid1.rows[0][cols[0]].val.date() == range1.val
+
+    # check his_grid2
+    cols = [col["name"] for col in his_grid1.cols]
+    assert isinstance(his_grid1.rows[0][cols[1]], Number)
+    assert his_grid2.rows[0][cols[1]].unit == "kW"
+    assert his_grid2.rows[0][cols[1]].val >= 0
+    assert his_grid2.rows[0][cols[0]].val.date() == range2.val.date()
+
+    # check his_grid3
+    cols = [col["name"] for col in his_grid1.cols]
+    assert isinstance(his_grid1.rows[0][cols[1]], Number)
+    assert his_grid3.rows[0][cols[1]].unit == "kW"
+    assert his_grid3.rows[0][cols[1]].val >= 0
+    assert his_grid3.rows[0][cols[0]].val.date() == range3.start.val
+    assert his_grid3.rows[-1][cols[0]].val.date() == range3.end.val
+
+    # check his_grid4
+    cols = [col["name"] for col in his_grid1.cols]
+    assert isinstance(his_grid1.rows[0][cols[1]], Number)
+    assert his_grid4.rows[0][cols[1]].unit == "kW"
+    assert his_grid4.rows[0][cols[1]].val >= 0
+    assert his_grid4.rows[0][cols[0]].val.date() == range4.start.val.date()
+    assert his_grid4.rows[-1][cols[0]].val.date() == range4.end.val.date()
 
 
 def test_batch_his_read(hc: Client):

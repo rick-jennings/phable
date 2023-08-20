@@ -11,7 +11,9 @@ from phable.auth.scram import (
     to_base64,
 )
 from phable.http import request
-from phable.kinds import Grid, Ref
+from phable.kinds import DateSpan  # type: ignore
+from phable.kinds import DateTimeSpan  # type: ignore
+from phable.kinds import Date, DateTime, Grid, Ref
 from phable.parser.json import create_his_write_grid
 
 logger = logging.getLogger(__name__)
@@ -186,7 +188,8 @@ class Client:
         return call_result
 
     def read(self, filter: str, limit: int | None = None) -> Grid:
-        """Read a record that matches a given filter.  Apply an optional limit."""
+        """Read a record that matches a given filter.  Apply an optional
+        limit."""
         if limit is None:
             grid = Grid.to_grid({"filter": filter})
         else:
@@ -225,17 +228,24 @@ class Client:
 
         return response
 
-    def his_read(self, ids: Ref | list[Ref], range: str) -> Grid:
+    def his_read(
+        self,
+        ids: Ref | list[Ref],
+        range: Date | DateTime | DateSpan | DateTimeSpan,  # type: ignore
+    ) -> Grid:
         """Read history data on selected records for the given range."""
         if isinstance(ids, Ref):
             grid = Grid.to_grid(
-                {"id": {"_kind": "ref", "val": ids.val}, "range": range}
+                {
+                    "id": {"_kind": "ref", "val": ids.val},
+                    "range": str(range),
+                }  # type: ignore
             )
         else:
-            meta = {"ver": "3.0", "range": range}
+            meta = {"ver": "3.0", "range": str(range)}  # type: ignore
             cols = [{"name": "id"}]
             rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-            grid = Grid(meta, cols, rows)
+            grid = Grid(meta, cols, rows)  # type: ignore
 
         return self.call("hisRead", grid)
 

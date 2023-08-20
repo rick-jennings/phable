@@ -130,3 +130,4 @@ TODO
 - Reconsider the use of singleton for Marker(), Remove(), and NA()
 - Consider using Pydantic v2 for Haystack Kind objects
 - Add date range support
+- Add static method to DateTime to create DateTime objects
