@@ -8,9 +8,7 @@ from phable.kinds import (
     NA,
     Coord,
     Date,
-    DateSpan,
     DateTime,
-    DateTimeSpan,
     Grid,
     Marker,
     Number,
@@ -301,71 +299,3 @@ def test_symbol() -> None:
     # invalid case
     with pytest.raises(TypeError):
         Symbol(1)  # type: ignore
-
-
-# -----------------------------------------------------------------------------
-# tests for additional kinds not supported by Haystack
-# -----------------------------------------------------------------------------
-
-
-def test_date_span() -> None:
-    # valid case
-    x = Date(date(2023, 1, 22))
-    y = Date(date(2023, 1, 25))
-
-    assert str(DateSpan(x, y)) == "2023-01-22,2023-01-25"
-
-    # invalid case #1
-    with pytest.raises(TypeError):
-        DateSpan(1, y)  # type: ignore
-
-    # invalid case #2
-    with pytest.raises(TypeError):
-        DateSpan(x, 1)  # type: ignore
-
-
-def test_datetime_span() -> None:
-    # valid case
-    x = DateTime(
-        datetime(
-            2023, 3, 3, 9, 40, 12, 121230, tzinfo=ZoneInfo("America/New_York")
-        ),
-        "New_York",
-    )
-    y = DateTime(
-        datetime(
-            2023, 3, 4, 9, 40, 12, 121230, tzinfo=ZoneInfo("America/New_York")
-        ),
-        "New_York",
-    )
-
-    assert (
-        str(DateTimeSpan(x, y)) == "2023-03-03T09:40:12.121-05:00 New_York,"
-        "2023-03-04T09:40:12.121-05:00 New_York"
-    )
-
-    # invalid case #1
-    with pytest.raises(TypeError):
-        DateTimeSpan(1, y)  # type: ignore
-
-    # invalid case #2
-    with pytest.raises(TypeError):
-        DateTimeSpan(x, 1)  # type: ignore
-
-    z = DateTime(
-        datetime(
-            2023,
-            3,
-            4,
-            9,
-            40,
-            12,
-            121230,
-            tzinfo=ZoneInfo("America/Los_Angeles"),
-        ),
-        "Los_Angeles",
-    )
-
-    # invalid case #3
-    with pytest.raises(TimezoneMismatchError):
-        DateTimeSpan(x, z)  # type: ignore

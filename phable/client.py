@@ -11,8 +11,6 @@ from phable.auth.scram import (
     to_base64,
 )
 from phable.http import request
-from phable.kinds import DateSpan  # type: ignore
-from phable.kinds import DateTimeSpan  # type: ignore
 from phable.kinds import Date, DateTime, Grid, Ref
 from phable.parser.json import create_his_write_grid
 
@@ -231,7 +229,7 @@ class Client:
     def his_read(
         self,
         ids: Ref | list[Ref],
-        range: Date | DateTime | DateSpan | DateTimeSpan,  # type: ignore
+        range: Date | DateTime
     ) -> Grid:
         """Read history data on selected records for the given range."""
         if isinstance(ids, Ref):
