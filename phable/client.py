@@ -103,7 +103,7 @@ class Client:
             "Authorization": f"HELLO username={to_base64(self.username)}"
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
-
+        logger.debug(f"  Here is the response to the hello call:\n{response.headers}")
         self._handshake_token, self._hash = parse_hello_call_result(response)
 
     def _first_call(self) -> None:
@@ -116,6 +116,7 @@ class Client:
             f"hash={self._hash}, data={to_base64(gs2_header+self._c1_bare)}"
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
+        logger.debug(f"  Here is the response to the first call:\n{response.headers}")
         self._s_nonce, self._salt, self._iter_count = parse_first_call_result(
             response
         )
@@ -148,7 +149,7 @@ class Client:
             )
         }
         response = request(self.uri + "/about", headers=headers, method="GET")
-
+        logger.debug(f"  Here is the response to the final call:\n{response.headers}")
         self._auth_token, server_signature = parse_final_call_result(response)
 
         if server_signature != sc.server_signature:
