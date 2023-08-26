@@ -10,15 +10,12 @@ from zoneinfo import ZoneInfo, available_timezones
 from phable.kinds import (
     NA,
     Coord,
-    Date,
-    DateTime,
     Grid,
     Marker,
     Number,
     Ref,
     Remove,
     Symbol,
-    Time,
     Uri,
     XStr,
 )
@@ -59,7 +56,7 @@ def _parse_row_to_json(row: dict[str, Any]) -> dict[str, str | dict[str, str]]:
     parsed_row: dict[str, str | dict[str, str]] = {}
     for key in row.keys():
         val = row[key]
-        if isinstance(val, DateTime):
+        if isinstance(val, datetime):
             parsed_row[key] = _datetime_to_json(val)
         elif isinstance(row[key], Number):
             parsed_row[key] = _number_to_json(val)  # type: ignore
@@ -80,10 +77,13 @@ def _number_to_json(num: Number) -> dict[str, str | float]:
     return json
 
 
-def _datetime_to_json(date_time: DateTime) -> dict[str, str]:
-    json = {"_kind": "dateTime", "val": date_time.val.isoformat()}
-    if date_time.tz is not None:
-        json["tz"] = date_time.tz
+def _datetime_to_json(date_time: datetime) -> dict[str, str]:
+    # TODO: Parse from IANA to Haystack here
+    tz = str(date_time.tzinfo).split("/")[1]
+
+    json = {"_kind": "dateTime", "val": date_time.isoformat(),
+            "tz": tz}
+
     return json
 
 
@@ -167,12 +167,12 @@ def _parse_ref(d: dict[str, str]) -> Ref:
     return Ref(d["val"], dis)
 
 
-def _parse_date(d: dict[str, str]) -> Date:
-    return Date(date.fromisoformat(d["val"]))
+def _parse_date(d: dict[str, str]) -> date:
+    return date.fromisoformat(d["val"])
 
 
-def _parse_time(d: dict[str, str]) -> Time:
-    return Time(time.fromisoformat(d["val"]))
+def _parse_time(d: dict[str, str]) -> time:
+    return time.fromisoformat(d["val"])
 
 
 @dataclass
@@ -191,11 +191,11 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
     )
 
 
-def _parse_date_time(d: dict[str, str]) -> DateTime:
+def _parse_date_time(d: dict[str, str]) -> datetime:
     haystack_tz: str = d["tz"]
     iana_tz: ZoneInfo = _haystack_to_iana_tz(haystack_tz)
     dt = datetime.fromisoformat(d["val"]).astimezone(iana_tz)
-    return DateTime(dt, haystack_tz)
+    return dt
 
 
 def _parse_uri(d: dict[str, str]) -> Uri:

@@ -4,9 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus, UnknownRecError
-from phable.kinds import (  # type: ignore
-    Date,
-    DateTime,
+from phable.kinds import (
     Grid,
     Marker,
     Number,
@@ -155,7 +153,7 @@ def test_his_read(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        range1 = Date(date.today() - timedelta(days=1))
+        range1 = date.today() - timedelta(days=1)
         his_grid1 = hc.his_read(point_ref, range1)
 
     # check his_grid1
@@ -163,7 +161,7 @@ def test_his_read(hc: Client):
     assert isinstance(his_grid1.rows[0][cols[1]], Number)
     assert his_grid1.rows[0][cols[1]].unit == "kW"
     assert his_grid1.rows[0][cols[1]].val >= 0
-    assert his_grid1.rows[0][cols[0]].val.date() == range1.val
+    assert his_grid1.rows[0][cols[0]].date() == range1
 
 
 def test_batch_his_read(hc: Client):
@@ -178,7 +176,7 @@ def test_batch_his_read(hc: Client):
         his_grid = hc.his_read(ids, date.today().isoformat())
 
     cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[0]], DateTime)
+    assert isinstance(his_grid.rows[0][cols[0]], datetime)
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -192,11 +190,11 @@ def test_single_his_write(hc: Client):
 
     data = [
         {
-            "ts": DateTime(ts_now - timedelta(seconds=30), "New_York"),
+            "ts": ts_now - timedelta(seconds=30),
             "val": Number(72.2),
         },
         {
-            "ts": DateTime(ts_now, "New_York"),
+            "ts": ts_now,
             "val": Number(76.3),
         },
     ]
@@ -219,7 +217,7 @@ def test_single_his_write(hc: Client):
         # end_date = date.today().isoformat()
         # range = "{2023-06-15,2023-07-01}}"
         # range = f"{{{start_date},{end_date}}}" + "}"
-        range = "today"
+        range = date.today()
 
         response_grid = hc.his_read(test_pt_id, range)
 

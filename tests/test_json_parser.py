@@ -31,21 +31,15 @@ def test_create_single_his_write_grid():
     cols = [{"name": "ts"}, {"name": "val"}]
     rows_haystack = [
         {
-            "ts": kinds.DateTime(
-                datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
+            "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
                     tzinfo=ZoneInfo("America/New_York")
                 ),
-                "New_York",
-            ),
             "val": kinds.Number(72.2),
         },
         {
-            "ts": kinds.DateTime(
-                datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
+            "ts": datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
                     tzinfo=ZoneInfo("America/New_York")
                 ),
-                "New_York",
-            ),
             "val": kinds.Number(76.3),
         },
     ]
@@ -82,31 +76,22 @@ def test_create_batch_his_write_grid():
     ]
     rows_haystack = [
         {
-            "ts": kinds.DateTime(
-                datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
+            "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
                     tzinfo=ZoneInfo("America/New_York")
                 ),
-                "New_York",
-            ),
             "v0": kinds.Number(72.2),
             "v1": kinds.Number(10),
         },
         {
-            "ts": kinds.DateTime(
-                datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
+            "ts": datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
                     tzinfo=ZoneInfo("America/New_York")
                 ),
-                "New_York",
-            ),
             "v0": kinds.Number(76.3),
         },
         {
-            "ts": kinds.DateTime(
-                datetime.fromisoformat("2012-04-21T09:00:00-04:00").replace(
+            "ts": datetime.fromisoformat("2012-04-21T09:00:00-04:00").replace(
                     tzinfo=ZoneInfo("America/New_York")
                 ),
-                "New_York",
-            ),
             "v1": kinds.Number(12),
         },
     ]
@@ -155,7 +140,7 @@ def test__number_to_json():
 
 def test__datetime_to_json():
     now = datetime.now(ZoneInfo("America/New_York"))
-    assert _datetime_to_json(kinds.DateTime(now, "New_York")) == {
+    assert _datetime_to_json(now) == {
         "_kind": "dateTime",
         "val": now.isoformat(),
         "tz": "New_York",
@@ -226,7 +211,7 @@ def test__parse_date():
         y = {"val": "2011-06-07abc"}
         _parse_date(y)
 
-    assert _parse_date({"val": "2011-06-07"}) == kinds.Date(date(2011, 6, 7))
+    assert _parse_date({"val": "2011-06-07"}) == date(2011, 6, 7)
 
 
 def test__parse_time():
@@ -238,7 +223,7 @@ def test__parse_time():
         y = {"val": "14:30:00abc"}
         _parse_time(y)
 
-    assert _parse_time({"val": "14:30:00"}) == kinds.Time(time(14, 30))
+    assert _parse_time({"val": "14:30:00"}) == time(14, 30)
 
 
 def test__parse_date_time():
@@ -271,12 +256,8 @@ def test__parse_date_time():
         "val": "2023-06-20T23:45:00-04:00",
         "tz": "New_York",
     }
-    assert _parse_date_time(a) == kinds.DateTime(
-        datetime.fromisoformat(a["val"]).replace(
-            tzinfo=ZoneInfo("America/New_York")
-        ),
-        "New_York",
-    )
+    assert _parse_date_time(a) == datetime.fromisoformat(a["val"]).replace(
+            tzinfo=ZoneInfo("America/New_York"))
 
     b = {
         "_kind": "dateTime",

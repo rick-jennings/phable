@@ -7,15 +7,12 @@ import pytest
 from phable.kinds import (
     NA,
     Coord,
-    Date,
-    DateTime,
     Grid,
     Marker,
     Number,
     Ref,
     Remove,
     Symbol,
-    Time,
     TimezoneInfoIncorrectError,
     TimezoneMismatchError,
     Uri,
@@ -92,170 +89,6 @@ def test_ref() -> None:
         Ref(1)  # type: ignore
     with pytest.raises(TypeError):
         Ref("foo", 1)  # type: ignore
-
-
-def test_date() -> None:
-    # valid case
-    assert str(Date(date(2023, 1, 22))) == "2023-01-22"
-
-    # invalid case
-    with pytest.raises(TypeError):
-        Date(1)  # type: ignore
-
-
-def test_time() -> None:
-    # valid cases
-    assert str(Time(time(2, 0, 0))) == "02:00:00"
-    assert str(Time(time(2, 0, 0, 12))) == "02:00:00.000012"
-    assert str(Time(time(2, 0, 0, 12))) == "02:00:00.000012"
-
-    # invalid case
-    with pytest.raises(TypeError):
-        Time(1)  # type: ignore
-
-
-def test_datetime() -> None:
-    # valid case
-
-    assert (
-        str(
-            DateTime(
-                datetime(
-                    2023, 1, 12, 1, 1, 36, tzinfo=ZoneInfo("America/New_York")
-                ),
-                "New_York",
-            )
-        )
-        == "2023-01-12T01:01:36-05:00 New_York"
-    )
-
-    assert (
-        str(
-            DateTime(
-                datetime(
-                    2023,
-                    3,
-                    4,
-                    9,
-                    40,
-                    12,
-                    121230,
-                    tzinfo=ZoneInfo("America/New_York"),
-                ),
-                "New_York",
-            )
-        )
-        == "2023-03-04T09:40:12.121-05:00 New_York"
-    )
-
-    assert (
-        str(
-            DateTime(
-                datetime(
-                    2023,
-                    3,
-                    5,
-                    9,
-                    40,
-                    12,
-                    121230,
-                    tzinfo=ZoneInfo("America/New_York"),
-                ),
-                "New_York",
-            )
-        )
-        == "2023-03-05T09:40:12.121-05:00 New_York"
-    )
-
-    assert (
-        str(
-            DateTime(
-                datetime(
-                    2023,
-                    2,
-                    3,
-                    9,
-                    40,
-                    12,
-                    121230,
-                    tzinfo=ZoneInfo("America/New_York"),
-                ),
-                "New_York",
-            )
-        )
-        == "2023-02-03T09:40:12.121-05:00 New_York"
-    )
-
-    assert (
-        str(
-            DateTime(
-                datetime(
-                    2023,
-                    3,
-                    3,
-                    9,
-                    40,
-                    12,
-                    121000,
-                    tzinfo=ZoneInfo("America/New_York"),
-                ),
-                "New_York",
-            )
-        )
-        == "2023-03-03T09:40:12.121-05:00 New_York"
-    )
-
-    # invalid case #1
-    with pytest.raises(TypeError):
-        DateTime(23, "New_York")  # type: ignore
-
-    # invalid case #2
-    with pytest.raises(TypeError):
-        DateTime(
-            datetime(
-                2023,
-                3,
-                3,
-                9,
-                40,
-                12,
-                121000,
-                tzinfo=ZoneInfo("America/New_York"),
-            ),
-            None,
-        )
-
-    # invalid case #3
-    with pytest.raises(TimezoneMismatchError):
-        DateTime(
-            datetime(
-                2023,
-                3,
-                3,
-                9,
-                40,
-                12,
-                121000,
-                tzinfo=ZoneInfo("America/New_York"),
-            ),
-            "Los_Angeles",
-        )
-
-    # invalid case #4
-    with pytest.raises(TimezoneInfoIncorrectError):
-        DateTime(
-            datetime(
-                2023,
-                3,
-                3,
-                9,
-                40,
-                12,
-                121000,
-                # tzinfo=ZoneInfo("America/Los_Angeles"),
-            ),
-            "Los_Angeles",
-        )
 
 
 def test_uri() -> None:

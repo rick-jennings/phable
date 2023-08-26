@@ -1,6 +1,7 @@
 import logging
 from dataclasses import dataclass
 from typing import Any
+from datetime import date
 
 from phable.auth.scram import (
     Scram,
@@ -11,7 +12,7 @@ from phable.auth.scram import (
     to_base64,
 )
 from phable.http import request
-from phable.kinds import Date, DateTime, Grid, Ref
+from phable.kinds import Grid, Ref
 from phable.parser.json import create_his_write_grid
 
 logger = logging.getLogger(__name__)
@@ -229,14 +230,14 @@ class Client:
     def his_read(
         self,
         ids: Ref | list[Ref],
-        range: Date | DateTime
+        range: date
     ) -> Grid:
         """Read history data on selected records for the given range."""
         if isinstance(ids, Ref):
             grid = Grid.to_grid(
                 {
                     "id": {"_kind": "ref", "val": ids.val},
-                    "range": str(range),
+                    "range": range.isoformat(),
                 }  # type: ignore
             )
         else:

@@ -155,64 +155,6 @@ class Ref:
 
 
 @dataclass(frozen=True, slots=True)
-class Date:
-    val: date
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, date):  # type: ignore
-            raise TypeError("Val should be of type date")
-
-    def __str__(self):
-        return self.val.isoformat()
-
-
-@dataclass(frozen=True, slots=True)
-class Time:
-    val: time
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, time):  # type: ignore
-            raise TypeError("Val should be of type time")
-
-    def __str__(self):
-        return self.val.isoformat()
-
-
-@dataclass(frozen=True, slots=True)
-class DateTime:
-    val: datetime
-    tz: str  # city name from IANA database
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, datetime):  # type: ignore
-            raise TypeError("Val should be of type datetime")
-
-        if not isinstance(self.tz, str):  # type: ignore
-            raise TypeError("tz should be of type str")
-
-        if not str(self.val.tzinfo) in available_timezones():
-            raise TimezoneInfoIncorrectError(
-                "The DateTime val attribute has tzinfo == "
-                f"{self.val.tzinfo}.  This is not an IANA timezone "
-                "which is required."
-            )
-
-        if self.tz not in str(self.val.tzinfo):
-            raise TimezoneMismatchError(
-                f"DateTime instance has tz attribute equal to {self.tz} and "
-                f"val attribute with tzinfo equal to {str(self.val.tzinfo)}"
-            )
-
-    def __str__(self) -> str:
-        if self.val.microsecond == 0:
-            display = self.val.isoformat(timespec="seconds")
-        else:
-            display = self.val.isoformat(timespec="milliseconds")
-
-        return f"{display} {self.tz}"
-
-
-@dataclass(frozen=True, slots=True)
 class Uri:
     val: str
 
