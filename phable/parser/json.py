@@ -7,18 +7,7 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import (
-    NA,
-    Coord,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Uri,
-    XStr,
-)
+from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
 
 
 def json_to_grid(d: dict[str, Any]) -> Grid:
@@ -81,8 +70,7 @@ def _datetime_to_json(date_time: datetime) -> dict[str, str]:
     # TODO: Parse from IANA to Haystack here
     tz = str(date_time.tzinfo).split("/")[1]
 
-    json = {"_kind": "dateTime", "val": date_time.isoformat(),
-            "tz": tz}
+    json = {"_kind": "dateTime", "val": date_time.isoformat(), "tz": tz}
 
     return json
 

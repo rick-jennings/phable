@@ -4,12 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus, UnknownRecError
-from phable.kinds import (
-    Grid,
-    Marker,
-    Number,
-    Ref,
-)
+from phable.kinds import Grid, Marker, Number, Ref
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
 # Note 2:  These tests create pt records on the server with the pytest tag.
@@ -31,14 +26,14 @@ def hc() -> Client:
 
 
 def test_open(hc: Client):
-    hc._password = "wrong_password"
+    hc._password = "wrong_password"  # type: ignore
     with pytest.raises(Exception):
         hc.open()
 
 
 def test_auth_token(hc: Client):
     hc.open()
-    auth_token = hc._auth_token
+    auth_token = hc._auth_token  # type: ignore
 
     # verify the auth token is valid
     assert len(auth_token) > 40
@@ -55,7 +50,7 @@ def test_auth_token(hc: Client):
 
 def test_context_manager(hc: Client):
     with hc:
-        auth_token = hc._auth_token
+        auth_token = hc._auth_token  # type: ignore
 
         # verify the auth token is valid
         assert len(auth_token) > 40
@@ -143,7 +138,7 @@ def test_read_by_ids(hc: Client):
             response = hc.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-def test_his_read(hc: Client):
+def test_his_read_with_date_range(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
@@ -153,15 +148,89 @@ def test_his_read(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        range1 = date.today() - timedelta(days=1)
-        his_grid1 = hc.his_read(point_ref, range1)
+        range = date.today() - timedelta(days=7)
+        his_grid = hc.his_read(point_ref, range)
 
-    # check his_grid1
-    cols = [col["name"] for col in his_grid1.cols]
-    assert isinstance(his_grid1.rows[0][cols[1]], Number)
-    assert his_grid1.rows[0][cols[1]].unit == "kW"
-    assert his_grid1.rows[0][cols[1]].val >= 0
-    assert his_grid1.rows[0][cols[0]].date() == range1
+    # check his_grid
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert his_grid.rows[0][cols[0]].date() == range
+    assert his_grid.rows[-1][cols[0]].date() == range
+
+
+def test_his_read_with_datetime_range(hc: Client):
+    with hc:
+        # find the point id
+        point_grid = hc.read(
+            """point and siteRef->dis=="Carytown" and """
+            """equipRef->siteMeter and power"""
+        )
+        point_ref = point_grid.rows[0]["id"]
+
+        # get the his using Date as the range
+        range = datetime(
+            2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
+        ) - timedelta(days=7)
+        his_grid = hc.his_read(point_ref, range)
+
+    # check his_grid
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert his_grid.rows[0][cols[0]].date() == range.date()
+    assert his_grid.rows[-1][cols[0]].date() == date.today()
+
+
+def test_his_read_with_date_slice(hc: Client):
+    with hc:
+        # find the point id
+        point_grid = hc.read(
+            """point and siteRef->dis=="Carytown" and """
+            """equipRef->siteMeter and power"""
+        )
+        point_ref = point_grid.rows[0]["id"]
+
+        # get the his using Date as the range
+        range = slice(date.today() - timedelta(days=7), date.today())
+        his_grid = hc.his_read(point_ref, range)
+
+    # check his_grid
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert his_grid.rows[0][cols[0]].date() == date.today() - timedelta(days=7)
+    assert his_grid.rows[-1][cols[0]].date() == date.today()
+
+
+def test_his_read_with_datetime_slice(hc: Client):
+    with hc:
+        # find the point id
+        point_grid = hc.read(
+            """point and siteRef->dis=="Carytown" and """
+            """equipRef->siteMeter and power"""
+        )
+        point_ref = point_grid.rows[0]["id"]
+
+        # get the his using Date as the range
+        start = datetime(
+            2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York")
+        )
+        stop = start + timedelta(days=3)
+
+        range = slice(start, stop)
+        his_grid = hc.his_read(point_ref, range)
+
+    # check his_grid
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert his_grid.rows[0][cols[0]].date() == start.date()
+    assert his_grid.rows[-1][cols[0]].date() == stop.date()
 
 
 def test_batch_his_read(hc: Client):

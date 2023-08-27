@@ -1,23 +1,8 @@
-from datetime import date, datetime, time, timezone
 from decimal import Decimal
-from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.kinds import (
-    NA,
-    Coord,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    TimezoneInfoIncorrectError,
-    TimezoneMismatchError,
-    Uri,
-    XStr,
-)
+from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
 
 # -----------------------------------------------------------------------------
 # Haystack kind tests

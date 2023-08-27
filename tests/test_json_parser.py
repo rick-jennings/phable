@@ -32,14 +32,14 @@ def test_create_single_his_write_grid():
     rows_haystack = [
         {
             "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
-                    tzinfo=ZoneInfo("America/New_York")
-                ),
+                tzinfo=ZoneInfo("America/New_York")
+            ),
             "val": kinds.Number(72.2),
         },
         {
             "ts": datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
-                    tzinfo=ZoneInfo("America/New_York")
-                ),
+                tzinfo=ZoneInfo("America/New_York")
+            ),
             "val": kinds.Number(76.3),
         },
     ]
@@ -77,21 +77,21 @@ def test_create_batch_his_write_grid():
     rows_haystack = [
         {
             "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
-                    tzinfo=ZoneInfo("America/New_York")
-                ),
+                tzinfo=ZoneInfo("America/New_York")
+            ),
             "v0": kinds.Number(72.2),
             "v1": kinds.Number(10),
         },
         {
             "ts": datetime.fromisoformat("2012-04-21T08:45:00-04:00").replace(
-                    tzinfo=ZoneInfo("America/New_York")
-                ),
+                tzinfo=ZoneInfo("America/New_York")
+            ),
             "v0": kinds.Number(76.3),
         },
         {
             "ts": datetime.fromisoformat("2012-04-21T09:00:00-04:00").replace(
-                    tzinfo=ZoneInfo("America/New_York")
-                ),
+                tzinfo=ZoneInfo("America/New_York")
+            ),
             "v1": kinds.Number(12),
         },
     ]
@@ -257,7 +257,8 @@ def test__parse_date_time():
         "tz": "New_York",
     }
     assert _parse_date_time(a) == datetime.fromisoformat(a["val"]).replace(
-            tzinfo=ZoneInfo("America/New_York"))
+        tzinfo=ZoneInfo("America/New_York")
+    )
 
     b = {
         "_kind": "dateTime",

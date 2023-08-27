@@ -1,7 +1,7 @@
 import logging
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import Any
-from datetime import date
 
 from phable.auth.scram import (
     Scram,
@@ -14,6 +14,7 @@ from phable.auth.scram import (
 from phable.http import request
 from phable.kinds import Grid, Ref
 from phable.parser.json import create_his_write_grid
+from phable.parser.range import to_haystack_range
 
 logger = logging.getLogger(__name__)
 
@@ -228,23 +229,37 @@ class Client:
         return response
 
     def his_read(
-        self,
-        ids: Ref | list[Ref],
-        range: date
+        self, ids: Ref | list[Ref], range: str | date | datetime | slice
     ) -> Grid:
-        """Read history data on selected records for the given range."""
+        """Read history data on selected records for the given range.
+
+        Range must strictly conform to the Haystack definition if it is Python
+        type str.  Please note at this time there is no validation built
+        within Phable to check for this conformity.
+
+        If range is type slice then the start and stop must both be either of
+        Python types date or datetime.
+
+        See references below for more details on range.
+
+        References:
+        1.)  https://project-haystack.org/doc/docHaystack/Ops#hisRead
+        2.)  https://project-haystack.org/doc/docHaystack/Zinc
+        """
+        range = to_haystack_range(range)
+
         if isinstance(ids, Ref):
             grid = Grid.to_grid(
                 {
                     "id": {"_kind": "ref", "val": ids.val},
-                    "range": range.isoformat(),
-                }  # type: ignore
+                    "range": range,
+                }
             )
         else:
-            meta = {"ver": "3.0", "range": str(range)}  # type: ignore
+            meta = {"ver": "3.0", "range": range}
             cols = [{"name": "id"}]
             rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-            grid = Grid(meta, cols, rows)  # type: ignore
+            grid = Grid(meta, cols, rows)
 
         return self.call("hisRead", grid)
 
@@ -259,8 +274,7 @@ class Client:
         https://project-haystack.org/doc/docHaystack/Ops#hisWrite
 
         Note:  Future Phable versions may apply a breaking change to this func
-        to make
-        it easier.
+        to make it easier.
         """
         his_grid = create_his_write_grid(ids, data)
         return self.call("hisWrite", his_grid)
