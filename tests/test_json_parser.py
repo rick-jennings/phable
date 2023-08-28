@@ -9,7 +9,6 @@ from phable.parser.json import (
     _datetime_to_json,
     _haystack_to_iana_tz,
     _number_to_json,
-    _parse_coord,
     _parse_date,
     _parse_date_time,
     _parse_marker,
@@ -17,13 +16,24 @@ from phable.parser.json import (
     _parse_number,
     _parse_ref,
     _parse_remove,
-    _parse_symbol,
     _parse_time,
-    _parse_uri,
-    _parse_xstr,
     _ref_to_json,
     create_his_write_grid,
 )
+
+
+def test__haystack_to_iana_tz():
+    assert _haystack_to_iana_tz("New_York") == ZoneInfo("America/New_York")
+    assert _haystack_to_iana_tz("Los_Angeles") == ZoneInfo(
+        "America/Los_Angeles"
+    )
+    assert _haystack_to_iana_tz("Bangkok") == ZoneInfo("Asia/Bangkok")
+    assert _haystack_to_iana_tz("UTC") == ZoneInfo("UTC")
+    assert _haystack_to_iana_tz("GMT+1") == ZoneInfo("Etc/GMT+1")
+    assert _haystack_to_iana_tz("GMT+11") == ZoneInfo("Etc/GMT+11")
+    assert _haystack_to_iana_tz("La_Rioja") == ZoneInfo(
+        "America/Argentina/La_Rioja"
+    )
 
 
 def test_create_single_his_write_grid():

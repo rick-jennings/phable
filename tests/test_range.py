@@ -32,7 +32,7 @@ def test_to_haystack_range_with_date():
 def test_to_haystack_range_with_datetime():
     dt = datetime(2023, 8, 12, 10, 12, 23, tzinfo=ZoneInfo("America/New_York"))
     haystack_range = to_haystack_range(dt)
-    assert haystack_range == dt.isoformat()
+    assert haystack_range == dt.isoformat() + " New_York"
 
 
 def test_to_haystack_range_with_date_slice():
@@ -59,9 +59,22 @@ def test_to_haystack_range_with_datetime_slice():
 
 
 def test_to_haystack_with_datetime():
-    dt = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
-    haystack_dt = to_haystack_datetime(dt)
+    # America/New_York
+    dt1 = datetime(
+        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
+    )
+    haystack_dt = to_haystack_datetime(dt1)
     assert haystack_dt == "2023-03-12T12:12:34-04:00 New_York"
+
+    # Asia/Bangkok
+    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("Asia/Bangkok"))
+    haystack_dt = to_haystack_datetime(dt2)
+    assert haystack_dt == "2023-03-12T12:12:34+07:00 Bangkok"
+
+    # UTC
+    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("UTC"))
+    haystack_dt = to_haystack_datetime(dt2)
+    assert haystack_dt == "2023-03-12T12:12:34+00:00 UTC"
 
 
 def test_to_haystack_with_date():

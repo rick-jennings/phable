@@ -7,7 +7,18 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 
 def json_to_grid(d: dict[str, Any]) -> Grid:
@@ -67,10 +78,17 @@ def _number_to_json(num: Number) -> dict[str, str | float]:
 
 
 def _datetime_to_json(date_time: datetime) -> dict[str, str]:
-    # TODO: Parse from IANA to Haystack here
-    tz = str(date_time.tzinfo).split("/")[1]
+    iana_tz = str(date_time.tzinfo)
+    if "/" in iana_tz:
+        haystack_tz = iana_tz.split("/")[-1]
+    else:
+        haystack_tz = iana_tz
 
-    json = {"_kind": "dateTime", "val": date_time.isoformat(), "tz": tz}
+    json = {
+        "_kind": "dateTime",
+        "val": date_time.isoformat(),
+        "tz": haystack_tz,
+    }
 
     return json
 
@@ -171,7 +189,9 @@ class IanaCityNotFoundError(Exception):
 @lru_cache(maxsize=16)
 def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
     for iana_tz in available_timezones():
-        if "/" + haystack_tz in iana_tz or haystack_tz == iana_tz:
+        if "UTC" in haystack_tz:
+            return ZoneInfo("UTC")
+        elif haystack_tz == iana_tz.split("/")[-1]:
             return ZoneInfo(iana_tz)
 
     raise IanaCityNotFoundError(

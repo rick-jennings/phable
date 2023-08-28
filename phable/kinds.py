@@ -1,15 +1,20 @@
+"""
+The following Haystack types map directly to their Python equivalent types:
+ - Bool
+ - Str
+ - List
+ - Dict
+ - Time
+ - Date
+ - DateTime
+"""
+
+
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, time
 from decimal import Decimal, getcontext
 from typing import Any
-from zoneinfo import available_timezones
-
-# Note: Bool, Str, List, and Dict Haystack kinds are assumed to just be
-# their Python type equivalents.  We may reevaluate this decision in the
-# future.
-
 
 # -----------------------------------------------------------------------------
 # Custom exceptions raised within this module
