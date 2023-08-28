@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from datetime import date, datetime
 
+from phable.parser.tz import find_haystack_tz
+
 
 @dataclass
 class HisReadRangeSliceError(Exception):
@@ -55,7 +57,8 @@ def to_haystack_date(x: date) -> str:
 
 
 def to_haystack_datetime(x: datetime) -> str:
-    haystack_tz = str(x.tzinfo).split("/")[1]
+    # haystack_tz = str(x.tzinfo).split("/")[1]
+    haystack_tz = find_haystack_tz(x.tzinfo)
     if x.microsecond == 0:
         dt = x.isoformat(timespec="seconds")
     else:

@@ -30,9 +30,9 @@ def test_to_haystack_range_with_date():
 
 
 def test_to_haystack_range_with_datetime():
-    dt_now = datetime.now()
-    haystack_range = to_haystack_range(dt_now)
-    assert haystack_range == dt_now.isoformat()
+    dt = datetime(2023, 8, 12, 10, 12, 23, tzinfo=ZoneInfo("America/New_York"))
+    haystack_range = to_haystack_range(dt)
+    assert haystack_range == dt.isoformat()
 
 
 def test_to_haystack_range_with_date_slice():
