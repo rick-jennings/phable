@@ -11,6 +11,7 @@ received by the Client class in `phable.client.py`.
 
 import hashlib
 import hmac
+import logging
 import re
 from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
@@ -19,6 +20,8 @@ from hashlib import pbkdf2_hmac
 from uuid import uuid4
 
 from phable.http import HttpResponse
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -149,7 +152,7 @@ def parse_first_call_result(
 
     if scram_data is None:
         raise NotFoundError(
-            "Scram data not found in the 'WWW-Authenticate' header:"
+            "Scram data not found in the 'WWW-Authenticate' header (test #2):"
             f"\n{auth_header}"
         )
 
