@@ -148,16 +148,16 @@ def test_his_read_with_date_range(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        range = date.today() - timedelta(days=7)
-        his_grid = hc.his_read(point_ref, range)
+        start = date.today() - timedelta(days=7)
+        his_grid = hc.his_read(point_ref, start)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == range
-    assert his_grid.rows[-1][cols[0]].date() == range
+    assert his_grid.rows[0][cols[0]].date() == start
+    assert his_grid.rows[-1][cols[0]].date() == start
 
 
 def test_his_read_with_datetime_range(hc: Client):
@@ -194,16 +194,17 @@ def test_his_read_with_date_slice(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        range = slice(date.today() - timedelta(days=7), date.today())
-        his_grid = hc.his_read(point_ref, range)
+        start = date.today() - timedelta(days=7)
+        end = date.today()
+        his_grid = hc.his_read(point_ref, start, end)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == date.today() - timedelta(days=7)
-    assert his_grid.rows[-1][cols[0]].date() == date.today()
+    assert his_grid.rows[0][cols[0]].date() == start
+    assert his_grid.rows[-1][cols[0]].date() == end
 
 
 def test_his_read_with_datetime_slice(hc: Client):
@@ -219,10 +220,9 @@ def test_his_read_with_datetime_slice(hc: Client):
         start = datetime(
             2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York")
         )
-        stop = start + timedelta(days=3)
+        end = start + timedelta(days=3)
 
-        range = slice(start, stop)
-        his_grid = hc.his_read(point_ref, range)
+        his_grid = hc.his_read(point_ref, start, end)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -230,7 +230,7 @@ def test_his_read_with_datetime_slice(hc: Client):
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
     assert his_grid.rows[0][cols[0]].date() == start.date()
-    assert his_grid.rows[-1][cols[0]].date() == stop.date()
+    assert his_grid.rows[-1][cols[0]].date() == end.date()
 
 
 def test_batch_his_read(hc: Client):
@@ -242,7 +242,7 @@ def test_batch_his_read(hc: Client):
         id4 = ids.rows[3]["id"]
 
         ids = [id1, id2, id3, id4]
-        his_grid = hc.his_read(ids, date.today().isoformat())
+        his_grid = hc.his_read(ids, date.today())
 
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[0]], datetime)

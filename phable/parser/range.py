@@ -3,50 +3,42 @@ from datetime import date, datetime
 
 
 @dataclass
-class HisReadRangeSliceError(Exception):
+class HisReadStartEndTypeError(Exception):
     help_msg: str
 
 
-def to_haystack_range(range: str | date | datetime | slice) -> str:
-    """Convert range to a Python type str required for the Haystack HisRead op.
+def to_haystack_range(
+    start: date | datetime, end: date | datetime | None = None
+) -> str:
+    """Convert defined start and end to a range required for the Haystack
+    HisRead op.
 
     Note: We need to check for type datetime before type date since a datetime
     object is also a date object.
     """
-    if isinstance(range, str):
-        return range
-    elif isinstance(range, datetime):
-        return to_haystack_datetime(range)
-    elif isinstance(range, date):
-        return to_haystack_date(range)
-    elif isinstance(range, slice):
-        _validate_slice(range)
+    if end is None:
+        if isinstance(start, datetime):
+            return to_haystack_datetime(start)
+        elif isinstance(start, date):
+            return to_haystack_date(start)
+    else:
+        _validate_start_and_end(start, end)
 
-        if isinstance(range.start, datetime):
+        if isinstance(start, datetime):
             return (
-                to_haystack_datetime(range.start)
-                + ","
-                + to_haystack_datetime(range.stop)
+                to_haystack_datetime(start) + "," + to_haystack_datetime(end)
             )
-        elif isinstance(range.start, date):
-            return (
-                to_haystack_date(range.start)
-                + ","
-                + to_haystack_date(range.stop)
-            )
+        elif isinstance(start, date):
+            return to_haystack_date(start) + "," + to_haystack_date(end)
 
 
-def _validate_slice(range: slice) -> None:
-    if not isinstance(range.start, date | datetime) or not isinstance(
-        range.start, type(range.stop)
+def _validate_start_and_end(start, end) -> None:
+    if not isinstance(start, date | datetime) or not isinstance(
+        start, type(end)
     ):
-        raise HisReadRangeSliceError(
-            "slice[start] and slice[stop] must both either be of type"
+        raise HisReadStartEndTypeError(
+            "Range start and end must both either be of type"
             " date or datetime"
-        )
-    if range.step is not None:
-        raise HisReadRangeSliceError(
-            "Range cannot be a slice object with a step"
         )
 
 
