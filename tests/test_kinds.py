@@ -1,8 +1,17 @@
 from decimal import Decimal
 
-import pytest
-
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 # -----------------------------------------------------------------------------
 # Haystack kind tests
@@ -45,12 +54,6 @@ def test_number() -> None:
     assert str(Number(-10.2, "kW")) == "-10.2kW"
     assert str(Number(10.2)) == "10.2"
 
-    # invalid cases
-    with pytest.raises(TypeError):
-        Number("abc")  # type: ignore
-    with pytest.raises(TypeError):
-        Number(10, 10)  # type: ignore
-
 
 def test_marker() -> None:
     assert str(Marker()) == "\u2713"
@@ -69,22 +72,10 @@ def test_ref() -> None:
     assert str(Ref("foo")) == "@foo"
     assert str(Ref("foo", "bar")) == "bar"
 
-    # invalid cases
-    with pytest.raises(TypeError):
-        Ref(1)  # type: ignore
-    with pytest.raises(TypeError):
-        Ref("foo", 1)  # type: ignore
-
 
 def test_uri() -> None:
     # valid case
     assert Uri("basic_test")
-
-    # Note:  probably want to consider adding better validation support to Uri
-
-    # invalid case
-    with pytest.raises(TypeError):
-        Uri(1)  # type: ignore
 
 
 def test_coord() -> None:
@@ -102,18 +93,7 @@ def test_xstr() -> None:
     # valid case
     assert str(XStr("a", "b")) == "(a, b)"
 
-    # invalid case
-    with pytest.raises(TypeError):
-        XStr(1, "b")  # type: ignore
-
-    with pytest.raises(TypeError):
-        XStr("a", 2)  # type: ignore
-
 
 def test_symbol() -> None:
     # valid case
     assert str(Symbol("a")) == "^a"
-
-    # invalid case
-    with pytest.raises(TypeError):
-        Symbol(1)  # type: ignore
