@@ -87,13 +87,6 @@ class Number:
     val: int | float
     unit: str | None = None
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, int | float):  # type: ignore
-            raise TypeError("Val should be of type int or float")
-
-        if not isinstance(self.unit, str | None):
-            raise TypeError("Unit should be of type str or None")
-
     def __str__(self):
         if self.unit is not None:
             return f"{self.val}{self.unit}"
@@ -145,13 +138,6 @@ class Ref:
     val: str
     dis: str | None = None
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, str):  # type: ignore
-            raise TypeError("Val should be of type str")
-
-        if not isinstance(self.dis, str | None):
-            raise TypeError("Dis should be of type str or None")
-
     def __str__(self) -> str:
         if self.dis is not None:
             return self.dis
@@ -163,10 +149,6 @@ class Ref:
 class Uri:
     val: str
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, str):  # type: ignore
-            raise TypeError("Val should be of type str")
-
     def __str__(self):
         return self.val
 
@@ -175,13 +157,6 @@ class Uri:
 class Coord:
     lat: Decimal
     lng: Decimal
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.lat, Decimal):  # type: ignore
-            raise TypeError("Lat should be of type Decimal")
-
-        if not isinstance(self.lng, Decimal):  # type: ignore
-            raise TypeError("Lng should be of type Decimal")
 
     def __str__(self):
         getcontext().prec = 6
@@ -193,13 +168,6 @@ class XStr:
     type: str
     val: str
 
-    def __post_init__(self) -> None:
-        if not isinstance(self.type, str):  # type: ignore
-            raise TypeError("Type should be of type str")
-
-        if not isinstance(self.val, str):  # type: ignore
-            raise TypeError("Val should be of type str")
-
     def __str__(self):
         return f"({self.type}, {self.val})"
 
@@ -207,10 +175,6 @@ class XStr:
 @dataclass(frozen=True, slots=True)
 class Symbol:
     val: str
-
-    def __post_init__(self) -> None:
-        if not isinstance(self.val, str):  # type: ignore
-            raise TypeError("Val should be of type str")
 
     def __str__(self):
         return f"^{self.val}"
