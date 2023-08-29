@@ -144,7 +144,7 @@ def parse_first_call_result(
     """
 
     auth_header = first_call_result.headers["WWW-Authenticate"]
-    exclude_msg = "scram data="
+    exclude_msg = "data="
     scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
 
     if scram_data is None:
