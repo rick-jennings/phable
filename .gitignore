@@ -5,3 +5,4 @@ __pycache__/
 dist/
 *.csv
 read_me.py
+poetry.lock
