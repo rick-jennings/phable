@@ -1,52 +1,40 @@
-import logging
 from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-from phable.auth.scram import (
-    Scram,
-    c1_bare,
-    parse_final_call_result,
-    parse_first_call_result,
-    parse_hello_call_result,
-    to_base64,
-)
-from phable.http import request
+from phable.auth.scram import ScramScheme
+from phable.http import get_headers, post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
-from phable.parser.json import create_his_write_grid
+from phable.parser.json import grid_to_json
 
-logger = logging.getLogger(__name__)
+# -----------------------------------------------------------------------------
+# Module exceptions
+# -----------------------------------------------------------------------------
 
 
 @dataclass
-class IncorrectHttpStatus(Exception):
+class HaystackCloseOpRespError(Exception):
     help_msg: str
 
 
 @dataclass
-class InvalidCloseError(Exception):
+class HaystackReadOpUnknownRecError(Exception):
     help_msg: str
 
 
 @dataclass
-class ScramAuthError(Exception):
-    pass
-
-
-@dataclass
-class ServerSignatureNotEqualError(Exception):
-    """Raised when the ServerSignature value sent by the server does not equal
-    the ServerSignature computed by the client."""
-
-    pass
-
-
-@dataclass
-class UnknownRecError(Exception):
+class HaystackErrorGridRespError(Exception):
     help_msg: str
 
 
-# TODO: Consider not using Grid parameter to call method in certain cases
+@dataclass
+class HaystackIncompleteDataRespError(Exception):
+    help_msg: str
+
+
+# -----------------------------------------------------------------------------
+# Client core interface
+# -----------------------------------------------------------------------------
 
 
 class Client:
@@ -63,97 +51,23 @@ class Client:
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
-
-        # attributes for scram auth
-        self._handshake_token: str
-        self._hash: str
-        self._c1_bare: str
-        self._s_nonce: str
-        self._salt: str
-        self._iter_count: int
         self._auth_token: str
 
     # -------------------------------------------------------------------------
-    # execute the scram auth scheme to get a valid auth token from the server
+    # open the connection with the server
     # -------------------------------------------------------------------------
 
     def open(self) -> None:
         """Initiates and executes the SCRAM authentication exchange with the
         server. Upon a successful exchange an auth token provided by the
         server is assigned to the _auth_token attribute of this class which
-        may be used in future requests to
-        the server by other class methods.
+        may be used in future requests to the server by other class methods.
         """
-        try:
-            self._hello_call()
-            self._c1_bare = c1_bare(self.username)
-            self._first_call()
-            self._final_call()
-        except Exception:
-            logger.critical(
-                "Unable to scram authenticate with the Haystack Server."
-            )
-            raise ScramAuthError
-
-    def _hello_call(self) -> None:
-        """Defines and sends the HELLO message to the server and processes the
-        server's response according to Project Haystack's SCRAM auth
-        instructions."""
-
-        headers = {
-            "Authorization": f"HELLO username={to_base64(self.username)}"
-        }
-        response = request(self.uri + "/about", headers=headers, method="GET")
-
-        self._handshake_token, self._hash = parse_hello_call_result(response)
-
-    def _first_call(self) -> None:
-        """Defines and sends the "client-first-message" to the server and
-        processes the server's response according to RFC5802."""
-
-        gs2_header = "n,,"
-        headers = {
-            "Authorization": f"scram handshakeToken={self._handshake_token}, "
-            f"hash={self._hash}, data={to_base64(gs2_header+self._c1_bare)}"
-        }
-        response = request(self.uri + "/about", headers=headers, method="GET")
-        self._s_nonce, self._salt, self._iter_count = parse_first_call_result(
-            response
+        scram = ScramScheme(
+            get_headers, self.uri, self.username, self._password
         )
-
-    def _final_call(self) -> None:
-        """Defines and sends the "client-final-message" to the server and
-        processes the server's response according to RFC5802.
-
-        If the SCRAM authentication exchange was successful then the auth
-        token parsed from the server's response is assigned to the _auth_token
-        attribute in this class, which may be used in future requests to the
-        server.
-
-        Raises a ServerSignatureNotEqualError if the client's computed
-        ServerSignature does not match the one received by the server.
-        """
-        sc = Scram(
-            password=self._password,
-            hash=self._hash,
-            handshake_token=self._handshake_token,
-            c1_bare=self._c1_bare,
-            s_nonce=self._s_nonce,
-            salt=self._salt,
-            iter_count=self._iter_count,
-        )
-        headers = {
-            "Authorization": (
-                f"scram handshaketoken={self._handshake_token},"
-                f"data={sc.client_final_message}"
-            )
-        }
-        response = request(self.uri + "/about", headers=headers, method="GET")
-
-        self._auth_token, server_signature = parse_final_call_result(response)
-
-        if server_signature != sc.server_signature:
-            raise ServerSignatureNotEqualError
+        self._auth_token = scram.get_auth_token()
+        del scram
 
     # -------------------------------------------------------------------------
     # define an optional context manager
@@ -179,7 +93,7 @@ class Client:
         call_result = self.call("close")
 
         if call_result.cols[0]["name"] != "empty":
-            raise InvalidCloseError(
+            raise HaystackCloseOpRespError(
                 "Expected an empty grid response and instead received:"
                 f"\n{call_result}"
             )
@@ -188,40 +102,50 @@ class Client:
 
     def read(self, filter: str, limit: int | None = None) -> Grid:
         """Read a record that matches a given filter.  Apply an optional
-        limit."""
+        limit.
+        """
         if limit is None:
-            grid = Grid.to_grid({"filter": filter})
+            data_row = {"filter": filter}
         else:
-            grid = Grid.to_grid({"filter": filter, "limit": limit})
-        return self.call("read", grid)
+            data_row = {"filter": filter, "limit": limit}
+
+        data = _rows_to_grid_json(data_row)
+        return self.call("read", data)
 
     def read_by_id(self, id: Ref) -> dict[str, Any]:
-        """Read a record by its id."""
-        grid = Grid.to_grid({"id": {"_kind": "ref", "val": id.val}})
-        response = self.call("read", grid)
+        """Read a record by its id.  Raises UnknownRecError if the rec cannot
+        be found.
+        """
+
+        data_row = {"id": {"_kind": "ref", "val": id.val}}
+        data = _rows_to_grid_json(data_row)
+        response = self.call("read", data)
 
         # verify the rec was found
         if response.cols[0]["name"] == "empty":
-            raise UnknownRecError(
+            raise HaystackReadOpUnknownRecError(
                 f"Unable to locate id {id.val} on the server."
             )
 
         return response.rows[0]
 
     def read_by_ids(self, ids: list[Ref]) -> Grid:
-        """Read records by their ids."""
-        parsed_ids = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-        grid = Grid.to_grid(parsed_ids)
-        response = self.call("read", grid)
+        """Read records by their ids.  Raises UnknownRecError if any of the
+        recs cannot be found.
+        """
+        ids = ids.copy()
+        data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+        data = _rows_to_grid_json(data_rows)
+        response = self.call("read", data)
 
         # verify the recs were found
         if len(response.rows) == 0:
-            raise UnknownRecError(
+            raise HaystackReadOpUnknownRecError(
                 "Unable to locate any of the ids on the server."
             )
         for row in response.rows:
             if len(row) == 0:
-                raise UnknownRecError(
+                raise HaystackReadOpUnknownRecError(
                     "Unable to locate one or more ids on the server."
                 )
 
@@ -245,29 +169,24 @@ class Client:
         1.)  https://project-haystack.org/doc/docHaystack/Ops#hisRead
         2.)  https://project-haystack.org/doc/docHaystack/Zinc
         """
+        if isinstance(ids, list):
+            ids = ids.copy()
+
+        # convert range to Haystack defined string
         if isinstance(range, date):
             range = range.isoformat()
         else:
             range = str(range)
 
+        # structure data for HTTP request
         if isinstance(ids, Ref):
-            grid = Grid.to_grid(
-                {
-                    "id": {"_kind": "ref", "val": ids.val},
-                    "range": range,
-                }
-            )
-        else:
-            meta = {"ver": "3.0", "range": range}
-            cols = [{"name": "id"}]
-            rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-            grid = Grid(meta, cols, rows)
+            data = _to_single_his_read_json(ids, range)
+        elif isinstance(ids, list):
+            data = _to_batch_his_read_json(ids, range)
 
-        return self.call("hisRead", grid)
+        return self.call("hisRead", data)
 
-    def his_write(
-        self, ids: Ref | list[Ref], data: list[dict[str, Any]]
-    ) -> Grid:
+    def his_write(self, his_grid: Grid) -> Grid:
         """Write history data to records on the Haystack server.
 
         A Haystack Grid object defined in phable.kinds will need to be
@@ -278,16 +197,17 @@ class Client:
         Note:  Future Phable versions may apply a breaking change to this func
         to make it easier.
         """
-        his_grid = create_his_write_grid(ids, data)
-        return self.call("hisWrite", his_grid)
+        return self.call("hisWrite", grid_to_json(his_grid))
 
     # -------------------------------------------------------------------------
     # other ops
     # -------------------------------------------------------------------------
 
-    def eval(self, grid: Grid) -> Grid:
+    def eval(self, expr: str) -> Grid:
         """Evaluates an expression."""
-        return self.call("eval", grid)
+        data = _rows_to_grid_json({"expr": expr})
+
+        return self.call("eval", data)
 
     # -------------------------------------------------------------------------
     # base to Haystack and all other ops
@@ -296,47 +216,94 @@ class Client:
     def call(
         self,
         op: str,
-        grid: Grid = Grid(
-            meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]
-        ),
+        data: dict[str, Any] | None = None,
     ) -> Grid:
+        if data is None:
+            data = _to_empty_grid_json()
+        else:
+            data = data.copy()
+
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
             "Accept": "application/json",
         }
 
-        data = {
-            "_kind": "grid",
-            "meta": grid.meta,
-            "cols": grid.cols,
-            "rows": grid.rows,
-        }
-
-        response = request(
-            url=f"{self.uri}/{op}", data=data, headers=headers, method="POST"
-        )
-
-        if response.status != 200:
-            raise IncorrectHttpStatus(
-                f"Expected status 200 and received status {response.status}."
-            )
-
-        # convert the response to a Haystack Grid
-        response = response.grid
-
-        # log errors and where there is incomplete data
-        if "err" in response.meta.keys():
-            error_dis = response.meta["dis"]
-            logger.debug(
-                "The server returned an error grid with this message:"
-                f"\n{error_dis}"
-            )
-
-        if "incomplete" in response.meta.keys():
-            incomplete_dis = response.meta["incomplete"]
-            logger.debug(
-                "Incomplete data was returned for these reasons:"
-                f"\n{incomplete_dis}"
-            )
+        response = post(url=f"{self.uri}/{op}", data=data, headers=headers)
+        _validate_response_meta(response.meta)
 
         return response
+
+
+# -----------------------------------------------------------------------------
+# Misc support functions for Client()
+# -----------------------------------------------------------------------------
+
+
+def _validate_response_meta(meta: dict[str, str]):
+    if "err" in meta.keys():
+        error_dis = meta["dis"]
+        raise HaystackErrorGridRespError(
+            "The server returned an error grid with this message:\n"
+            + error_dis
+        )
+
+    if "incomplete" in meta.keys():
+        incomplete_dis = meta["incomplete"]
+        raise HaystackIncompleteDataRespError(
+            "Incomplete data was returned for these reasons:"
+            f"\n{incomplete_dis}"
+        )
+
+
+def _to_single_his_read_json(id: Ref, range: str) -> dict[str, Any]:
+    """Creates a Grid in the JSON format using given Ref ID and range."""
+    return _rows_to_grid_json(
+        {"id": {"_kind": "ref", "val": id.val}, "range": range}
+    )
+
+
+def _to_batch_his_read_json(ids: list[Ref], range: str) -> dict[str, Any]:
+    """Returns a Grid in the JSON format using given Ref IDs and range."""
+
+    meta = {"ver": "3.0", "range": range}
+    cols = [{"name": "id"}]
+    rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+
+    return {
+        "_kind": "grid",
+        "meta": meta,
+        "cols": cols,
+        "rows": rows,
+    }
+
+
+def _to_empty_grid_json() -> dict[str, Any]:
+    """Returns an empty Grid in the JSON format."""
+    return {
+        "_kind": "grid",
+        "meta": {"ver": "3.0"},
+        "cols": [{"name": "empty"}],
+        "rows": [],
+    }
+
+
+def _rows_to_grid_json(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    if isinstance(rows, dict):
+        rows = [rows]
+
+    col_names: list[str] = []
+    for row in rows:
+        for col_name in row.keys():
+            if col_name not in col_names:
+                col_names.append(col_name)
+
+    cols = [{"name": name} for name in col_names]
+    meta = {"ver": "3.0"}
+    rows = rows.copy()
+
+    return {
+        "_kind": "grid",
+        "meta": meta,
+        "cols": cols,
+        "rows": rows,
+    }

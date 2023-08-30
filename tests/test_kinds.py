@@ -23,29 +23,7 @@ from phable.kinds import (
 
 
 def test_grid():
-    # test #1
-    rows = [
-        {"ts": "some_time", "v0": "50kW"},
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
-
-    # test #2
-    rows = [
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
-        {"ts": "some_time", "v0": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
-
-    # test #3
-    rows = [
-        {"ts": "some_time", "v0": "45kW"},
-        {"ts": "some_time", "v0": "50kW"},
-    ]
-    grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
+    grid = Grid(meta={}, cols=[], rows=[])
 
     # test display
     assert str(grid) == "Haystack Grid"

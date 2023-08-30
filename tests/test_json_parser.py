@@ -18,7 +18,7 @@ from phable.parser.json import (
     _parse_remove,
     _parse_time,
     _ref_to_json,
-    create_his_write_grid,
+    grid_to_json,
 )
 
 
@@ -37,9 +37,9 @@ def test__haystack_to_iana_tz():
 
 
 def test_create_single_his_write_grid():
-    meta = {"ver": "3.0", "id": {"_kind": "ref", "val": "hisId"}}
+    meta = {"ver": "3.0", "id": kinds.Ref("hisId")}
     cols = [{"name": "ts"}, {"name": "val"}]
-    rows_haystack = [
+    rows = [
         {
             "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
                 tzinfo=ZoneInfo("America/New_York")
@@ -53,6 +53,9 @@ def test_create_single_his_write_grid():
             "val": kinds.Number(76.3),
         },
     ]
+
+    haystack_grid = kinds.Grid(meta=meta, cols=cols, rows=rows)
+
     rows_json = [
         {
             "ts": {
@@ -72,17 +75,16 @@ def test_create_single_his_write_grid():
         },
     ]
 
-    assert create_his_write_grid(
-        kinds.Ref("hisId"), rows_haystack
-    ) == kinds.Grid(meta, cols, rows_json)
+    assert grid_to_json(haystack_grid)["rows"] == rows_json
 
 
 def test_create_batch_his_write_grid():
     meta = {"ver": "3.0"}
-    cols = [
+
+    cols_haystack = [
         {"name": "ts"},
-        {"name": "v0", "meta": {"id": {"_kind": "ref", "val": "hisA"}}},
-        {"name": "v1", "meta": {"id": {"_kind": "ref", "val": "hisB"}}},
+        {"name": "v0", "meta": {"id": kinds.Ref("hisA")}},
+        {"name": "v1", "meta": {"id": kinds.Ref("hisB")}},
     ]
     rows_haystack = [
         {
@@ -105,6 +107,21 @@ def test_create_batch_his_write_grid():
             "v1": kinds.Number(12),
         },
     ]
+
+    haystack_grid = kinds.Grid(
+        meta=meta, cols=cols_haystack, rows=rows_haystack
+    )
+
+    json_grid = grid_to_json(haystack_grid)
+
+    cols_json = [
+        {"name": "ts"},
+        {"name": "v0", "meta": {"id": {"_kind": "ref", "val": "hisA"}}},
+        {"name": "v1", "meta": {"id": {"_kind": "ref", "val": "hisB"}}},
+    ]
+
+    assert json_grid["cols"] == cols_json
+
     rows_json = [
         {
             "ts": {
@@ -133,11 +150,7 @@ def test_create_batch_his_write_grid():
         },
     ]
 
-    test_grid = create_his_write_grid(
-        [kinds.Ref("hisA"), kinds.Ref("hisB")], rows_haystack
-    )
-
-    assert test_grid == kinds.Grid(meta, cols, rows_json)
+    assert json_grid["rows"] == rows_json
 
 
 def test__number_to_json():

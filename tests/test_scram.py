@@ -1,12 +1,12 @@
 import pytest
 
 from phable.auth.scram import (
-    NotFoundError,
+    ScramRespParsingError,
     _from_base64,
+    _parse_first_call_result,
+    _parse_hello_call_result,
+    _to_base64,
     _to_bytes,
-    parse_first_call_result,
-    parse_hello_call_result,
-    to_base64,
 )
 
 # from phable.exceptions import NotFoundError
@@ -41,8 +41,8 @@ from phable.auth.scram import (
 
 
 def test__to_base64():
-    assert to_base64("example") == "ZXhhbXBsZQ"
-    assert to_base64(bytes("example", "utf-8")) == "ZXhhbXBsZQ"
+    assert _to_base64("example") == "ZXhhbXBsZQ"
+    assert _to_base64(bytes("example", "utf-8")) == "ZXhhbXBsZQ"
 
 
 def test__from_base64():

@@ -10,6 +10,20 @@ from typing import Any, Optional
 from phable.kinds import Grid
 from phable.parser.json import json_to_grid
 
+# -----------------------------------------------------------------------------
+# Module exceptions
+# -----------------------------------------------------------------------------
+
+
+@dataclass
+class IncorrectHttpResponseStatus(Exception):
+    help_msg: str
+
+
+# -----------------------------------------------------------------------------
+# Data model for HTTP response
+# -----------------------------------------------------------------------------
+
 
 @dataclass
 class HttpResponse:
@@ -21,6 +35,33 @@ class HttpResponse:
     @property
     def grid(self) -> Grid:
         return json_to_grid(json.loads(self.body))
+
+
+# -----------------------------------------------------------------------------
+# Post and get header funcs tailored for Project Haystack
+# -----------------------------------------------------------------------------
+
+
+def post(url: str, data: dict[str, Any], headers: dict[str, str]) -> Grid:
+    if data is None:
+        data = {}
+    response = request(url, data=data, headers=headers, method="POST")
+
+    if response.status != 200:
+        raise IncorrectHttpResponseStatus(
+            f"Expected status 200 and received status {response.status}."
+        )
+
+    return response.grid
+
+
+def get_headers(url: str, headers: dict[str, str]) -> dict[str, str]:
+    return request(url, headers=headers).headers
+
+
+# -----------------------------------------------------------------------------
+# Foundation for all requests
+# -----------------------------------------------------------------------------
 
 
 def request(

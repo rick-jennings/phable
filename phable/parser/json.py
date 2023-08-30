@@ -26,44 +26,59 @@ def json_to_grid(d: dict[str, Any]) -> Grid:
     return Grid(meta=d["meta"], cols=d["cols"], rows=d["rows"])
 
 
-def create_his_write_grid(
-    ids: Ref | list[Ref], data: list[dict[str, Any]]
-) -> Grid:
-    # Note:  The order of the ids is important!
-    meta: dict[str, str | dict[str, str]] = {"ver": "3.0"}
-    cols: list[dict[str, Any]] = [{"name": "ts"}]
-    if isinstance(ids, Ref):
-        meta["id"] = _ref_to_json(ids)
-        cols.append({"name": "val"})
-    else:
-        for count, id in enumerate(ids):
-            cols.append(
-                {"name": "v" + str(count), "meta": {"id": _ref_to_json(id)}}
-            )
+# TODO: need to make this more robust and add tests, etc.
+def grid_to_json(grid: Grid) -> dict[str, Any]:
+    meta = grid.meta
+    cols = grid.cols
+    rows = grid.rows
 
-    # TODO: traverse the rows and parse to JSON!
-    rows: list[dict[str, str | dict[str, str]]] = []
-    for row in data:
-        if len(row) > len(cols):
-            # TODO:  improve this exception
-            raise Exception
-        rows.append(_parse_row_to_json(row))
+    # traverse the meta and parse to JSON
+    new_meta: dict[str, Any] = meta.copy()
+    for m in meta.keys():
+        if m == "id":
+            new_meta["id"] = _ref_to_json(new_meta["id"])
 
-    return Grid(meta, cols, rows)
+    # traverse the cols and parse to JSON
+    new_cols: list[dict[str, Any]] = []
+    for col in cols:
+        new_cols.append(_parse_dict_with_kinds_to_json(col))
+
+    # traverse the rows and parse to JSON
+    new_rows: list[dict[str, str | dict[str, str]]] = []
+    for row in rows:
+        new_rows.append(_parse_dict_with_kinds_to_json(row))
+
+    return {
+        "_kind": "grid",
+        "meta": new_meta,
+        "cols": new_cols,
+        "rows": new_rows,
+    }
 
 
-def _parse_row_to_json(row: dict[str, Any]) -> dict[str, str | dict[str, str]]:
+def _parse_dict_with_kinds_to_json(
+    row: dict[str, Any]
+) -> dict[str, str | dict[str, str]]:
     parsed_row: dict[str, str | dict[str, str]] = {}
     for key in row.keys():
         val = row[key]
         if isinstance(val, datetime):
             parsed_row[key] = _datetime_to_json(val)
         elif isinstance(row[key], Number):
-            parsed_row[key] = _number_to_json(val)  # type: ignore
+            parsed_row[key] = _number_to_json(val)
         elif isinstance(row[key], str):
             parsed_row[key] = val
         elif isinstance(row[key], bool):
             parsed_row[key] = val
+        elif isinstance(row[key], Ref):
+            parsed_row[key] = _ref_to_json(val)
+        # this case is for dealing with col data in Grid
+        elif isinstance(row[key], dict):
+            if "id" in row[key].keys():
+                new_val = row[key]
+                new_val["id"] = _ref_to_json(row[key]["id"])
+                parsed_row[key] = new_val
+            # TODO: add some more checks here
         else:
             # TODO: create a unique exception for this case
             raise Exception

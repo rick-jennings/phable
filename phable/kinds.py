@@ -48,22 +48,6 @@ class Grid:
             rename_map[ori_col_name] = new_col_name
         return rename_map
 
-    @staticmethod
-    def to_grid(rows: dict[str, Any] | list[dict[str, Any]]) -> Grid:
-        if isinstance(rows, dict):
-            rows = [rows]
-
-        col_names: list[str] = []
-        for row in rows:
-            for col_name in row.keys():
-                if col_name not in col_names:
-                    col_names.append(col_name)
-
-        cols = [{"name": name} for name in col_names]
-        meta = {"ver": "3.0"}
-
-        return Grid(meta=meta, cols=cols, rows=rows)
-
     def __str__(self):
         return "Haystack Grid"
 
@@ -167,7 +151,7 @@ class Symbol:
 
 
 # -----------------------------------------------------------------------------
-# Additional kinds not support by Project Haystack
+# Additional kinds not supported by Project Haystack
 # -----------------------------------------------------------------------------
 
 
