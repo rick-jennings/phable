@@ -1,6 +1,6 @@
 import logging
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from typing import Any
 
 from phable.auth.scram import (
@@ -12,9 +12,8 @@ from phable.auth.scram import (
     to_base64,
 )
 from phable.http import request
-from phable.kinds import Grid, Ref
+from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parser.json import create_his_write_grid
-from phable.parser.range import to_haystack_range
 
 logger = logging.getLogger(__name__)
 
@@ -229,25 +228,16 @@ class Client:
         return response
 
     def his_read(
-        self,
-        ids: Ref | list[Ref],
-        start: date | datetime,
-        end: date | datetime | None = None,
+        self, ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
     ) -> Grid:
         """Read history data on selected records for the given range.
 
         Ranges are inclusive of start timestamp and exclusive of end
-        timestamp, if provided.
+        timestamp.
 
         If a start date is provided without a defined end, then the server
         should infer the range to be from midnight of the start date to
         midnight of the day after the start date.
-
-        If a start datetime is provided without a defined end, then the server
-        should send all available data after the start timestamp.
-
-        If end is not none then start and end must be the same type of date or
-        datetime.
 
         See references below for more details on range.
 
@@ -255,7 +245,10 @@ class Client:
         1.)  https://project-haystack.org/doc/docHaystack/Ops#hisRead
         2.)  https://project-haystack.org/doc/docHaystack/Zinc
         """
-        range = to_haystack_range(start, end)
+        if isinstance(range, date):
+            range = range.isoformat()
+        else:
+            range = str(range)
 
         if isinstance(ids, Ref):
             grid = Grid.to_grid(

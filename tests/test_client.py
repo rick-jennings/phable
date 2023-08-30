@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from phable.client import Client, IncorrectHttpStatus, UnknownRecError
-from phable.kinds import Grid, Marker, Number, Ref
+from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
 # Note 2:  These tests create pt records on the server with the pytest tag.
@@ -170,17 +170,19 @@ def test_his_read_with_datetime_range(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        range = datetime(
-            2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
-        ) - timedelta(days=7)
-        his_grid = hc.his_read(point_ref, range)
+        datetime_range = DateTimeRange(
+            datetime(
+                2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
+            )
+        )
+        his_grid = hc.his_read(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == range.date()
+    assert his_grid.rows[0][cols[0]].date() == datetime_range.start.date()
     assert his_grid.rows[-1][cols[0]].date() == date.today()
 
 
@@ -196,7 +198,8 @@ def test_his_read_with_date_slice(hc: Client):
         # get the his using Date as the range
         start = date.today() - timedelta(days=7)
         end = date.today()
-        his_grid = hc.his_read(point_ref, start, end)
+        date_range = DateRange(start, end)
+        his_grid = hc.his_read(point_ref, date_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -222,7 +225,9 @@ def test_his_read_with_datetime_slice(hc: Client):
         )
         end = start + timedelta(days=3)
 
-        his_grid = hc.his_read(point_ref, start, end)
+        datetime_range = DateTimeRange(start, end)
+
+        his_grid = hc.his_read(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]

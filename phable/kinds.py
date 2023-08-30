@@ -13,23 +13,9 @@ The following Haystack types map directly to their Python equivalent types:
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 from decimal import Decimal, getcontext
 from typing import Any
-
-# -----------------------------------------------------------------------------
-# Custom exceptions raised within this module
-# -----------------------------------------------------------------------------
-
-
-@dataclass
-class TimezoneMismatchError(Exception):
-    help_msg: str
-
-
-@dataclass
-class TimezoneInfoIncorrectError(Exception):
-    help_msg: str
-
 
 # -----------------------------------------------------------------------------
 # Project Haystack supported kinds
@@ -178,3 +164,64 @@ class Symbol:
 
     def __str__(self):
         return f"^{self.val}"
+
+
+# -----------------------------------------------------------------------------
+# Additional kinds not support by Project Haystack
+# -----------------------------------------------------------------------------
+
+
+@dataclass(frozen=True, slots=True)
+class DateRange:
+    """DateRange describes a time range from midnight of the start date
+    (inclusive) until midnight of the end date (exclusive).
+    """
+
+    start: date
+    end: date
+
+    def __str__(self):
+        return self.start.isoformat() + "," + self.end.isoformat()
+
+
+@dataclass(frozen=True, slots=True)
+class DateTimeRange:
+    """DateTimeRange describes a time range from a start timestamp (inclusive)
+    until an end timestamp (exclusive).
+
+    If end is undefined, then assume end to be when the last data value was
+    recorded.
+    """
+
+    start: datetime
+    end: datetime | None = None
+
+    def __str__(self):
+        if self.end is None:
+            return _to_haystack_datetime(self.start)
+        else:
+            return (
+                _to_haystack_datetime(self.start)
+                + ","
+                + _to_haystack_datetime(self.end)
+            )
+
+
+# -----------------------------------------------------------------------------
+# Misc support functions
+# -----------------------------------------------------------------------------
+
+
+def _to_haystack_datetime(x: datetime) -> str:
+    iana_tz = str(x.tzinfo)
+    if "/" in iana_tz:
+        haystack_tz = iana_tz.split("/")[-1]
+    else:
+        haystack_tz = iana_tz
+
+    if x.microsecond == 0:
+        dt = x.isoformat(timespec="seconds")
+    else:
+        dt = x.isoformat(timespec="milliseconds")
+
+    return f"{dt} {haystack_tz}"

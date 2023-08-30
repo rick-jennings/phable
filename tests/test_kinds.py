@@ -1,8 +1,12 @@
+from datetime import date, datetime, timedelta
 from decimal import Decimal
+from zoneinfo import ZoneInfo
 
 from phable.kinds import (
     NA,
     Coord,
+    DateRange,
+    DateTimeRange,
     Grid,
     Marker,
     Number,
@@ -97,3 +101,49 @@ def test_xstr() -> None:
 def test_symbol() -> None:
     # valid case
     assert str(Symbol("a")) == "^a"
+
+
+def test_date_range() -> None:
+    start = date.today() - timedelta(days=3)
+    end = date.today()
+    date_range = DateRange(start, end)
+
+    assert str(date_range) == start.isoformat() + "," + end.isoformat()
+
+
+def test_datetime_range_no_end() -> None:
+    dt = datetime(2023, 8, 12, 10, 12, 23, tzinfo=ZoneInfo("America/New_York"))
+    datetime_range = DateTimeRange(dt)
+    assert str(datetime_range) == dt.isoformat() + " New_York"
+
+    # America/New_York
+    dt1 = datetime(
+        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
+    )
+    datetime_range = str(DateTimeRange(dt1))
+    assert datetime_range == "2023-03-12T12:12:34-04:00 New_York"
+
+    # Asia/Bangkok
+    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("Asia/Bangkok"))
+    datetime_range = str(DateTimeRange(dt2))
+    assert datetime_range == "2023-03-12T12:12:34+07:00 Bangkok"
+
+    # UTC
+    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("UTC"))
+    datetime_range = str(DateTimeRange(dt2))
+    assert datetime_range == "2023-03-12T12:12:34+00:00 UTC"
+
+
+def test_datetime_range() -> None:
+    start = datetime(
+        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
+    )
+    end = datetime(
+        2023, 4, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
+    )
+
+    datetime_range = DateTimeRange(start, end)
+    assert str(datetime_range) == (
+        "2023-03-12T12:12:34-04:00 New_York,"
+        "2023-04-12T12:12:34-04:00 New_York"
+    )
