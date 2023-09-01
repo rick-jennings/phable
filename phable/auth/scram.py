@@ -126,7 +126,7 @@ class ScramScheme:
         headers = {
             "Authorization": (
                 f"scram handshaketoken={self._handshake_token},"
-                f"data={self.client_final_message}"
+                f"data={self._client_final_message}"
             )
         }
 
@@ -134,7 +134,7 @@ class ScramScheme:
 
         self._auth_token, server_signature = _parse_final_call_result(response)
 
-        if server_signature != self.server_signature:
+        if server_signature != self._server_signature:
             raise ScramServerSignatureNotEqualError(
                 "Raised when the ServerSignature value sent by the server "
                 "does not equal the ServerSignature computed by the client."
@@ -151,51 +151,51 @@ class ScramScheme:
         )
 
     @property
-    def client_key(self) -> bytes:
+    def _client_key(self) -> bytes:
         return _hmac(self._salted_password, b"Client Key", self._hash)
 
     @property
-    def stored_key(self) -> bytes:
+    def _stored_key(self) -> bytes:
         hashFunc = hashlib.new(self._hash)
-        hashFunc.update(self.client_key)
+        hashFunc.update(self._client_key)
         return hashFunc.digest()
 
     @property
-    def client_final_no_proof(self) -> str:
+    def _client_final_no_proof(self) -> str:
         return f"c={_to_base64('n,,')},r={self._s_nonce}"
 
     @property
-    def auth_message(self) -> str:
+    def _auth_message(self) -> str:
         return (
             f"{self._c1_bare},r={self._s_nonce},s={self._salt},"
-            + f"i={self._iter_count},{self.client_final_no_proof}"
+            + f"i={self._iter_count},{self._client_final_no_proof}"
         )
 
     @property
-    def client_signature(self) -> bytes:
+    def _client_signature(self) -> bytes:
         return _hmac(
-            self.stored_key, self.auth_message.encode("utf-8"), self._hash
+            self._stored_key, self._auth_message.encode("utf-8"), self._hash
         )
 
     @property
-    def client_proof(self) -> str:
-        return _to_base64(_xor(self.client_key, self.client_signature))
+    def _client_proof(self) -> str:
+        return _to_base64(_xor(self._client_key, self._client_signature))
 
     @property
-    def server_key(self) -> bytes:
+    def _server_key(self) -> bytes:
         return _hmac(self._salted_password, b"Server Key", self._hash)
 
     @property
-    def server_signature(self) -> str:
+    def _server_signature(self) -> str:
         server_signature = _hmac(
-            self.server_key, self.auth_message.encode("utf-8"), self._hash
+            self._server_key, self._auth_message.encode("utf-8"), self._hash
         )
         server_signature = b64encode(server_signature).decode("utf-8")
         return server_signature
 
     @property
-    def client_final_message(self) -> str:
-        client_final = self.client_final_no_proof + ",p=" + self.client_proof
+    def _client_final_message(self) -> str:
+        client_final = self._client_final_no_proof + ",p=" + self._client_proof
         return _to_base64(client_final)
 
 
