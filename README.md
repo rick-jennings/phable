@@ -130,5 +130,12 @@ TODO
 - Reconsider the use of singleton for Marker(), Remove(), and NA()
 - Consider using Pydantic v2 for Haystack Kind objects
 - Consider if there is a more clear type for data parameter to his_write()
-- Consider decoupling the scram code from client
-- Update kinds.py to reflect the removal of Time, Date and DateTime
+- Introduce Grid to Pandas support
+- Remove HTTP dependency inversion in scram module
+- Update some docstrings to commented strings
+- Change name of parser package to serializers?  Or change the name of parser to parsers?
+- Add additional help information in ScramAuthError
+- Redo some of the error messaging for parsing of scram messages
+- Make tests for Pandas dataframe
+- Can we map Uri directly to a Python datatype?
+- Update README
