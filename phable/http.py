@@ -8,7 +8,7 @@ from email.message import Message
 from typing import Any, Optional
 
 from phable.kinds import Grid
-from phable.parser.json import json_to_grid
+from phable.parsers.json import json_to_grid
 
 # -----------------------------------------------------------------------------
 # Module exceptions

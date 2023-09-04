@@ -5,7 +5,7 @@ from typing import Any
 from phable.auth.scram import ScramScheme
 from phable.http import get_headers, post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
-from phable.parser.json import grid_to_json
+from phable.parsers.json import grid_to_json
 
 # -----------------------------------------------------------------------------
 # Module exceptions

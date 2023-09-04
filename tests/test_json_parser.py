@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 import phable.kinds as kinds
-from phable.parser.json import (
+from phable.parsers.json import (
     IanaCityNotFoundError,
     _datetime_to_json,
     _haystack_to_iana_tz,

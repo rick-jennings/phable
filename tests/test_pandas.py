@@ -4,7 +4,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 from phable.kinds import Grid, Number, Ref, Uri
-from phable.parser.pandas import (
+from phable.parsers.pandas import (
     DataFrameColumnDisplayHasInvalidUnitError,
     HaystackHisGridUnitMismatchError,
     _is_his_grid,
