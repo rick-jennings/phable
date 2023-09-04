@@ -1,13 +1,4 @@
-import pytest
-
-from phable.auth.scram import (
-    ScramRespParsingError,
-    _from_base64,
-    _parse_first_call_result,
-    _parse_hello_call_result,
-    _to_base64,
-    _to_bytes,
-)
+from phable.auth.scram import _from_base64, _to_base64, _to_bytes
 
 # from phable.exceptions import NotFoundError
 

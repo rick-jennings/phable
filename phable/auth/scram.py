@@ -32,7 +32,7 @@ class ScramAuthError(Exception):
 
 
 @dataclass
-class ScramRespParsingError(Exception):
+class ScramServerResponseParsingError(Exception):
     help_msg: str
 
 
@@ -55,6 +55,7 @@ class ScramScheme:
         self._salt: str
         self._iter_count: int
         self._auth_token: str
+        self._c1_bare = _c1_bare(username)
 
     # -------------------------------------------------------------------------
     # Send HTTP messages following scram to get auth token
@@ -62,7 +63,6 @@ class ScramScheme:
     def get_auth_token(self) -> str:
         try:
             self._hello_call()
-            self._c1_bare = _c1_bare(self.username)
             self._first_call()
             self._final_call()
         except Exception:
@@ -83,7 +83,15 @@ class ScramScheme:
         }
         response = get_headers(self.uri + "/about", headers)
 
-        self._handshake_token, self._hash = _parse_hello_call_result(response)
+        try:
+            self._handshake_token, self._hash = _parse_hello_call_result(
+                response
+            )
+        except Exception:
+            raise ScramServerResponseParsingError(
+                "Unable to parse the server's response to the client's Hello"
+                " call message"
+            )
 
     def _first_call(self) -> None:
         """Defines and sends the "client-first-message" to the server and
@@ -96,9 +104,17 @@ class ScramScheme:
         }
         response = get_headers(self.uri + "/about", headers)
 
-        self._s_nonce, self._salt, self._iter_count = _parse_first_call_result(
-            response
-        )
+        try:
+            (
+                self._s_nonce,
+                self._salt,
+                self._iter_count,
+            ) = _parse_first_call_result(response)
+        except Exception:
+            raise ScramServerResponseParsingError(
+                "Unable to parse the server's response to the client's First"
+                " call message"
+            )
 
     def _final_call(self) -> None:
         """Defines and sends the "client-final-message" to the server and
@@ -122,7 +138,15 @@ class ScramScheme:
 
         response = get_headers(self.uri + "/about", headers)
 
-        self._auth_token, server_signature = _parse_final_call_result(response)
+        try:
+            self._auth_token, server_signature = _parse_final_call_result(
+                response
+            )
+        except Exception:
+            raise ScramServerResponseParsingError(
+                "Unable to parse the server's response to the client's Final"
+                " call message"
+            )
 
         if server_signature != self._server_signature:
             raise ScramServerSignatureNotEqualError(
@@ -207,26 +231,12 @@ def _parse_hello_call_result(
     exclude_msg = "handshakeToken="
     s = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
 
-    if s is None:
-        raise ScramRespParsingError(
-            (
-                "Handshake token not found in the 'WWW-Authenticate' header:"
-                + f"\n{auth_header}"
-            )
-        )
-
     start_index = len(exclude_msg)
     handshake_token = s.group(0)[start_index:]
 
     # find the hash
     exclude_msg = "hash="
     s = re.search(f"({exclude_msg})(SHA-256)", auth_header)
-
-    if s is None:
-        raise ScramRespParsingError(
-            "Hash method not found in the 'WWW-Authenticate' header:"
-            f"\n{auth_header}"
-        )
 
     start_index = len(exclude_msg)
     s_new = s.group(0)[start_index:]
@@ -250,34 +260,11 @@ def _parse_first_call_result(
     exclude_msg = "data="
     scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
 
-    if scram_data is None:
-        raise ScramRespParsingError(
-            "Scram data not found in the 'WWW-Authenticate' header:"
-            f"\n{auth_header}"
-        )
-
     start_index = len(exclude_msg)
     decoded_scram_data = _from_base64(scram_data.group(0)[start_index:])
     s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(
         ","
     )
-
-    if "r=" not in s_nonce:
-        raise ScramRespParsingError(
-            "Server nonce not found in the 'WWW-Authenticate' header:"
-            f"\n{auth_header}"
-        )
-    elif "s=" not in salt:
-        raise ScramRespParsingError(
-            f"Salt not found in the 'WWW-Authenticate' header:\n{auth_header}"
-        )
-    elif "i=" not in iteration_count:
-        raise ScramRespParsingError(
-            (
-                "Iteration count not found in the 'WWW-Authenticate' header:"
-                f"\n{auth_header}"
-            )
-        )
 
     return (
         s_nonce.replace("r=", "", 1),
@@ -297,12 +284,6 @@ def _parse_final_call_result(
 
     exclude_msg1 = "authToken="
     s1 = re.search(f"({exclude_msg1})[^,]+", auth_header)
-
-    if s1 is None:
-        raise ScramRespParsingError(
-            "Auth token not found in the 'WWW-Authenticate' header:"
-            f"\n{auth_header}"
-        )
 
     start_index = len(exclude_msg1)
     auth_token = s1.group(0)[start_index:]
