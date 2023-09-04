@@ -3,7 +3,7 @@ from datetime import date
 from typing import Any
 
 from phable.auth.scram import ScramScheme
-from phable.http import get_headers, post
+from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parsers.json import grid_to_json
 
@@ -63,9 +63,7 @@ class Client:
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(
-            get_headers, self.uri, self.username, self._password
-        )
+        scram = ScramScheme(self.uri, self.username, self._password)
         self._auth_token = scram.get_auth_token()
         del scram
 

@@ -12,16 +12,9 @@ from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
 from functools import cached_property
 from hashlib import pbkdf2_hmac
-from typing import Callable
 from uuid import uuid4
 
-# -----------------------------------------------------------------------------
-# Use dependency inversion so we don't need to define the HTTP client code here
-# -----------------------------------------------------------------------------
-HttpGetHeaders = Callable[[str, dict[str, str]], dict[str, str]]
-# Note: We expect parameters for HttpGetHeaders to include uri as a str and
-# headers as a dict.  Headers are expected to be returned as a dict.
-
+from phable.http import get_headers
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -49,10 +42,7 @@ class ScramRespParsingError(Exception):
 
 
 class ScramScheme:
-    def __init__(
-        self, http_get: HttpGetHeaders, uri: str, username: str, password: str
-    ):
-        self.http_get: HttpGetHeaders = http_get
+    def __init__(self, uri: str, username: str, password: str):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
@@ -91,7 +81,7 @@ class ScramScheme:
         headers = {
             "Authorization": f"HELLO username={_to_base64(self.username)}"
         }
-        response = self.http_get(self.uri + "/about", headers)
+        response = get_headers(self.uri + "/about", headers)
 
         self._handshake_token, self._hash = _parse_hello_call_result(response)
 
@@ -104,7 +94,7 @@ class ScramScheme:
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
             f"hash={self._hash}, data={_to_base64(gs2_header+self._c1_bare)}"
         }
-        response = self.http_get(self.uri + "/about", headers)
+        response = get_headers(self.uri + "/about", headers)
 
         self._s_nonce, self._salt, self._iter_count = _parse_first_call_result(
             response
@@ -130,7 +120,7 @@ class ScramScheme:
             )
         }
 
-        response = self.http_get(self.uri + "/about", headers)
+        response = get_headers(self.uri + "/about", headers)
 
         self._auth_token, server_signature = _parse_final_call_result(response)
 
