@@ -2,10 +2,13 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
+import pandas as pd
+
 from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parsers.json import grid_to_json
+from phable.parsers.pandas import to_pandas
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -13,7 +16,12 @@ from phable.parsers.json import grid_to_json
 
 
 @dataclass
-class HaystackCloseOpRespError(Exception):
+class HaystackCloseOpServerResponseError(Exception):
+    help_msg: str
+
+
+@dataclass
+class HaystackHisWriteOpServerResponseError(Exception):
     help_msg: str
 
 
@@ -42,12 +50,7 @@ class Client:
     Haystack ops.
     """
 
-    def __init__(
-        self,
-        uri: str,
-        username: str,
-        password: str,
-    ):
+    def __init__(self, uri: str, username: str, password: str):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
@@ -82,23 +85,21 @@ class Client:
     # standard Haystack ops
     # -------------------------------------------------------------------------
 
-    def about(self) -> dict[str, Any]:
+    def about(self) -> pd.Series:
         """Query basic information about the server."""
-        return self.call("about").rows[0]
+        return pd.Series(self.call("about").rows[0])
 
-    def close(self) -> Grid:
+    def close(self) -> None:
         """Close the connection to the Haystack server."""
         call_result = self.call("close")
 
         if call_result.cols[0]["name"] != "empty":
-            raise HaystackCloseOpRespError(
+            raise HaystackCloseOpServerResponseError(
                 "Expected an empty grid response and instead received:"
                 f"\n{call_result}"
             )
 
-        return call_result
-
-    def read(self, filter: str, limit: int | None = None) -> Grid:
+    def read(self, filter: str, limit: int | None = None) -> pd.DataFrame:
         """Read a record that matches a given filter.  Apply an optional
         limit.
         """
@@ -108,9 +109,9 @@ class Client:
             data_row = {"filter": filter, "limit": limit}
 
         data = _rows_to_grid_json(data_row)
-        return self.call("read", data)
+        return to_pandas(self.call("read", data))
 
-    def read_by_id(self, id: Ref) -> dict[str, Any]:
+    def read_by_id(self, id: Ref) -> pd.Series:
         """Read a record by its id.  Raises UnknownRecError if the rec cannot
         be found.
         """
@@ -125,9 +126,9 @@ class Client:
                 f"Unable to locate id {id.val} on the server."
             )
 
-        return response.rows[0]
+        return pd.Series(response.rows[0])
 
-    def read_by_ids(self, ids: list[Ref]) -> Grid:
+    def read_by_ids(self, ids: list[Ref]) -> pd.DataFrame:
         """Read records by their ids.  Raises UnknownRecError if any of the
         recs cannot be found.
         """
@@ -147,11 +148,11 @@ class Client:
                     "Unable to locate one or more ids on the server."
                 )
 
-        return response
+        return to_pandas(response)
 
     def his_read(
         self, ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
-    ) -> Grid:
+    ) -> pd.DataFrame:
         """Read history data on selected records for the given range.
 
         Ranges are inclusive of start timestamp and exclusive of end
@@ -182,9 +183,9 @@ class Client:
         elif isinstance(ids, list):
             data = _to_batch_his_read_json(ids, range)
 
-        return self.call("hisRead", data)
+        return to_pandas(self.call("hisRead", data))
 
-    def his_write(self, his_grid: Grid) -> Grid:
+    def his_write(self, his_grid: Grid) -> None:
         """Write history data to records on the Haystack server.
 
         A Haystack Grid object defined in phable.kinds will need to be
@@ -195,17 +196,22 @@ class Client:
         Note:  Future Phable versions may apply a breaking change to this func
         to make it easier.
         """
-        return self.call("hisWrite", grid_to_json(his_grid))
+        response_grid = self.call("hisWrite", grid_to_json(his_grid))
+        if "err" in response_grid.meta.keys():
+            raise HaystackHisWriteOpServerResponseError(
+                "The server reported an error in response to the client's "
+                "HisWrite op"
+            )
 
     # -------------------------------------------------------------------------
     # other ops
     # -------------------------------------------------------------------------
 
-    def eval(self, expr: str) -> Grid:
+    def eval(self, expr: str) -> pd.DataFrame:
         """Evaluates an expression."""
         data = _rows_to_grid_json({"expr": expr})
 
-        return self.call("eval", data)
+        return to_pandas(self.call("eval", data))
 
     # -------------------------------------------------------------------------
     # base to Haystack and all other ops

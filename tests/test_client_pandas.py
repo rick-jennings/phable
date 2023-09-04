@@ -82,7 +82,7 @@ def test_about_op(hc: Client):
 def test_read_site(hc: Client):
     with hc:
         grid = hc.read('site and dis=="Carytown"')
-    assert grid.rows[0]["geoState"] == "VA"
+    assert grid.iloc[0]["geoState"] == "VA"
 
 
 def test_read_point(hc: Client):
@@ -91,13 +91,13 @@ def test_read_point(hc: Client):
             """point and siteRef->dis=="Carytown" and """
             """equipRef->siteMeter and power"""
         )
-    assert isinstance(grid.rows[0]["power"], Marker)
+    assert isinstance(grid.iloc[0]["power"], Marker)
 
 
 def test_read_by_id(hc: Client):
     # Test a valid Ref
     with hc:
-        id1 = hc.read("point and power and equipRef->siteMeter").rows[0]["id"]
+        id1 = hc.read("point and power and equipRef->siteMeter").iloc[0]["id"]
         response = hc.read_by_id(id1)
     assert response["navName"] == "kW"
 
@@ -112,13 +112,13 @@ def test_read_by_ids(hc: Client):
     # Test valid Refs
     with hc:
         ids = hc.read("point and power and equipRef->siteMeter")
-        id1 = ids.rows[0]["id"]
-        id2 = ids.rows[1]["id"]
+        id1 = ids.iloc[0]["id"]
+        id2 = ids.iloc[1]["id"]
 
         response = hc.read_by_ids([id1, id2])
 
-    for row in response.rows:
-        assert row["tz"] == "New_York"
+    assert response.iloc[0]["tz"] == "New_York"
+    assert response.iloc[1]["tz"] == "New_York"
 
     # Test invalid Refs
     with pytest.raises(HaystackReadOpUnknownRecError):
@@ -145,19 +145,18 @@ def test_his_read_with_date_range(hc: Client):
             """point and siteRef->dis=="Carytown" and """
             """equipRef->siteMeter and power"""
         )
-        point_ref = point_grid.rows[0]["id"]
+        point_ref = point_grid.iloc[0]["id"]
 
         # get the his using Date as the range
         start = date.today() - timedelta(days=7)
-        his_grid = hc.his_read(point_ref, start)
+        df = hc.his_read(point_ref, start)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == start
-    assert his_grid.rows[-1][cols[0]].date() == start
+    cols = df.columns
+    assert cols[0].split(" ")[-1] == "kW"
+    assert df.iloc[0][cols[0]] >= 0
+    assert df.index[0].to_pydatetime().date() == start
+    assert df.index[-1].to_pydatetime().date() == start
 
 
 def test_his_read_with_datetime_range(hc: Client):
@@ -167,7 +166,7 @@ def test_his_read_with_datetime_range(hc: Client):
             """point and siteRef->dis=="Carytown" and """
             """equipRef->siteMeter and power"""
         )
-        point_ref = point_grid.rows[0]["id"]
+        point_ref = point_grid.iloc[0]["id"]
 
         # get the his using Date as the range
         datetime_range = DateTimeRange(
@@ -175,15 +174,14 @@ def test_his_read_with_datetime_range(hc: Client):
                 2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
             )
         )
-        his_grid = hc.his_read(point_ref, datetime_range)
+        df = hc.his_read(point_ref, datetime_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == datetime_range.start.date()
-    assert his_grid.rows[-1][cols[0]].date() == date.today()
+    cols = df.columns
+    assert df.columns[0].split(" ")[-1] == "kW"
+    assert df.iloc[0][cols[0]] >= 0
+    assert df.index[0].to_pydatetime().date() == datetime_range.start.date()
+    assert df.index[-1].to_pydatetime().date() == date.today()
 
 
 def test_his_read_with_date_slice(hc: Client):
@@ -193,21 +191,20 @@ def test_his_read_with_date_slice(hc: Client):
             """point and siteRef->dis=="Carytown" and """
             """equipRef->siteMeter and power"""
         )
-        point_ref = point_grid.rows[0]["id"]
+        point_ref = point_grid.iloc[0]["id"]
 
         # get the his using Date as the range
         start = date.today() - timedelta(days=7)
         end = date.today()
         date_range = DateRange(start, end)
-        his_grid = hc.his_read(point_ref, date_range)
+        df = hc.his_read(point_ref, date_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == start
-    assert his_grid.rows[-1][cols[0]].date() == end
+    cols = df.columns
+    assert df.columns[0].split(" ")[-1] == "kW"
+    assert df.iloc[0][cols[0]] >= 0
+    assert df.index[0].to_pydatetime().date() == start
+    assert df.index[-1].to_pydatetime().date() == end
 
 
 def test_his_read_with_datetime_slice(hc: Client):
@@ -217,7 +214,7 @@ def test_his_read_with_datetime_slice(hc: Client):
             """point and siteRef->dis=="Carytown" and """
             """equipRef->siteMeter and power"""
         )
-        point_ref = point_grid.rows[0]["id"]
+        point_ref = point_grid.iloc[0]["id"]
 
         # get the his using Date as the range
         start = datetime(
@@ -227,36 +224,32 @@ def test_his_read_with_datetime_slice(hc: Client):
 
         datetime_range = DateTimeRange(start, end)
 
-        his_grid = hc.his_read(point_ref, datetime_range)
+        df = hc.his_read(point_ref, datetime_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
-    assert his_grid.rows[0][cols[0]].date() == start.date()
-    assert his_grid.rows[-1][cols[0]].date() == end.date()
+    cols = df.columns
+    assert df.columns[0].split(" ")[-1] == "kW"
+    assert df.iloc[0][cols[0]] >= 0
+    assert df.index[0].to_pydatetime().date() == start.date()
+    assert df.index[-1].to_pydatetime().date() == end.date()
 
 
 def test_batch_his_read(hc: Client):
     with hc:
         ids = hc.read("point and power and equipRef->siteMeter")
-        id1 = ids.rows[0]["id"]
-        id2 = ids.rows[1]["id"]
-        id3 = ids.rows[2]["id"]
-        id4 = ids.rows[3]["id"]
+        id1 = ids.iloc[0]["id"]
+        id2 = ids.iloc[1]["id"]
+        id3 = ids.iloc[2]["id"]
+        id4 = ids.iloc[3]["id"]
 
         ids = [id1, id2, id3, id4]
-        his_grid = hc.his_read(ids, date.today())
+        df = hc.his_read(ids, date.today())
 
-    cols = [col["name"] for col in his_grid.cols]
-    assert isinstance(his_grid.rows[0][cols[0]], datetime)
-    assert isinstance(his_grid.rows[0][cols[1]], Number)
-    assert his_grid.rows[0][cols[1]].unit == "kW"
-    assert his_grid.rows[0][cols[1]].val >= 0
-    assert isinstance(his_grid.rows[0][cols[4]], Number)
-    assert his_grid.rows[0][cols[4]].unit == "kW"
-    assert his_grid.rows[0][cols[4]].val >= 0
+    cols = df.columns
+    assert cols[0].split(" ")[-1] == "kW"
+    assert cols[3].split(" ")[-1] == "kW"
+    assert df.iloc[0][cols[0]] >= 0
+    assert df.iloc[0][cols[3]] >= 0
 
 
 def test_single_his_write(hc: Client):
@@ -266,7 +259,7 @@ def test_single_his_write(hc: Client):
             diff(null, {pytest, point, his, tz: "New_York",
                         kind: "Number"}, {add}).commit
         """
-        test_pt_id = hc.eval(axon_expr).rows[0]["id"]
+        test_pt_id = hc.eval(axon_expr).iloc[0]["id"]
 
         ts_now = datetime.now(ZoneInfo("America/New_York"))
 
@@ -286,17 +279,14 @@ def test_single_his_write(hc: Client):
         his_grid = Grid(meta, cols, rows)
 
         # write the his data to the test pt
-        response_grid = hc.his_write(his_grid)
-
-    assert "err" not in response_grid.meta.keys()
+        hc.his_write(his_grid)
 
     with hc:
         range = date.today()
+        df = hc.his_read(test_pt_id, range)
 
-        response_grid = hc.his_read(test_pt_id, range)
-
-    assert response_grid.rows[0]["val"] == 72.19999694824219
-    assert response_grid.rows[1]["val"] == 76.30000305175781
+    assert df.iloc[0][df.columns[0]] == 72.19999694824219
+    assert df.iloc[1][df.columns[0]] == 76.30000305175781
 
 
 def test_batch_his_write(hc: Client):
@@ -306,8 +296,8 @@ def test_batch_his_write(hc: Client):
             diff(null, {pytest, point, his, tz: "New_York",
                         kind: "Number"}, {add}).commit
         """
-        test_pt_id1 = hc.eval(axon_expr).rows[0]["id"]
-        test_pt_id2 = hc.eval(axon_expr).rows[0]["id"]
+        test_pt_id1 = hc.eval(axon_expr).iloc[0]["id"]
+        test_pt_id2 = hc.eval(axon_expr).iloc[0]["id"]
 
         ts_now = datetime.now(ZoneInfo("America/New_York"))
 
@@ -329,19 +319,18 @@ def test_batch_his_write(hc: Client):
         his_grid = Grid(meta, cols, rows)
 
         # write the his data to the test pt
-        response_grid = hc.his_write(his_grid)
-
-    assert "err" not in response_grid.meta.keys()
+        hc.his_write(his_grid)
 
     with hc:
         range = date.today()
 
-        response_grid = hc.his_read([test_pt_id1, test_pt_id2], range)
+        df = hc.his_read([test_pt_id1, test_pt_id2], range)
 
-    assert response_grid.rows[0]["v0"] == 72.19999694824219
-    assert response_grid.rows[1]["v0"] == 76.30000305175781
-    assert response_grid.rows[0]["v1"] == 76.30000305175781
-    assert response_grid.rows[1]["v1"] == 72.19999694824219
+    columns = df.columns
+    assert df.iloc[0][columns[0]] == 72.19999694824219
+    assert df.iloc[1][columns[0]] == 76.30000305175781
+    assert df.iloc[0][columns[1]] == 76.30000305175781
+    assert df.iloc[1][columns[1]] == 72.19999694824219
 
     # # delete the point rec from the server
     # rec = f"readById(@{test_pt_id1.val})"
