@@ -16,12 +16,8 @@ Basic Usage Examples
 --------------------
 ```python
 from datetime import date
-from typing import Any
-
-import pandas as pd
 
 from phable.client import Client
-from phable.kinds import Grid
 
 # define these settings specific to your use case
 # Reminder:  Properly secure your login credentials!!!
@@ -30,35 +26,28 @@ username = "su"
 password = "su"
 
 
-# define convenience func for converting Haystack Grid to Pandas DataFrame
-def to_pandas(grid: Grid) -> pd.DataFrame:
-    return pd.DataFrame(data=grid.rows).rename(columns=grid.col_rename_map)
-
-
 # open a session, execute queries, and simply close
 # session with the context manager
 with Client(uri, username, password) as ph:
     # fetch info about the Haystack server
-    about_example: dict[str, Any] = ph.about()
+    about_example = ph.about()
 
     # fetch a rec
-    read_example: Grid = ph.read("point and power and equipRef->siteMeter")
+    read_example = ph.read("point and power and equipRef->siteMeter")
 
     # find the ids for two recs in read_example
-    rec_id1 = read_example.rows[0]["id"]
-    rec_id2 = read_example.rows[1]["id"]
+    rec_id1 = read_example.iloc[0]["id"]
+    rec_id2 = read_example.iloc[1]["id"]
 
     # fetch recs using Ref IDs
-    read_by_id_example: dict[str, Any] = ph.read_by_id(rec_id1)
-    read_by_ids_example: Grid = ph.read_by_ids([rec_id1, rec_id2])
+    read_by_id_example = ph.read_by_id(rec_id1)
+    read_by_ids_example = ph.read_by_ids([rec_id1, rec_id2])
 
     # single hisRead
-    single_his_read_example: Grid = ph.his_read(
-        rec_id1, date.today().isoformat()
-    )
+    single_his_read_example = ph.his_read(rec_id1, date.today().isoformat())
 
     # batch hisRead
-    batch_his_read_example: Grid = ph.his_read(
+    batch_his_read_example = ph.his_read(
         [rec_id1, rec_id2], date.today().isoformat()
     )
 
@@ -76,16 +65,10 @@ within Pandas.
 """
 
 print(f"Results from about example:\n{about_example}\n")
-print(f"Results from read example:\n{to_pandas(read_example)}\n")
+print(f"Results from read example:\n{read_example}\n")
 print(f"Results from read by id example:\n{read_by_id_example}\n")
-print(
-    "Results from single hisRead example:"
-    f"\n{to_pandas(single_his_read_example)}\n"
-)
-print(
-    "Results from batch hisRead example:"
-    f"\n{to_pandas(batch_his_read_example)}\n"
-)
+print("Results from single hisRead example:" f"\n{single_his_read_example}\n")
+print("Results from batch hisRead example:" f"\n{batch_his_read_example}\n")
 ```
 
 Review the test code for more examples.  Here is a link to an example on how to perform a hisWrite op on a single data point:
@@ -95,6 +78,7 @@ Async Usage Example
 -------------------
 ```python
 import asyncio
+
 from phable.client import Client
 
 
@@ -112,8 +96,9 @@ async def main() -> None:
     read1, read2 = await asyncio.gather(read1, read2)
     ph.close()
 
-    print(read1.rows)
-    print(read2.rows)
+    print(read1)
+    print(read2)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
@@ -129,7 +114,5 @@ TODO
 - Add better validation to Uri kind
 - Reconsider the use of singleton for Marker(), Remove(), and NA()
 - Consider using Pydantic v2 for Haystack Kind objects
-- Consider if there is a more clear type for data parameter to his_write()
 - Update some docstrings to commented strings
 - Can we map Uri directly to a Python datatype?
-- Update README
