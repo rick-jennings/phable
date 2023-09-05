@@ -4,7 +4,7 @@ Phable is a simple, modern Python toolkit for basic client connectivity to a [Pr
 
 Installation
 ------------
-Phable requires Python 3.11 or higher and has no other software dependencies.  Phable is in early development and it is recommended to stay on the latest available version.
+Phable requires Python 3.11 or higher and has no other software dependencies, except for the Pandas library.  Phable is in early development and it is recommended to stay on the latest available version.
 
 Download Phable from Pypi:
 
