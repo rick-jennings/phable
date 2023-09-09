@@ -31,12 +31,12 @@ class HaystackReadOpUnknownRecError(Exception):
 
 
 @dataclass
-class HaystackErrorGridRespError(Exception):
+class HaystackErrorGridResponseError(Exception):
     help_msg: str
 
 
 @dataclass
-class HaystackIncompleteDataRespError(Exception):
+class HaystackIncompleteDataResponseError(Exception):
     help_msg: str
 
 
@@ -246,14 +246,14 @@ class Client:
 def _validate_response_meta(meta: dict[str, str]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
-        raise HaystackErrorGridRespError(
+        raise HaystackErrorGridResponseError(
             "The server returned an error grid with this message:\n"
             + error_dis
         )
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
-        raise HaystackIncompleteDataRespError(
+        raise HaystackIncompleteDataResponseError(
             "Incomplete data was returned for these reasons:"
             f"\n{incomplete_dis}"
         )

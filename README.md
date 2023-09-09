@@ -116,4 +116,3 @@ TODO
 - Consider using Pydantic v2 for Haystack Kind objects
 - Update some docstrings to commented strings
 - Can we map Uri directly to a Python datatype?
-- Update client module exceptions with 'resp'
