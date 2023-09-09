@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "phable"
-version = "0.1.10b"
+version = "0.1.10rc2"
 description = ""
 authors = ["Rick Jennings <rjennings055@gmail.com>"]
 readme = "README.md"
@@ -9,6 +9,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.11"
+pandas = "^2.1.0"
 
 
 [tool.poetry.group.dev.dependencies]

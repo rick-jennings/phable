@@ -136,7 +136,11 @@ def _parse_kinds(d: dict[str, Any]):
 
 def _parse_layer(new_d: dict[str, Any]) -> None:
     for x in new_d.keys():
-        if isinstance(new_d[x], dict):
+        if isinstance(new_d[x], int):
+            new_d[x] = Number(new_d[x], None)
+        elif isinstance(new_d[x], float):
+            new_d[x] = Number(new_d[x], None)
+        elif isinstance(new_d[x], dict):
             if "_kind" in new_d[x].keys():
                 new_d[x] = _to_kind(new_d[x])
 

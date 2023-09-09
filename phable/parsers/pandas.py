@@ -1,6 +1,6 @@
 import pandas as pd
 
-from phable.kinds import Grid, Number
+from phable.kinds import Grid
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -63,8 +63,6 @@ def _his_grid_to_pandas(his_grid: Grid) -> pd.DataFrame:
             col_name_map[col["name"]] = ref.dis
 
     # in each of the data rows replace Number with just its val
-    # TODO: figure out why if we hiswrite a Number without units the his_read
-    # returns a non-Number data type
     col_unit_map = {}
     new_grid_rows = []
     for row in his_grid.rows:
@@ -73,21 +71,18 @@ def _his_grid_to_pandas(his_grid: Grid) -> pd.DataFrame:
             if col_name == "ts":
                 new_row[col_name] = row[col_name]
             else:
-                if isinstance(row[col_name], Number):
-                    new_row[col_name] = row[col_name].val
-                    # new_row[col_name] = row[col_name]
-                    if col_name not in col_unit_map.keys():
-                        col_unit_map[col_name] = row[col_name].unit
-                    else:
-                        if row[col_name].unit != col_unit_map[col_name]:
-                            raise HaystackHisGridUnitMismatchError(
-                                f"The column {col_name} does not have the same"
-                                " unit in each of its his_grid rows.  This is "
-                                "required to convert a his_grid to a Pandas "
-                                "DataFrame."
-                            )
+                new_row[col_name] = row[col_name].val
+                if col_name not in col_unit_map.keys():
+                    col_unit_map[col_name] = row[col_name].unit
                 else:
-                    new_row[col_name] = row[col_name]
+                    if row[col_name].unit != col_unit_map[col_name]:
+                        raise HaystackHisGridUnitMismatchError(
+                            f"The column {col_name} does not have the same"
+                            " unit in each of its his_grid rows.  This is "
+                            "required to convert a his_grid to a Pandas "
+                            "DataFrame."
+                        )
+
         new_grid_rows.append(new_row)
 
     # verify that the col dis names have the expected units
