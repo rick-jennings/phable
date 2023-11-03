@@ -107,12 +107,3 @@ if __name__ == "__main__":
 Breaking Changes
 ----------------
 Phable is a new open-source project.  The early focus of this project is to find the best practices for using modern Python with a Haystack server.  This may lead to breaking changes in newer Phable versions.  However, in the future we do plan to have more stable releases and updates of Phable.
-
-TODO
-----
-- Reevaluate wherever # type: ignore is applied
-- Add better validation to Uri kind
-- Reconsider the use of singleton for Marker(), Remove(), and NA()
-- Consider using Pydantic v2 for Haystack Kind objects
-- Update some docstrings to commented strings
-- Can we map Uri directly to a Python datatype?

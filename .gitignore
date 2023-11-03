@@ -6,3 +6,4 @@ dist/
 *.csv
 read_me.py
 poetry.lock
+todo.md
