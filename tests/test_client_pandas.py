@@ -13,7 +13,7 @@ from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 
 @pytest.fixture
 def hc() -> Client:
-    uri = "http://localhost:8080/api/demo1"
+    uri = "http://localhost:8080/api/demo"
     username = "su"
     password = "su"
 

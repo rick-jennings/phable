@@ -5,7 +5,6 @@ import pytest
 
 from phable.kinds import Grid, Number, Ref, Uri
 from phable.parsers.pandas import (
-    DataFrameColumnDisplayHasInvalidUnitError,
     HaystackHisGridUnitMismatchError,
     _is_his_grid,
     to_pandas,
@@ -71,67 +70,6 @@ def test_to_pandas_df_attributes() -> None:
 
     assert df.attrs["meta"] != meta
     assert df.attrs["cols"] != cols
-
-
-def test_his_grid_dataframe_column_dis_has_invalid_unit_error() -> None:
-    # invalid case 1
-    with pytest.raises(DataFrameColumnDisplayHasInvalidUnitError):
-        ts_now = datetime.now(ZoneInfo("America/New_York"))
-        meta = {"ver": "3.0", "id": Ref("1234", "foo")}
-        cols = [{"name": "ts"}, {"name": "val"}]
-        rows = [
-            {
-                "ts": ts_now - timedelta(seconds=30),
-                "val": Number(72.2, "kW"),
-            },
-            {
-                "ts": ts_now,
-                "val": Number(76.3, "kW"),
-            },
-        ]
-
-        his_grid = Grid(meta, cols, rows)
-        to_pandas(his_grid)
-
-    # invalid case 2
-    with pytest.raises(DataFrameColumnDisplayHasInvalidUnitError):
-        ts_now = datetime.now(ZoneInfo("America/New_York"))
-        meta = {"ver": "3.0"}
-        cols = [
-            {"name": "ts"},
-            {"name": "v0", "meta": {"id": Ref("1234", "foo1 kW")}},
-            {"name": "v1", "meta": {"id": Ref("2345", "foo2 W")}},
-        ]
-        rows = [
-            {
-                "ts": ts_now - timedelta(seconds=30),
-                "v0": Number(72.2, "kW"),
-                "v1": Number(76.3, "kW"),
-            },
-            {"ts": ts_now, "v0": Number(76.3, "kW"), "v1": Number(72.2, "kW")},
-        ]
-
-        his_grid = Grid(meta, cols, rows)
-        to_pandas(his_grid)
-
-    # valid case should not throw the error
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0", "id": Ref("1234", "foo")}
-    cols = [{"name": "ts"}, {"name": "val"}]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "val": Number(72.2),
-        },
-        {
-            "ts": ts_now,
-            "val": Number(76.3),
-        },
-    ]
-
-    his_grid = to_pandas(Grid(meta, cols, rows))
-    # pick an arbitary test
-    assert his_grid.loc[ts_now]["foo"] == 76.3
 
 
 def test_haystack_his_grid_with_single_col_unit_mismatch_error() -> None:

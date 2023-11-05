@@ -1,6 +1,6 @@
 import pandas as pd
 
-from phable.kinds import Grid
+from phable.kinds import Grid, Number
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -8,10 +8,6 @@ from phable.kinds import Grid
 
 
 class HaystackHisGridUnitMismatchError(Exception):
-    help_msg: str
-
-
-class DataFrameColumnDisplayHasInvalidUnitError(Exception):
     help_msg: str
 
 
@@ -70,7 +66,7 @@ def _his_grid_to_pandas(his_grid: Grid) -> pd.DataFrame:
         for col_name in row.keys():
             if col_name == "ts":
                 new_row[col_name] = row[col_name]
-            else:
+            elif isinstance(row[col_name], Number):
                 new_row[col_name] = row[col_name].val
                 if col_name not in col_unit_map.keys():
                     col_unit_map[col_name] = row[col_name].unit
@@ -82,21 +78,10 @@ def _his_grid_to_pandas(his_grid: Grid) -> pd.DataFrame:
                             "required to convert a his_grid to a Pandas "
                             "DataFrame."
                         )
+            else:
+                new_row[col_name] = row[col_name]
 
         new_grid_rows.append(new_row)
-
-    # verify that the col dis names have the expected units
-    for col_name in col_unit_map.keys():
-        if col_unit_map[col_name] is None:
-            continue
-        elif col_unit_map[col_name] != col_name_map[col_name].split(" ")[-1]:
-            raise DataFrameColumnDisplayHasInvalidUnitError(
-                "The column display name must specify the unit for the data"
-                " values in the rows that it represents, unless the values "
-                "have no units.  This must be such that splitting the column"
-                " display name by ' ' and fetching the value at the last index"
-                " of the returned list results in the expected unit."
-            )
 
     df = pd.DataFrame(data=new_grid_rows)
     df = df.rename(columns=col_name_map)
