@@ -7,7 +7,18 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 
 def json_to_grid(d: dict[str, Any]) -> Grid:

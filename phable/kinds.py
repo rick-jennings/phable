@@ -31,6 +31,12 @@ class Grid:
     def __str__(self):
         return "Haystack Grid"
 
+    def is_his_grid(self):
+        if self.cols[0]["name"] == "ts":
+            return True
+        else:
+            return False
+
 
 @dataclass(frozen=True, slots=True)
 class Number:
@@ -133,6 +139,9 @@ class Symbol:
 # -----------------------------------------------------------------------------
 # Additional kinds not supported by Project Haystack
 # -----------------------------------------------------------------------------
+
+
+# TODO: introduce generic Range which is DateRange | DateTimeRange | Date?
 
 
 @dataclass(frozen=True, slots=True)

@@ -8,7 +8,7 @@ from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parsers.json import grid_to_json
-from phable.parsers.pandas import to_pandas
+from phable.parsers.pandas import grid_to_pandas, his_grid_to_pandas
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -85,6 +85,7 @@ class Client:
     # standard Haystack ops
     # -------------------------------------------------------------------------
 
+    # TODO: Should we just keep this as a simple dictionary?
     def about(self) -> pd.Series:
         """Query basic information about the server."""
         return pd.Series(self.call("about").rows[0])
@@ -109,9 +110,9 @@ class Client:
             data_row = {"filter": filter, "limit": limit}
 
         data = _rows_to_grid_json(data_row)
-        return to_pandas(self.call("read", data))
+        return grid_to_pandas(self.call("read", data))
 
-    def read_by_id(self, id: Ref) -> pd.Series:
+    def read_by_id(self, id: Ref) -> pd.DataFrame:
         """Read a record by its id.  Raises UnknownRecError if the rec cannot
         be found.
         """
@@ -126,7 +127,7 @@ class Client:
                 f"Unable to locate id {id.val} on the server."
             )
 
-        return pd.Series(response.rows[0])
+        return pd.DataFrame(response.rows)
 
     def read_by_ids(self, ids: list[Ref]) -> pd.DataFrame:
         """Read records by their ids.  Raises UnknownRecError if any of the
@@ -148,10 +149,12 @@ class Client:
                     "Unable to locate one or more ids on the server."
                 )
 
-        return to_pandas(response)
+        return grid_to_pandas(response)
 
     def his_read(
-        self, ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
+        self,
+        pt_data: pd.DataFrame,
+        range: date | DateRange | DateTimeRange,
     ) -> pd.DataFrame:
         """Read history data on selected records for the given range.
 
@@ -168,8 +171,6 @@ class Client:
         1.)  https://project-haystack.org/doc/docHaystack/Ops#hisRead
         2.)  https://project-haystack.org/doc/docHaystack/Zinc
         """
-        if isinstance(ids, list):
-            ids = ids.copy()
 
         # convert range to Haystack defined string
         if isinstance(range, date):
@@ -178,12 +179,18 @@ class Client:
             range = str(range)
 
         # structure data for HTTP request
-        if isinstance(ids, Ref):
-            data = _to_single_his_read_json(ids, range)
-        elif isinstance(ids, list):
+        ids = pt_data["id"].to_list()
+        num_pts = len(ids)
+        if num_pts == 0:
+            raise Exception
+        elif num_pts == 1:
+            data = _to_single_his_read_json(ids[0], range)
+        else:
             data = _to_batch_his_read_json(ids, range)
 
-        return to_pandas(self.call("hisRead", data))
+        his_grid = self.call("hisRead", data)
+
+        return his_grid_to_pandas(his_grid, pt_data)
 
     def his_write(self, his_grid: Grid) -> None:
         """Write history data to records on the Haystack server.
@@ -211,7 +218,13 @@ class Client:
         """Evaluates an expression."""
         data = _rows_to_grid_json({"expr": expr})
 
-        return to_pandas(self.call("eval", data))
+        grid = self.call("eval", data)
+
+        if grid.is_his_grid():
+            pt_data = _get_pt_data_from_his_grid(grid)
+            return his_grid_to_pandas(grid, pt_data)
+        else:
+            return grid_to_pandas(grid)
 
     # -------------------------------------------------------------------------
     # base to Haystack and all other ops
@@ -241,6 +254,23 @@ class Client:
 # -----------------------------------------------------------------------------
 # Misc support functions for Client()
 # -----------------------------------------------------------------------------
+
+
+def _get_pt_data_from_his_grid(his_grid: Grid) -> pd.DataFrame:
+    pt_data = []
+    for col in his_grid.cols:
+        pt_meta = {}
+        if col["name"] == "ts":
+            # TODO: check the timezone matches the other cols?
+            continue
+        else:
+            pt_meta["id"] = col["meta"]["id"]
+            pt_meta["kind"] = col["meta"]["kind"]
+            if pt_meta["kind"] == "Number":
+                pt_meta["unit"] = col["meta"]["unit"]
+
+        pt_data.append(pt_meta)
+    return pd.DataFrame(pt_data)
 
 
 def _validate_response_meta(meta: dict[str, str]):
