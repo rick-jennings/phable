@@ -2,13 +2,10 @@ from dataclasses import dataclass
 from datetime import date
 from typing import Any
 
-import pandas as pd
-
 from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
-from phable.parsers.json import grid_to_json
-from phable.parsers.pandas import grid_to_pandas, his_grid_to_pandas
+from phable.parsers.json import grid_to_json, json_to_grid
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -85,22 +82,21 @@ class Client:
     # standard Haystack ops
     # -------------------------------------------------------------------------
 
-    # TODO: Should we just keep this as a simple dictionary?
-    def about(self) -> pd.Series:
+    def about(self) -> dict[str, Any]:
         """Query basic information about the server."""
-        return pd.Series(self.call("about").rows[0])
+        return self._call("about")["rows"][0]
 
     def close(self) -> None:
         """Close the connection to the Haystack server."""
-        call_result = self.call("close")
+        call_result = self._call("close")
 
-        if call_result.cols[0]["name"] != "empty":
+        if call_result["cols"][0]["name"] != "empty":
             raise HaystackCloseOpServerResponseError(
                 "Expected an empty grid response and instead received:"
                 f"\n{call_result}"
             )
 
-    def read(self, filter: str, limit: int | None = None) -> pd.DataFrame:
+    def read(self, filter: str, limit: int | None = None) -> Grid:
         """Read a record that matches a given filter.  Apply an optional
         limit.
         """
@@ -109,53 +105,55 @@ class Client:
         else:
             data_row = {"filter": filter, "limit": limit}
 
-        data = _rows_to_grid_json(data_row)
-        return grid_to_pandas(self.call("read", data))
+        post_data = _rows_to_grid_json(data_row)
+        response = self._call("read", post_data)
 
-    def read_by_id(self, id: Ref) -> pd.DataFrame:
+        return json_to_grid(response)
+
+    def read_by_id(self, id: Ref) -> dict[str, Any]:
         """Read a record by its id.  Raises UnknownRecError if the rec cannot
         be found.
         """
 
         data_row = {"id": {"_kind": "ref", "val": id.val}}
-        data = _rows_to_grid_json(data_row)
-        response = self.call("read", data)
+        post_data = _rows_to_grid_json(data_row)
+        response = self._call("read", post_data)
 
         # verify the rec was found
-        if response.cols[0]["name"] == "empty":
+        if response["cols"][0]["name"] == "empty":
             raise HaystackReadOpUnknownRecError(
                 f"Unable to locate id {id.val} on the server."
             )
 
-        return pd.DataFrame(response.rows)
+        return response["rows"][0]
 
-    def read_by_ids(self, ids: list[Ref]) -> pd.DataFrame:
+    def read_by_ids(self, ids: list[Ref]) -> Grid:
         """Read records by their ids.  Raises UnknownRecError if any of the
         recs cannot be found.
         """
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-        data = _rows_to_grid_json(data_rows)
-        response = self.call("read", data)
+        post_data = _rows_to_grid_json(data_rows)
+        response = self._call("read", post_data)
 
         # verify the recs were found
-        if len(response.rows) == 0:
+        if len(response["rows"]) == 0:
             raise HaystackReadOpUnknownRecError(
                 "Unable to locate any of the ids on the server."
             )
-        for row in response.rows:
+        for row in response["rows"]:
             if len(row) == 0:
                 raise HaystackReadOpUnknownRecError(
                     "Unable to locate one or more ids on the server."
                 )
 
-        return grid_to_pandas(response)
+        return json_to_grid(response)
 
     def his_read(
         self,
-        pt_data: pd.DataFrame,
+        ids: Ref | list[Ref],
         range: date | DateRange | DateTimeRange,
-    ) -> pd.DataFrame:
+    ) -> Grid:
         """Read history data on selected records for the given range.
 
         Ranges are inclusive of start timestamp and exclusive of end
@@ -179,18 +177,14 @@ class Client:
             range = str(range)
 
         # structure data for HTTP request
-        ids = pt_data["id"].to_list()
-        num_pts = len(ids)
-        if num_pts == 0:
-            raise Exception
-        elif num_pts == 1:
-            data = _to_single_his_read_json(ids[0], range)
-        else:
+        if isinstance(ids, Ref):
+            data = _to_single_his_read_json(ids, range)
+        elif isinstance(ids, list):
             data = _to_batch_his_read_json(ids, range)
 
-        his_grid = self.call("hisRead", data)
+        response = self._call("hisRead", data)
 
-        return his_grid_to_pandas(his_grid, pt_data)
+        return json_to_grid(response)
 
     def his_write(self, his_grid: Grid) -> None:
         """Write history data to records on the Haystack server.
@@ -203,50 +197,55 @@ class Client:
         Note:  Future Phable versions may apply a breaking change to this func
         to make it easier.
         """
-        response_grid = self.call("hisWrite", grid_to_json(his_grid))
-        if "err" in response_grid.meta.keys():
+        json_response = self._call("hisWrite", grid_to_json(his_grid))
+        if "err" in json_response["meta"].keys():
             raise HaystackHisWriteOpServerResponseError(
                 "The server reported an error in response to the client's "
                 "HisWrite op"
             )
 
+        return
+
     # -------------------------------------------------------------------------
     # other ops
     # -------------------------------------------------------------------------
 
-    def eval(self, expr: str) -> pd.DataFrame:
+    def eval(self, expr: str) -> Grid:
         """Evaluates an expression."""
         data = _rows_to_grid_json({"expr": expr})
 
-        grid = self.call("eval", data)
+        response = self._call("eval", data)
 
-        if grid.is_his_grid():
-            pt_data = _get_pt_data_from_his_grid(grid)
-            return his_grid_to_pandas(grid, pt_data)
-        else:
-            return grid_to_pandas(grid)
+        return json_to_grid(response)
 
     # -------------------------------------------------------------------------
     # base to Haystack and all other ops
     # -------------------------------------------------------------------------
 
-    def call(
+    def _call(
         self,
         op: str,
-        data: dict[str, Any] | None = None,
-    ) -> Grid:
-        if data is None:
-            data = _to_empty_grid_json()
+        post_data: dict[str, Any] | None = None,
+    ) -> dict[str, Any]:
+        """Sends a POST request based on given parameters, receives a HTTP
+        response, and returns JSON data."""
+
+        if post_data is None:
+            post_data = _to_empty_grid_json()
         else:
-            data = data.copy()
+            post_data = post_data.copy()
 
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
             "Accept": "application/json",
         }
 
-        response = post(url=f"{self.uri}/{op}", data=data, headers=headers)
-        _validate_response_meta(response.meta)
+        response = post(
+            url=f"{self.uri}/{op}",
+            post_data=post_data,
+            headers=headers,
+        )
+        _validate_response_meta(response["meta"])
 
         return response
 
@@ -256,24 +255,7 @@ class Client:
 # -----------------------------------------------------------------------------
 
 
-def _get_pt_data_from_his_grid(his_grid: Grid) -> pd.DataFrame:
-    pt_data = []
-    for col in his_grid.cols:
-        pt_meta = {}
-        if col["name"] == "ts":
-            # TODO: check the timezone matches the other cols?
-            continue
-        else:
-            pt_meta["id"] = col["meta"]["id"]
-            pt_meta["kind"] = col["meta"]["kind"]
-            if pt_meta["kind"] == "Number":
-                pt_meta["unit"] = col["meta"]["unit"]
-
-        pt_data.append(pt_meta)
-    return pd.DataFrame(pt_data)
-
-
-def _validate_response_meta(meta: dict[str, str]):
+def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
         raise HaystackErrorGridResponseError(

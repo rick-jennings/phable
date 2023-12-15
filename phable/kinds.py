@@ -17,6 +17,8 @@ from datetime import date, datetime
 from decimal import Decimal, getcontext
 from typing import Any
 
+import pandas as pd
+
 # -----------------------------------------------------------------------------
 # Project Haystack supported kinds
 # -----------------------------------------------------------------------------
@@ -31,11 +33,27 @@ class Grid:
     def __str__(self):
         return "Haystack Grid"
 
-    def is_his_grid(self):
-        if self.cols[0]["name"] == "ts":
-            return True
-        else:
-            return False
+    def get_ids(self) -> list[Ref]:
+        # TODO: need to handle this differently if his_grid or standard grid
+        return [row["id"] for row in self.rows]
+
+    # TODO: Is this necessary?
+    @staticmethod
+    def to_grid(rows: dict[str, Any] | list[dict[str, Any]]) -> Grid:
+        if isinstance(rows, dict):
+            rows = [rows]
+
+        cols = [{"name": name} for name in rows[0].keys()]
+        meta = {"ver": "3.0"}
+
+        return Grid(meta=meta, cols=cols, rows=rows)
+
+    def to_pandas(self) -> pd.DataFrame:
+        from phable.parsers.pandas import grid_to_pandas
+
+        return grid_to_pandas(self)
+
+    # TODO: add get_col_meta_by_id and get_col_meta_by_name
 
 
 @dataclass(frozen=True, slots=True)

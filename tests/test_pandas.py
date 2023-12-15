@@ -1,7 +1,6 @@
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-import pandas as pd
 import pytest
 
 from phable.client import Client
@@ -10,9 +9,9 @@ from phable.parsers.pandas import (
     DuplicateColNameError,
     NotFoundError,
     UnitMismatchError,
+    _get_col_meta_by_name,
     get_col_meta,
     grid_to_pandas,
-    his_grid_to_pandas,
 )
 
 
@@ -43,10 +42,21 @@ def test_to_pandas_df_attributes() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(his_grid)
+    df = his_grid.to_pandas()
 
     assert df.attrs["meta"] == meta
-    assert df.attrs["cols"] == cols
+    # assert df.attrs["cols"] == cols
+    assert df.attrs["cols"] == [
+        {"name": "ts"},
+        {
+            "name": "val",
+            "meta": {
+                "id": Ref("1234", "foo kW"),
+                "kind": "Number",
+                "unit": "kW",
+            },
+        },
+    ]
 
     # verify we made a copy of meta and cols
     meta["test"] = "123"
@@ -76,7 +86,27 @@ def test_to_pandas_df_attributes() -> None:
     df = grid_to_pandas(his_grid)
 
     assert df.attrs["meta"] == meta
-    assert df.attrs["cols"] == cols
+
+    cols_with_new_meta = cols = [
+        {"name": "ts"},
+        {
+            "name": "v0",
+            "meta": {
+                "id": Ref("1234", "foo1 kW"),
+                "kind": "Number",
+                "unit": "kW",
+            },
+        },
+        {
+            "name": "v1",
+            "meta": {
+                "id": Ref("2345", "foo2 W"),
+                "kind": "Number",
+                "unit": "W",
+            },
+        },
+    ]
+    assert df.attrs["cols"] == cols_with_new_meta
 
     # verify we made a copy of meta and cols
     meta["test"] = "123"
@@ -160,23 +190,27 @@ def test_get_col_meta_raises_not_found_error() -> None:
 
 
 def test_get_col_meta_raises_unit_mismatch_error(hc: Client) -> None:
+    meta = {"id": Ref("435", "Test")}
+    rows = [
+        {
+            "ts": datetime.now() - timedelta(minutes=5),
+            "val": Number(12, "kW"),
+        },
+        {
+            "ts": datetime.now(),
+            "val": Number(24, "W"),
+        },
+    ]
+    cols = [{"name": "ts"}, {"name": "val"}]
+    his_grid = Grid(meta, cols, rows)
     with pytest.raises(UnitMismatchError):
-        with hc:
-            pt_data = hc.read("power and point and equipRef->siteMeter")
-            pt_data.loc[0, "unit"] = "W"
-            hc.his_read(pt_data, date.today())
+        his_grid.to_pandas()
 
 
 def test_single_col_his_grid_to_pandas() -> None:
     ts_now = datetime.now(ZoneInfo("America/New_York"))
 
     foo = Ref("1234", "foo kW")
-
-    pt_data = pd.DataFrame(
-        [
-            {"id": foo, "kind": "Number", "unit": "kW"},
-        ]
-    )
 
     meta = {"ver": "3.0", "id": foo}
     cols = [{"name": "ts"}, {"name": "val"}]
@@ -192,11 +226,14 @@ def test_single_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = his_grid_to_pandas(his_grid, pt_data)
+    df = grid_to_pandas(his_grid)
 
     assert df.loc[ts_now]["foo kW"] == 76.3
     assert df.loc[ts_now - timedelta(seconds=30)]["foo kW"] == 72.2
-    assert get_col_meta(df.attrs, foo) == {
+    assert {
+        "name": "val",
+        "meta": _get_col_meta_by_name(df.attrs["cols"], "val"),
+    } == {
         "name": "val",
         "meta": {
             "id": foo,
@@ -213,13 +250,6 @@ def test_multi_col_his_grid_to_pandas() -> None:
     # define refs
     foo1 = Ref("1234", "foo1 kW")
     foo2 = Ref("2345", "foo2 kW")
-
-    pt_data = pd.DataFrame(
-        [
-            {"id": foo1, "kind": "Number", "unit": "kW"},
-            {"id": foo2, "kind": "Number", "unit": "kW"},
-        ]
-    )
 
     # test 1
     ts_now = datetime.now(ZoneInfo("America/New_York"))
@@ -239,7 +269,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = his_grid_to_pandas(his_grid, pt_data)
+    df = grid_to_pandas(his_grid)
 
     assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
     assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
@@ -265,7 +295,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = his_grid_to_pandas(his_grid, pt_data)
+    df = grid_to_pandas(his_grid)
 
     assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
     assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
@@ -273,7 +303,10 @@ def test_multi_col_his_grid_to_pandas() -> None:
     assert df.loc[ts_now]["foo1 kW"] == 76.3
     assert df.loc[ts_now]["foo2 kW"] == 72.2
 
-    assert get_col_meta(df.attrs, "foo1 kW") == {
+    assert {
+        "name": "v0",
+        "meta": _get_col_meta_by_name(df.attrs["cols"], "v0"),
+    } == {
         "name": "v0",
         "meta": {
             "id": foo1,
@@ -282,7 +315,10 @@ def test_multi_col_his_grid_to_pandas() -> None:
         },
     }
 
-    assert get_col_meta(df.attrs, "foo2 kW") == {
+    assert {
+        "name": "v1",
+        "meta": _get_col_meta_by_name(df.attrs["cols"], "v1"),
+    } == {
         "name": "v1",
         "meta": {
             "id": foo2,
@@ -300,13 +336,6 @@ def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> (
 ):
     foo1 = Ref("1234", "foo1 kW")
     foo2 = Ref("2345", "foo1 kW")
-
-    pt_data = pd.DataFrame(
-        [
-            {"id": foo1, "kind": "Number", "unit": "kW"},
-            {"id": foo2, "kind": "Number", "unit": "kW"},
-        ]
-    )
 
     ts_now = datetime.now(ZoneInfo("America/New_York"))
     meta = {"ver": "3.0"}
@@ -327,7 +356,7 @@ def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> (
     his_grid = Grid(meta, cols, rows)
 
     with pytest.raises(DuplicateColNameError):
-        his_grid_to_pandas(his_grid, pt_data)
+        grid_to_pandas(his_grid)
 
 
 def test_grid_to_pandas() -> None:

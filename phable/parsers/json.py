@@ -7,23 +7,15 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import (
-    NA,
-    Coord,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Uri,
-    XStr,
-)
+from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
 
 
-def json_to_grid(d: dict[str, Any]) -> Grid:
-    _parse_kinds(d)
-    return Grid(meta=d["meta"], cols=d["cols"], rows=d["rows"])
+def json_to_grid(json_data: dict[str, Any]) -> Grid:
+    _parse_kinds(json_data)
+
+    return Grid(
+        meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"]
+    )
 
 
 # TODO: need to make this more robust and add tests, etc.

@@ -1,8 +1,13 @@
-from typing import Any
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from phable.kinds import Grid, Number, Ref
+from phable.kinds import Number
+
+if TYPE_CHECKING:
+    from phable.kinds import Grid, Ref
 
 
 # -----------------------------------------------------------------------------
@@ -31,27 +36,24 @@ def grid_to_pandas(grid: Grid) -> pd.DataFrame:
     df.attrs["meta"] = grid.meta.copy()
     df.attrs["cols"] = grid.cols.copy()
 
-    return df
+    # handle Grid without history data
+    if not grid.cols[0]["name"] == "ts":
+        return df
 
-
-def his_grid_to_pandas(his_grid: Grid, pt_data: pd.DataFrame) -> pd.DataFrame:
     # create a map of HisGrid col names to their point display names
-    his_col_name_map = _his_col_name_map(his_grid)
+    his_col_name_map = _his_col_name_map(grid)
 
     # verify there are no duplicate column display names
     _verify_no_duplicate_his_col_names(his_col_name_map)
 
-    # create Pandas DataFrame
-    df = pd.DataFrame(his_grid.rows)
+    # some more validation and parse types
+    df = _parse_types(df, grid.meta, grid.cols)
+
+    # configure df
     df = df.rename(columns=his_col_name_map)
     df = df.set_index("Timestamp")
 
-    # add meta to DataFrame
-    df.attrs["meta"] = his_grid.meta
-    df.attrs["cols"] = _find_his_col_meta(pt_data, his_col_name_map)
-
-    # validate and parse types
-    df = _parse_types(df)
+    # _find_his_col_meta(pt_data, his_col_name_map)
 
     return df
 
@@ -104,71 +106,63 @@ def _verify_no_duplicate_his_col_names(col_name_map: dict[str, str]) -> None:
             )
 
 
-def _find_his_col_meta(
-    pt_data: pd.DataFrame, his_col_name_map: dict[str, str]
-) -> list[dict[str, Any]]:
-    """Returns a dictionary that has Ref value keys"""
-
-    # Note: his_col_name_map has unique dict values
-
-    cols_meta = []
-
-    # at minimum capture col id and kind
-    # if applicable capture unit
-    for row in pt_data.iterrows():
-        row_data = row[1].to_dict()
-
-        pt_id: Ref = row_data["id"]
-
-        for key, val in his_col_name_map.items():
-            if val == str(pt_id):
-                grid_col_name = key
-
-        pt_meta = {"name": grid_col_name, "meta": {}}
-
-        pt_meta["meta"]["id"] = pt_id
-        kind = row_data["kind"]
-        pt_meta["meta"]["kind"] = kind
-
-        if kind == "Number":
-            if "unit" in row_data.keys():
-                pt_meta["meta"]["unit"] = row_data["unit"]
-
-        cols_meta.append(pt_meta)
-
-    return cols_meta
-
-
-def _parse_types(his_df: pd.DataFrame) -> pd.DataFrame:
+def _parse_types(
+    his_df: pd.DataFrame,
+    grid_meta: dict[str, Any],
+    grid_cols: list[dict[str, Any]],
+) -> pd.DataFrame:
     """Replaces Haystack Numbers in his_df with native Pandas types.  Uses the
     DataFrame's attributes to determine which columns to apply the
     transformation to."""
 
-    df_attrs = his_df.attrs
-
+    cols_meta = []
     for col_name in his_df.columns.to_list():
-        col_meta = get_col_meta(df_attrs, col_name)
-        col_kind = col_meta["meta"]["kind"]
+        if col_name == "ts":
+            cols_meta.append({"name": "ts"})
+            continue
 
-        if col_kind == "Number":
-            col_unit = col_meta["meta"].get(
-                "unit"
-            )  # a Number's unit can be None
+        # case with Haystack single HisRead op
+        if "id" in grid_meta.keys():
+            ref_id = grid_meta["id"]
+        # case with Haystack batch HisRead op
+        else:
+            ref_id = _get_col_meta_by_name(grid_cols, col_name)["id"]
+
+        # establish what kind each of the column values should be
+        col_first_valid_index = his_df[col_name].first_valid_index()
+        col_first_val = his_df[col_name].iloc[col_first_valid_index]
+
+        col_meta = {"name": col_name, "meta": {"id": ref_id}}
+
+        if isinstance(col_first_val, Number):
             his_df[col_name] = his_df[col_name].map(
-                lambda x: _parse_number(x, col_unit)
+                lambda x: _parse_number(x, col_first_val.unit)
             )
+            col_meta["meta"]["kind"] = "Number"
+            col_meta["meta"]["unit"] = col_first_val.unit
+
+        cols_meta.append(col_meta)
+
+    his_df.attrs["cols"] = cols_meta
 
     return his_df
 
 
-def _parse_number(x, expected_unit: str | None):
-    # the DataFrame may be sparse involving non Number types
-    if isinstance(x, Number):
-        if not x.unit == expected_unit:
-            raise UnitMismatchError(
-                "One of the DataFrame columns has a Haystack Number with a"
-                " unit that is different than what is defined in the column's"
-                " metadata."
-            )
-        return x.val
-    return x
+def _parse_number(x: Number, expected_unit: str | None):
+    if not x.unit == expected_unit:
+        raise UnitMismatchError(
+            "One of the DataFrame columns has a Haystack Number with a"
+            " unit that is different than what is defined in the column's"
+            " metadata."
+        )
+    return x.val
+
+
+def _get_col_meta_by_name(cols: list[dict], col_name: str) -> dict[str, Any]:
+    for col in cols:
+        if col["name"] == col_name:
+            return col["meta"]
+
+    raise NotFoundError(
+        f"Unable to find meta for the Column titled '{col_name}'"
+    )

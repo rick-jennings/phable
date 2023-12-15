@@ -7,9 +7,6 @@ from dataclasses import dataclass
 from email.message import Message
 from typing import Any, Optional
 
-from phable.kinds import Grid
-from phable.parsers.json import json_to_grid
-
 # -----------------------------------------------------------------------------
 # Module exceptions
 # -----------------------------------------------------------------------------
@@ -32,9 +29,8 @@ class HttpResponse:
     status: int
     error_count: int = 0
 
-    @property
-    def grid(self) -> Grid:
-        return json_to_grid(json.loads(self.body))
+    def to_json(self) -> dict[str, Any]:
+        return json.loads(self.body)
 
 
 # -----------------------------------------------------------------------------
@@ -42,17 +38,21 @@ class HttpResponse:
 # -----------------------------------------------------------------------------
 
 
-def post(url: str, data: dict[str, Any], headers: dict[str, str]) -> Grid:
-    if data is None:
-        data = {}
-    response = request(url, data=data, headers=headers, method="POST")
+def post(
+    url: str,
+    post_data: dict[str, Any],
+    headers: dict[str, str],
+) -> dict[str, Any]:
+    if post_data is None:
+        post_data = {}
+    response = request(url, data=post_data, headers=headers, method="POST")
 
     if response.status != 200:
         raise IncorrectHttpResponseStatus(
             f"Expected status 200 and received status {response.status}."
         )
 
-    return response.grid
+    return response.to_json()
 
 
 def get_headers(url: str, headers: dict[str, str]) -> dict[str, str]:
