@@ -96,16 +96,17 @@ def test_read_point(hc: Client):
 
 
 def test_read_by_id(hc: Client):
+    """Test Client.read_by_ids() using a single id"""
+
     # Test a valid Ref
     with hc:
         id1 = hc.read("point and power and equipRef->siteMeter").rows[0]["id"]
-        response = hc.read_by_id(id1)
-    assert response["navName"] == "kW"
-
+        response = hc.read_by_ids(id1)
+    assert response.rows[0]["navName"] == "kW"
     # Test an invalid Ref
     with pytest.raises(HaystackReadOpUnknownRecError):
         with hc:
-            response = hc.read_by_id(Ref("invalid-id"))
+            response = hc.read_by_ids(Ref("invalid-id"))
 
 
 # TODO:  Come up with a better test than this

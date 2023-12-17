@@ -110,10 +110,13 @@ class Client:
 
         return json_to_grid(response)
 
-    def read_by_ids(self, ids: list[Ref]) -> Grid:
+    def read_by_ids(self, ids: Ref | list[Ref]) -> Grid:
         """Read records by their ids.  Raises UnknownRecError if any of the
         recs cannot be found.
         """
+        if isinstance(ids, Ref):
+            ids = [ids]
+
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
         post_data = _rows_to_grid_json(data_rows)
