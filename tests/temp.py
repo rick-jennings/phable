@@ -9,7 +9,7 @@ password = "su"
 
 with Client(uri, username, password) as ph:
     pt_grid = ph.read("power and point and equipRef->siteMeter")
-    his_grid = ph.his_read(pt_grid.get_ids(), date.today())
+    his_grid = ph.his_read_by_ids(pt_grid.get_ids(), date.today())
 
 his_df = his_grid.to_pandas()
 

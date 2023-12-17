@@ -150,7 +150,7 @@ def test_his_read_with_date_range(hc: Client):
 
         # get the his using Date as the range
         start = date.today() - timedelta(days=7)
-        his_grid = hc.his_read(point_ref, start)
+        his_grid = hc.his_read_by_ids(point_ref, start)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -176,7 +176,7 @@ def test_his_read_with_datetime_range(hc: Client):
                 2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
             )
         )
-        his_grid = hc.his_read(point_ref, datetime_range)
+        his_grid = hc.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -200,7 +200,7 @@ def test_his_read_with_date_slice(hc: Client):
         start = date.today() - timedelta(days=7)
         end = date.today()
         date_range = DateRange(start, end)
-        his_grid = hc.his_read(point_ref, date_range)
+        his_grid = hc.his_read_by_ids(point_ref, date_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -228,7 +228,7 @@ def test_his_read_with_datetime_slice(hc: Client):
 
         datetime_range = DateTimeRange(start, end)
 
-        his_grid = hc.his_read(point_ref, datetime_range)
+        his_grid = hc.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -248,7 +248,7 @@ def test_batch_his_read(hc: Client):
         id4 = ids.rows[3]["id"]
 
         ids = [id1, id2, id3, id4]
-        his_grid = hc.his_read(ids, date.today())
+        his_grid = hc.his_read_by_ids(ids, date.today())
 
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[0]], datetime)
@@ -291,7 +291,7 @@ def test_single_his_write(hc: Client):
 
     with hc:
         range = date.today()
-        his_grid = hc.his_read(test_pt_id, range)
+        his_grid = hc.his_read_by_ids(test_pt_id, range)
 
     assert his_grid.rows[0]["val"] == Number(72.19999694824219)
     assert his_grid.rows[1]["val"] == Number(76.30000305175781)
@@ -332,7 +332,7 @@ def test_batch_his_write(hc: Client):
     with hc:
         range = date.today()
 
-        his_grid = hc.his_read([test_pt_id1, test_pt_id2], range)
+        his_grid = hc.his_read_by_ids([test_pt_id1, test_pt_id2], range)
 
     assert his_grid.rows[0]["v0"] == Number(72.19999694824219)
     assert his_grid.rows[1]["v0"] == Number(76.30000305175781)

@@ -132,7 +132,7 @@ class Client:
 
         return json_to_grid(response)
 
-    def his_read(
+    def his_read_by_ids(
         self,
         ids: Ref | list[Ref],
         range: date | DateRange | DateTimeRange,
