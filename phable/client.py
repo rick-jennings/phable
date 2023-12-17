@@ -110,23 +110,6 @@ class Client:
 
         return json_to_grid(response)
 
-    def read_by_id(self, id: Ref) -> dict[str, Any]:
-        """Read a record by its id.  Raises UnknownRecError if the rec cannot
-        be found.
-        """
-
-        data_row = {"id": {"_kind": "ref", "val": id.val}}
-        post_data = _rows_to_grid_json(data_row)
-        response = self._call("read", post_data)
-
-        # verify the rec was found
-        if response["cols"][0]["name"] == "empty":
-            raise HaystackReadOpUnknownRecError(
-                f"Unable to locate id {id.val} on the server."
-            )
-
-        return response["rows"][0]
-
     def read_by_ids(self, ids: list[Ref]) -> Grid:
         """Read records by their ids.  Raises UnknownRecError if any of the
         recs cannot be found.
