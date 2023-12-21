@@ -106,6 +106,8 @@ def test_to_pandas_df_attributes() -> None:
             },
         },
     ]
+
+    print(f"LOOK HERE!!!!\n{df.attrs['cols']}")
     assert df.attrs["cols"] == cols_with_new_meta
 
     # verify we made a copy of meta and cols

@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from email.message import Message
 from typing import Any, Optional
 
+from phable.parsers.json import json_to_grid
+
 # -----------------------------------------------------------------------------
 # Module exceptions
 # -----------------------------------------------------------------------------
@@ -29,8 +31,8 @@ class HttpResponse:
     status: int
     error_count: int = 0
 
-    def to_json(self) -> dict[str, Any]:
-        return json.loads(self.body)
+    def to_grid(self) -> dict[str, Any]:
+        return json_to_grid(json.loads(self.body))
 
 
 # -----------------------------------------------------------------------------
@@ -52,7 +54,7 @@ def post(
             f"Expected status 200 and received status {response.status}."
         )
 
-    return response.to_json()
+    return response.to_grid()
 
 
 def get_headers(url: str, headers: dict[str, str]) -> dict[str, str]:

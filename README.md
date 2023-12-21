@@ -26,49 +26,27 @@ username = "su"
 password = "su"
 
 
-# open a session, execute queries, and simply close
-# session with the context manager
 with Client(uri, username, password) as ph:
-    # fetch info about the Haystack server
-    about_example = ph.about()
+    # get information about the Haystack server
+    about = ph.about()
 
-    # fetch a rec
-    read_example = ph.read("point and power and equipRef->siteMeter")
+    # read history data on main electric meter power points
+    pts = ph.read("point and power and equipRef->siteMeter")
+    his_df = ph.his_read(pts, date.today()).to_pandas()
 
-    # find the ids for two recs in read_example
-    rec_id1 = read_example.iloc[0]["id"]
-    rec_id2 = read_example.iloc[1]["id"]
-
-    # fetch recs using Ref IDs
-    read_by_id_example = ph.read_by_id(rec_id1)
-    read_by_ids_example = ph.read_by_ids([rec_id1, rec_id2])
-
-    # single hisRead
-    single_his_read_example = ph.his_read(rec_id1, date.today().isoformat())
-
-    # batch hisRead
-    batch_his_read_example = ph.his_read(
-        [rec_id1, rec_id2], date.today().isoformat()
-    )
+print("Here is information about the Haystack server:\n")
+print(about)
+print()
+print("Here is the Pandas DataFrame showing point history data:\n")
+print(his_df)
+print()
+print(f"Here are the DataFrame's attributes:\n{his_df.attrs}")
 
 
-"""
-Now print the results!
-
-Note:
------
-Converting Haystack Grids to Pandas DataFrames for better print display and to
-show how the conversion to Pandas works.  Keep in mind that the Haystack kinds
-are preserved within the Pandas DataFrame.  You may want to convert Haystack
-kind objects, especially Haystack Numbers, to other more optimal data types
-within Pandas.
-"""
-
-print(f"Results from about example:\n{about_example}\n")
-print(f"Results from read example:\n{read_example}\n")
-print(f"Results from read by id example:\n{read_by_id_example}\n")
-print("Results from single hisRead example:" f"\n{single_his_read_example}\n")
-print("Results from batch hisRead example:" f"\n{batch_his_read_example}\n")
+# Notes:
+# 1. these attributes contain important info, such as a column's unit
+# 2. later we will add some funcs to help parse the DataFrame attributes
+# 3. see the other public available methods on the Client class in client.py
 ```
 
 Review the test code for more examples.  Here is a link to an example on how to perform a hisWrite op on a single data point:
@@ -96,8 +74,8 @@ async def main() -> None:
     read1, read2 = await asyncio.gather(read1, read2)
     ph.close()
 
-    print(read1)
-    print(read2)
+    print(read1.to_pandas())
+    print(read2.to_pandas())
 
 
 if __name__ == "__main__":

@@ -140,7 +140,7 @@ def test_read_by_ids(hc: Client):
             response = hc.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-def test_his_read_with_date_range(hc: Client):
+def test_his_read_by_ids_with_date_range(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
@@ -162,7 +162,7 @@ def test_his_read_with_date_range(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == start
 
 
-def test_his_read_with_datetime_range(hc: Client):
+def test_his_read_by_ids_with_datetime_range(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
@@ -188,7 +188,7 @@ def test_his_read_with_datetime_range(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == date.today()
 
 
-def test_his_read_with_date_slice(hc: Client):
+def test_his_read_by_ids_with_date_slice(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
@@ -212,7 +212,7 @@ def test_his_read_with_date_slice(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == end
 
 
-def test_his_read_with_datetime_slice(hc: Client):
+def test_his_read_by_ids_with_datetime_slice(hc: Client):
     with hc:
         # find the point id
         point_grid = hc.read(
@@ -240,7 +240,7 @@ def test_his_read_with_datetime_slice(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == end.date()
 
 
-def test_batch_his_read(hc: Client):
+def test_batch_his_read_by_ids(hc: Client):
     with hc:
         ids = hc.read("point and power and equipRef->siteMeter")
         id1 = ids.rows[0]["id"]
@@ -259,6 +259,25 @@ def test_batch_his_read(hc: Client):
     assert isinstance(his_grid.rows[0][cols[4]], Number)
     assert his_grid.rows[0][cols[4]].unit == "kW"
     assert his_grid.rows[0][cols[4]].val >= 0
+
+
+def test_his_read(hc: Client):
+    with hc:
+        pt_grid = hc.read("power and point and equipRef->siteMeter")
+        his_grid = hc.his_read(pt_grid, date.today())
+
+    his_grid_cols = his_grid.cols
+
+    assert his_grid_cols[0]["name"] == "ts"
+    assert his_grid_cols[1]["meta"]["power"] == Marker()
+    assert his_grid_cols[1]["meta"]["point"] == Marker()
+    assert his_grid_cols[-1]["meta"]["power"] == Marker()
+    assert his_grid_cols[-1]["meta"]["point"] == Marker()
+
+    assert isinstance(his_grid.rows[0]["ts"], datetime)
+    assert isinstance(his_grid.rows[0]["v0"], Number)
+    assert his_grid.rows[0]["v0"].unit == "kW"
+    assert his_grid.rows[0]["v0"].val >= 0
 
 
 def test_single_his_write(hc: Client):
@@ -344,3 +363,52 @@ def test_batch_his_write(hc: Client):
     # rec = f"readById(@{test_pt_id1.val})"
     # axon_expr = f"commit(diff({rec}, null, {{remove}}))"
     # hc.eval(axon_expr)
+
+
+def test_client_his_read_with_pandas(hc: Client):
+    with hc:
+        pts = hc.read("point and power and equipRef->siteMeter")
+        pts_his_df = hc.his_read(pts, date.today()).to_pandas()
+
+    for col in pts_his_df.attrs["cols"]:
+        if col["name"] == "ts":
+            continue
+        assert col["meta"]["power"] == Marker()
+        assert col["meta"]["point"] == Marker()
+        assert col["meta"]["kind"] == "Number"
+        assert col["meta"]["unit"] == "kW"
+
+    assert pts_his_df.attrs["cols"][0]["name"] == "ts"
+    assert pts_his_df.attrs["cols"][1]["name"] == "v0"
+    assert pts_his_df.attrs["cols"][2]["name"] == "v1"
+    assert pts_his_df.attrs["cols"][3]["name"] == "v2"
+    assert pts_his_df.attrs["cols"][4]["name"] == "v3"
+    assert len(pts_his_df.attrs["cols"]) == 5
+    assert "ver" in pts_his_df.attrs["meta"].keys()
+    assert "hisStart" in pts_his_df.attrs["meta"].keys()
+    assert "hisEnd" in pts_his_df.attrs["meta"].keys()
+
+
+def test_client_his_read_by_ids_with_pandas(hc: Client):
+    with hc:
+        pts = hc.read("point and power and equipRef->siteMeter")
+        pts_his_df = hc.his_read_by_ids(
+            [pt_row["id"] for pt_row in pts.rows], date.today()
+        ).to_pandas()
+
+    for col in pts_his_df.attrs["cols"]:
+        if col["name"] == "ts":
+            continue
+        assert col["meta"]["kind"] == "Number"
+        assert col["meta"]["unit"] == "kW"
+        assert len(col["meta"]) == 3
+
+    assert pts_his_df.attrs["cols"][0]["name"] == "ts"
+    assert pts_his_df.attrs["cols"][1]["name"] == "v0"
+    assert pts_his_df.attrs["cols"][2]["name"] == "v1"
+    assert pts_his_df.attrs["cols"][3]["name"] == "v2"
+    assert pts_his_df.attrs["cols"][4]["name"] == "v3"
+    assert len(pts_his_df.attrs["cols"]) == 5
+    assert "ver" in pts_his_df.attrs["meta"].keys()
+    assert "hisStart" in pts_his_df.attrs["meta"].keys()
+    assert "hisEnd" in pts_his_df.attrs["meta"].keys()

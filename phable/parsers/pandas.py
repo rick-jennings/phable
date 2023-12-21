@@ -123,10 +123,15 @@ def _parse_types(
 
         # case with Haystack single HisRead op
         if "id" in grid_meta.keys():
+            if grid_cols[1].get("meta") is None:
+                grid_col_meta = {}
+            else:
+                grid_col_meta = grid_cols[1]["meta"]
             ref_id = grid_meta["id"]
         # case with Haystack batch HisRead op
         else:
-            ref_id = _get_col_meta_by_name(grid_cols, col_name)["id"]
+            grid_col_meta = _get_col_meta_by_name(grid_cols, col_name)
+            ref_id = grid_col_meta["id"]
 
         # establish what kind each of the column values should be
         col_first_valid_index = his_df[col_name].first_valid_index()
@@ -141,6 +146,7 @@ def _parse_types(
             col_meta["meta"]["kind"] = "Number"
             col_meta["meta"]["unit"] = col_first_val.unit
 
+        col_meta["meta"] = col_meta["meta"] | grid_col_meta
         cols_meta.append(col_meta)
 
     his_df.attrs["cols"] = cols_meta

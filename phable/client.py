@@ -5,7 +5,8 @@ from typing import Any
 from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
-from phable.parsers.json import grid_to_json, json_to_grid
+from phable.parsers.grid import merge_pt_data_to_his_grid_cols
+from phable.parsers.json import grid_to_json
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -84,13 +85,13 @@ class Client:
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server."""
-        return self._call("about")["rows"][0]
+        return self._call("about").rows[0]
 
     def close(self) -> None:
         """Close the connection to the Haystack server."""
         call_result = self._call("close")
 
-        if call_result["cols"][0]["name"] != "empty":
+        if call_result.cols[0]["name"] != "empty":
             raise HaystackCloseOpServerResponseError(
                 "Expected an empty grid response and instead received:"
                 f"\n{call_result}"
@@ -108,7 +109,7 @@ class Client:
         post_data = _rows_to_grid_json(data_row)
         response = self._call("read", post_data)
 
-        return json_to_grid(response)
+        return response
 
     def read_by_ids(self, ids: Ref | list[Ref]) -> Grid:
         """Read records by their ids.  Raises UnknownRecError if any of the
@@ -123,54 +124,67 @@ class Client:
         response = self._call("read", post_data)
 
         # verify the recs were found
-        if len(response["rows"]) == 0:
+        if len(response.rows) == 0:
             raise HaystackReadOpUnknownRecError(
                 "Unable to locate any of the ids on the server."
             )
-        for row in response["rows"]:
+        for row in response.rows:
             if len(row) == 0:
                 raise HaystackReadOpUnknownRecError(
                     "Unable to locate one or more ids on the server."
                 )
 
-        return json_to_grid(response)
+        return response
+
+    # TODO: raise exceptions if there are no valid pt ids on HisRead ops?
+    def his_read(
+        self,
+        pt_data: Grid,
+        range: date | DateRange | DateTimeRange,
+    ) -> Grid:
+        """Reads history data on point IDs defined within pt_data for the given
+        range.  Appends point attributes within pt_data to the column metadata
+        within the returned Grid.
+
+        Ranges are inclusive of start timestamp and exclusive of end
+        timestamp. If a date is provided without a defined end, then the
+        server should infer the range to be from midnight of the defined date
+        to midnight of the day after the defined date.
+
+        When there are available point IDs without pt_data, then instead use
+        the Client.his_read_by_ids() method.
+        """
+
+        data = _create_his_read_req_data(pt_data.get_ids(), range)
+        response = self._call("hisRead", data)
+
+        meta = response.meta | pt_data.meta
+        cols = merge_pt_data_to_his_grid_cols(response, pt_data)
+        rows = response.rows
+
+        return Grid(meta, cols, rows)
 
     def his_read_by_ids(
         self,
         ids: Ref | list[Ref],
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
-        """Read history data on selected records for the given range.
+        """Read history data on defined IDs for the given range.
 
         Ranges are inclusive of start timestamp and exclusive of end
-        timestamp.
+        timestamp. If a date is provided without a defined end, then the
+        server should infer the range to be from midnight of the defined date
+        to midnight of the day after the defined date.
 
-        If a start date is provided without a defined end, then the server
-        should infer the range to be from midnight of the start date to
-        midnight of the day after the start date.
-
-        See references below for more details on range.
-
-        References:
-        1.)  https://project-haystack.org/doc/docHaystack/Ops#hisRead
-        2.)  https://project-haystack.org/doc/docHaystack/Zinc
+        When there is an existing Grid describing point records, it is worth
+        considering to use the Client.his_read() method to store available
+        metadata within the returned Grid.
         """
 
-        # convert range to Haystack defined string
-        if isinstance(range, date):
-            range = range.isoformat()
-        else:
-            range = str(range)
-
-        # structure data for HTTP request
-        if isinstance(ids, Ref):
-            data = _to_single_his_read_json(ids, range)
-        elif isinstance(ids, list):
-            data = _to_batch_his_read_json(ids, range)
-
+        data = _create_his_read_req_data(ids, range)
         response = self._call("hisRead", data)
 
-        return json_to_grid(response)
+        return response
 
     def his_write(self, his_grid: Grid) -> None:
         """Write history data to records on the Haystack server.
@@ -183,14 +197,12 @@ class Client:
         Note:  Future Phable versions may apply a breaking change to this func
         to make it easier.
         """
-        json_response = self._call("hisWrite", grid_to_json(his_grid))
-        if "err" in json_response["meta"].keys():
+        response = self._call("hisWrite", grid_to_json(his_grid))
+        if "err" in response.meta.keys():
             raise HaystackHisWriteOpServerResponseError(
                 "The server reported an error in response to the client's "
                 "HisWrite op"
             )
-
-        return
 
     # -------------------------------------------------------------------------
     # other ops
@@ -202,7 +214,7 @@ class Client:
 
         response = self._call("eval", data)
 
-        return json_to_grid(response)
+        return response
 
     # -------------------------------------------------------------------------
     # base to Haystack and all other ops
@@ -212,7 +224,7 @@ class Client:
         self,
         op: str,
         post_data: dict[str, Any] | None = None,
-    ) -> dict[str, Any]:
+    ) -> Grid:
         """Sends a POST request based on given parameters, receives a HTTP
         response, and returns JSON data."""
 
@@ -231,7 +243,7 @@ class Client:
             post_data=post_data,
             headers=headers,
         )
-        _validate_response_meta(response["meta"])
+        _validate_response_meta(response.meta)
 
         return response
 
@@ -255,6 +267,24 @@ def _validate_response_meta(meta: dict[str, Any]):
             "Incomplete data was returned for these reasons:"
             f"\n{incomplete_dis}"
         )
+
+
+def _create_his_read_req_data(
+    ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
+) -> dict[str, Any]:
+    # convert range to Haystack defined string
+    if isinstance(range, date):
+        range = range.isoformat()
+    else:
+        range = str(range)
+
+    # structure data for HTTP request
+    if isinstance(ids, Ref):
+        data = _to_single_his_read_json(ids, range)
+    elif isinstance(ids, list):
+        data = _to_batch_his_read_json(ids, range)
+
+    return data
 
 
 def _to_single_his_read_json(id: Ref, range: str) -> dict[str, Any]:
