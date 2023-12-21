@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "phable"
-version = "0.1.11a3"
+version = "0.1.11a4"
 description = ""
 authors = ["Rick Jennings <rjennings055@gmail.com>"]
 readme = "README.md"
@@ -9,8 +9,10 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.11"
-pandas = "^2.1.0"
+pandas = {version = "^2.1.4", optional = true}
 
+[tool.poetry.extras]
+pandas = ["pandas"]
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.1.0"
@@ -18,7 +20,6 @@ flake8 = "^6.0.0"
 mypy = "^1.1.1"
 pytest = "^7.3.0"
 isort = "^5.12.0"
-pandas = "^2.0.1"
 auto-changelog = "^0.6.0"
 
 [build-system]

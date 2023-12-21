@@ -5,14 +5,8 @@ import pytest
 
 from phable.client import Client
 from phable.kinds import Grid, Number, Ref, Uri
-from phable.parsers.pandas import (
-    DuplicateColNameError,
-    NotFoundError,
-    UnitMismatchError,
-    _get_col_meta_by_name,
-    get_col_meta,
-    grid_to_pandas,
-)
+
+phable_parsers_pandas = pytest.importorskip("phable.parsers.pandas")
 
 
 @pytest.fixture
@@ -83,7 +77,7 @@ def test_to_pandas_df_attributes() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(his_grid)
+    df = phable_parsers_pandas.grid_to_pandas(his_grid)
 
     assert df.attrs["meta"] == meta
 
@@ -145,11 +139,14 @@ def test_get_col_meta() -> None:
 
     df_attrs = {"cols": [col_meta1, col_meta2]}
     assert (
-        get_col_meta(df_attrs, "Headquarters ElecMeter-Main kW") == col_meta1
+        phable_parsers_pandas.get_col_meta(
+            df_attrs, "Headquarters ElecMeter-Main kW"
+        )
+        == col_meta1
     )
 
     assert (
-        get_col_meta(
+        phable_parsers_pandas.get_col_meta(
             df_attrs,
             Ref(
                 val="p:demo:r:2caffc8e-43db8fe3",
@@ -187,8 +184,8 @@ def test_get_col_meta_raises_not_found_error() -> None:
 
     df_attrs = {"cols": [col_meta1, col_meta2]}
 
-    with pytest.raises(NotFoundError):
-        get_col_meta(df_attrs, "Hello World!")
+    with pytest.raises(phable_parsers_pandas.NotFoundError):
+        phable_parsers_pandas.get_col_meta(df_attrs, "Hello World!")
 
 
 def test_get_col_meta_raises_unit_mismatch_error(hc: Client) -> None:
@@ -205,7 +202,7 @@ def test_get_col_meta_raises_unit_mismatch_error(hc: Client) -> None:
     ]
     cols = [{"name": "ts"}, {"name": "val"}]
     his_grid = Grid(meta, cols, rows)
-    with pytest.raises(UnitMismatchError):
+    with pytest.raises(phable_parsers_pandas.UnitMismatchError):
         his_grid.to_pandas()
 
 
@@ -228,13 +225,15 @@ def test_single_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(his_grid)
+    df = phable_parsers_pandas.grid_to_pandas(his_grid)
 
     assert df.loc[ts_now]["foo kW"] == 76.3
     assert df.loc[ts_now - timedelta(seconds=30)]["foo kW"] == 72.2
     assert {
         "name": "val",
-        "meta": _get_col_meta_by_name(df.attrs["cols"], "val"),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(
+            df.attrs["cols"], "val"
+        ),
     } == {
         "name": "val",
         "meta": {
@@ -271,7 +270,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(his_grid)
+    df = phable_parsers_pandas.grid_to_pandas(his_grid)
 
     assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
     assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
@@ -297,7 +296,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
     ]
 
     his_grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(his_grid)
+    df = phable_parsers_pandas.grid_to_pandas(his_grid)
 
     assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
     assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
@@ -307,7 +306,9 @@ def test_multi_col_his_grid_to_pandas() -> None:
 
     assert {
         "name": "v0",
-        "meta": _get_col_meta_by_name(df.attrs["cols"], "v0"),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(
+            df.attrs["cols"], "v0"
+        ),
     } == {
         "name": "v0",
         "meta": {
@@ -319,7 +320,9 @@ def test_multi_col_his_grid_to_pandas() -> None:
 
     assert {
         "name": "v1",
-        "meta": _get_col_meta_by_name(df.attrs["cols"], "v1"),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(
+            df.attrs["cols"], "v1"
+        ),
     } == {
         "name": "v1",
         "meta": {
@@ -357,8 +360,8 @@ def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> (
 
     his_grid = Grid(meta, cols, rows)
 
-    with pytest.raises(DuplicateColNameError):
-        grid_to_pandas(his_grid)
+    with pytest.raises(phable_parsers_pandas.DuplicateColNameError):
+        phable_parsers_pandas.grid_to_pandas(his_grid)
 
 
 def test_grid_to_pandas() -> None:
@@ -395,7 +398,7 @@ def test_grid_to_pandas() -> None:
     ]
 
     grid = Grid(meta, cols, rows)
-    df = grid_to_pandas(grid)
+    df = phable_parsers_pandas.grid_to_pandas(grid)
 
     assert df.iloc[0]["productName"] == "Acme Haystack Server"
     assert df.iloc[0]["tz"] == "New_York"

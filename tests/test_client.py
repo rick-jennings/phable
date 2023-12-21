@@ -366,6 +366,9 @@ def test_batch_his_write(hc: Client):
 
 
 def test_client_his_read_with_pandas(hc: Client):
+    # We are importing pandas here only to check that it can be imported.
+    # This can be improved in the future.
+    pytest.importorskip("pandas")  # type: ignore
     with hc:
         pts = hc.read("point and power and equipRef->siteMeter")
         pts_his_df = hc.his_read(pts, date.today()).to_pandas()
@@ -390,6 +393,9 @@ def test_client_his_read_with_pandas(hc: Client):
 
 
 def test_client_his_read_by_ids_with_pandas(hc: Client):
+    # We are importing pandas here only to check that it can be imported.
+    # This can be improved in the future.
+    pytest.importorskip("pandas")  # type: ignore
     with hc:
         pts = hc.read("point and power and equipRef->siteMeter")
         pts_his_df = hc.his_read_by_ids(

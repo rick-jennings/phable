@@ -17,8 +17,6 @@ from datetime import date, datetime
 from decimal import Decimal, getcontext
 from typing import Any
 
-import pandas as pd
-
 # -----------------------------------------------------------------------------
 # Project Haystack supported kinds
 # -----------------------------------------------------------------------------
@@ -33,7 +31,9 @@ class Grid:
     def __str__(self):
         return "Haystack Grid"
 
-    def to_pandas(self) -> pd.DataFrame:
+    def to_pandas(self):
+        """Converts a Grid instance into a Pandas DataFrame.  Requires
+        Phable's optional Pandas dependency to be installed."""
         from phable.parsers.pandas import grid_to_pandas
 
         return grid_to_pandas(self)

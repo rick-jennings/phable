@@ -154,8 +154,8 @@ class Client:
         When there are available point IDs without pt_data, then instead use
         the Client.his_read_by_ids() method.
         """
-
-        data = _create_his_read_req_data(pt_data.get_ids(), range)
+        pt_ids = [pt_row["id"] for pt_row in pt_data.rows]
+        data = _create_his_read_req_data(pt_ids, range)
         response = self._call("hisRead", data)
 
         meta = response.meta | pt_data.meta
