@@ -48,23 +48,23 @@ class Client:
     Haystack ops.
     """
 
-    def __init__(self, uri: str, username: str, password: str):
+    def __init__(self, uri: str, username: str, password: str, context=None):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
         self._auth_token: str
+        self._context = context
 
     # -------------------------------------------------------------------------
     # open the connection with the server
     # -------------------------------------------------------------------------
 
-    def open(self, context=None) -> None:
+    def open(self) -> None:
         """Initiates and executes the SCRAM authentication exchange with the
         server. Upon a successful exchange an auth token provided by the
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        self._context = context
         scram = ScramScheme(
             self.uri, self.username, self._password, self._context
         )
