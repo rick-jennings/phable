@@ -37,17 +37,6 @@ class Grid:
         # TODO: need to handle this differently if his_grid or standard grid
         return [row["id"] for row in self.rows]
 
-    # TODO: Is this necessary?
-    @staticmethod
-    def to_grid(rows: dict[str, Any] | list[dict[str, Any]]) -> Grid:
-        if isinstance(rows, dict):
-            rows = [rows]
-
-        cols = [{"name": name} for name in rows[0].keys()]
-        meta = {"ver": "3.0"}
-
-        return Grid(meta=meta, cols=cols, rows=rows)
-
     def to_pandas(self) -> pd.DataFrame:
         from phable.parsers.pandas import grid_to_pandas
 
