@@ -58,13 +58,16 @@ class Client:
     # open the connection with the server
     # -------------------------------------------------------------------------
 
-    def open(self) -> None:
+    def open(self, context=None) -> None:
         """Initiates and executes the SCRAM authentication exchange with the
         server. Upon a successful exchange an auth token provided by the
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(self.uri, self.username, self._password)
+        self._context = context
+        scram = ScramScheme(
+            self.uri, self.username, self._password, self._context
+        )
         self._auth_token = scram.get_auth_token()
         del scram
 
@@ -242,6 +245,7 @@ class Client:
             url=f"{self.uri}/{op}",
             post_data=post_data,
             headers=headers,
+            context=self._context,
         )
         _validate_response_meta(response.meta)
 

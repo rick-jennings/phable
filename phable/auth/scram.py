@@ -42,10 +42,11 @@ class ScramServerResponseParsingError(Exception):
 
 
 class ScramScheme:
-    def __init__(self, uri: str, username: str, password: str):
+    def __init__(self, uri: str, username: str, password: str, context=None):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
+        self._context = context
 
         # others to be defined later
         self._handshake_token: str
@@ -81,7 +82,9 @@ class ScramScheme:
         headers = {
             "Authorization": f"HELLO username={_to_base64(self.username)}"
         }
-        response = get_headers(self.uri + "/about", headers)
+        response = get_headers(
+            self.uri + "/about", headers, context=self._context
+        )
 
         try:
             self._handshake_token, self._hash = _parse_hello_call_result(
@@ -102,7 +105,9 @@ class ScramScheme:
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
             f"hash={self._hash}, data={_to_base64(gs2_header+self._c1_bare)}"
         }
-        response = get_headers(self.uri + "/about", headers)
+        response = get_headers(
+            self.uri + "/about", headers, context=self._context
+        )
 
         try:
             (
@@ -136,7 +141,9 @@ class ScramScheme:
             )
         }
 
-        response = get_headers(self.uri + "/about", headers)
+        response = get_headers(
+            self.uri + "/about", headers, context=self._context
+        )
 
         try:
             self._auth_token, server_signature = _parse_final_call_result(

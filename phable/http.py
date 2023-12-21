@@ -41,13 +41,13 @@ class HttpResponse:
 
 
 def post(
-    url: str,
-    post_data: dict[str, Any],
-    headers: dict[str, str],
+    url: str, post_data: dict[str, Any], headers: dict[str, str], context=None
 ) -> dict[str, Any]:
     if post_data is None:
         post_data = {}
-    response = request(url, data=post_data, headers=headers, method="POST")
+    response = request(
+        url, data=post_data, headers=headers, method="POST", context=context
+    )
 
     if response.status != 200:
         raise IncorrectHttpResponseStatus(
@@ -57,8 +57,10 @@ def post(
     return response.to_grid()
 
 
-def get_headers(url: str, headers: dict[str, str]) -> dict[str, str]:
-    return request(url, headers=headers).headers
+def get_headers(
+    url: str, headers: dict[str, str], context=None
+) -> dict[str, str]:
+    return request(url, headers=headers, context=context).headers
 
 
 # -----------------------------------------------------------------------------
@@ -72,6 +74,7 @@ def request(
     headers: Optional[dict[str, Any]] = None,
     method: str = "GET",
     error_count: int = 0,
+    context=None,
 ) -> HttpResponse:
     """Performs an HTTP request."""
     if not url.startswith("http"):
@@ -88,9 +91,12 @@ def request(
         url, data=request_data, headers=headers, method=method
     )
 
+    if context is None:
+        context = ssl.create_default_context()
+
     try:
         with urllib.request.urlopen(
-            httprequest, context=ssl.create_default_context()
+            httprequest, context=context
         ) as httpresponse:
             response = HttpResponse(
                 headers=httpresponse.headers,
