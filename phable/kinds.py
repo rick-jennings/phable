@@ -33,16 +33,10 @@ class Grid:
     def __str__(self):
         return "Haystack Grid"
 
-    def get_ids(self) -> list[Ref]:
-        # TODO: need to handle this differently if his_grid or standard grid
-        return [row["id"] for row in self.rows]
-
     def to_pandas(self) -> pd.DataFrame:
         from phable.parsers.pandas import grid_to_pandas
 
         return grid_to_pandas(self)
-
-    # TODO: add get_col_meta_by_id and get_col_meta_by_name
 
 
 @dataclass(frozen=True, slots=True)
