@@ -2,7 +2,7 @@ About
 -----
 Phable is a simple, modern Python toolkit for basic client connectivity to a [Project Haystack](https://project-haystack.org/) server.
 
-We aimed to make code within Phable's client.py and kinds.py modules self-documenting by using type hints and docstrings and carefully selecting what is publically exposed.  In the future we plan to improve docs and release a stable version 1.0.0 for Phable.
+We aimed to make code within Phable's client.py and kinds.py modules self-documenting by using type hints and docstrings and carefully selecting what is publicly exposed.  In the future we plan to improve docs and release a stable version 1.0.0 for Phable.
 
 Installation
 ------------
