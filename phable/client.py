@@ -1,12 +1,18 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import date
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
 from phable.parsers.json import grid_to_json
+
+if TYPE_CHECKING:
+    from ssl import SSLContext
+
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -46,14 +52,23 @@ class HaystackIncompleteDataResponseError(Exception):
 class Client:
     """A client interface to a Haystack Server used for authentication and
     Haystack ops.
+
+    If the optional SSL context is not provided, then a SSL context with
+    default settings is created and used.
     """
 
-    def __init__(self, uri: str, username: str, password: str, context=None):
+    def __init__(
+        self,
+        uri: str,
+        username: str,
+        password: str,
+        ssl_context: SSLContext | None = None,
+    ):
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
         self._auth_token: str
-        self._context = context
+        self._context = ssl_context
 
     # -------------------------------------------------------------------------
     # open the connection with the server
