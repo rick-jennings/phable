@@ -15,7 +15,7 @@ $ pip install phable
 Phable has an optional Pandas dependency that is required for phable.kinds.Grid.to_pandas().  Download Phable with its optional Pandas dependency from PyPI using:
 
 ```console
-$ pip install 'phable[pandas]'
+$ pip install "phable[pandas]"
 ```
 
 Note:  Most of the below examples require the optional Pandas dependency.
