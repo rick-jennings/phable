@@ -86,6 +86,12 @@ def test_read_site(hc: Client):
     assert grid.rows[0]["geoState"] == "VA"
 
 
+def test_read_UnknownRecError(hc: Client):
+    with pytest.raises(HaystackReadOpUnknownRecError):
+        with hc:
+            hc.read("hi")
+
+
 def test_read_point(hc: Client):
     with hc:
         grid = hc.read(

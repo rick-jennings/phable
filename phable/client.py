@@ -127,6 +127,9 @@ class Client:
         post_data = _rows_to_grid_json(data_row)
         response = self._call("read", post_data)
 
+        if len(response.rows) == 0:
+            raise HaystackReadOpUnknownRecError(filter)
+
         return response
 
     def read_by_ids(self, ids: Ref | list[Ref]) -> Grid:
