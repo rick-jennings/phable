@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 
-from phable.kinds import Number
+from phable.kinds import NA, Number
 
 if TYPE_CHECKING:
     from phable.kinds import Grid, Ref
@@ -141,7 +141,7 @@ def _parse_types(
 
         if isinstance(col_first_val, Number):
             his_df[col_name] = his_df[col_name].map(
-                lambda x: _parse_number(x, col_first_val.unit)
+                lambda x: _parse_col_data(x, col_first_val.unit)
             )
             col_meta["meta"]["kind"] = "Number"
             col_meta["meta"]["unit"] = col_first_val.unit
@@ -154,8 +154,11 @@ def _parse_types(
     return his_df
 
 
-def _parse_number(x: Number, expected_unit: str | None):
-    if not x.unit == expected_unit:
+def _parse_col_data(x: Number | NA, expected_unit: str | None):
+    if isinstance(x, NA):
+        return pd.NA
+
+    elif not x.unit == expected_unit:
         raise UnitMismatchError(
             "One of the DataFrame columns has a Haystack Number with a"
             " unit that is different than what is defined in the column's"

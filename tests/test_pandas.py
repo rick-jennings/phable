@@ -1,10 +1,11 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pandas as pd
 import pytest
 
 from phable.client import Client
-from phable.kinds import Grid, Number, Ref, Uri
+from phable.kinds import NA, Grid, Number, Ref, Uri
 
 phable_parsers_pandas = pytest.importorskip("phable.parsers.pandas")
 
@@ -404,3 +405,24 @@ def test_grid_to_pandas() -> None:
     assert df.iloc[0]["haystackVersion"] == "4.0"
     assert df.iloc[0]["vendorUri"] == Uri("http://acme.com/")
     assert df.iloc[0]["serverTime"] == server_time
+
+
+def test_grid_with_na_to_pandas():
+    ts_now = datetime.now(ZoneInfo("America/New_York"))
+
+    foo = Ref("1234", "foo kW")
+
+    meta = {"ver": "3.0", "id": foo}
+    cols = [{"name": "ts"}, {"name": "val"}]
+    rows = [
+        {
+            "ts": ts_now - timedelta(seconds=30),
+            "val": Number(0, "kW"),
+        },
+        {"ts": ts_now, "val": NA()},
+    ]
+
+    his_df = Grid(meta, cols, rows).to_pandas()
+    print(his_df)
+
+    assert pd.isna(his_df.iloc[1]["foo kW"])
