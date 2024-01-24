@@ -155,15 +155,25 @@ def _parse_types(
 
 
 def _parse_col_data(x: Number | NA, expected_unit: str | None):
-    if isinstance(x, NA):
+    if isinstance(x, Number):
+        if not x.unit == expected_unit:
+            raise UnitMismatchError(
+                "One of the DataFrame columns has a Haystack Number with a"
+                " unit that is different than what is defined in the column's"
+                " metadata."
+            )
+
+    else:
         return pd.NA
 
-    elif not x.unit == expected_unit:
-        raise UnitMismatchError(
-            "One of the DataFrame columns has a Haystack Number with a"
-            " unit that is different than what is defined in the column's"
-            " metadata."
-        )
+    # Note:  we might want to be more explicit on the else condition (TBD)
+
+    # if isinstance(x, NA):
+    #     return pd.NA
+
+    # elif math.isnan(x):
+    #     return pd.NA
+
     return x.val
 
 

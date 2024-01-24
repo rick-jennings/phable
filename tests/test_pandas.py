@@ -423,6 +423,32 @@ def test_grid_with_na_to_pandas():
     ]
 
     his_df = Grid(meta, cols, rows).to_pandas()
-    print(his_df)
 
     assert pd.isna(his_df.iloc[1]["foo kW"])
+
+
+def test_grid_with_diff_cols_in_rows():
+    foo1 = Ref("1234", "foo1 kW")
+    foo2 = Ref("2345", "foo2 kW")
+
+    ts_now = datetime.now(ZoneInfo("America/New_York"))
+    meta = {"ver": "3.0"}
+    cols = [
+        {"name": "ts"},
+        {"name": "v0", "meta": {"id": foo1}},
+        {"name": "v1", "meta": {"id": foo2}},
+    ]
+    rows = [
+        {"ts": ts_now - timedelta(seconds=30), "v0": Number(72.2, "kW")},
+        {"ts": ts_now, "v1": Number(72.2, "kW")},
+        {
+            "ts": ts_now - timedelta(seconds=30),
+            "v0": Number(72.2, "kW"),
+            "v1": Number(76.3, "kW"),
+        },
+    ]
+
+    his_df = Grid(meta, cols, rows).to_pandas()
+
+    assert pd.isna(his_df.iloc[0]["foo2 kW"])
+    assert pd.isna(his_df.iloc[1]["foo1 kW"])
