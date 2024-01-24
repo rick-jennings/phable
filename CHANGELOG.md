@@ -1,14 +1,8 @@
 # Changelog
 
-## 0.1.12 (2023-12-27)
+## 0.1.13 (2024-01-23)
 
-#### New Features
+#### Fixes
 
-* add HaystackReadOpUnknownRecError on Client.read()
-#### Docs
-
-* update README
-#### Others
-
-* bump to v0.1.12
-* remove print statement used for testing
+* parse pandas nan to pandas.NA
+* parse Haystack NA() to pandas.NA
