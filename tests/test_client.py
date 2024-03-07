@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.client import Client, HaystackReadOpUnknownRecError
+from phable.client import Client, CommitFlag, HaystackReadOpUnknownRecError
 from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
@@ -179,9 +179,7 @@ def test_his_read_by_ids_with_datetime_range(hc: Client):
 
         # get the his using Date as the range
         datetime_range = DateTimeRange(
-            datetime(
-                2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
-            )
+            datetime(2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York"))
         )
         his_grid = hc.his_read_by_ids(point_ref, datetime_range)
 
@@ -228,9 +226,7 @@ def test_his_read_by_ids_with_datetime_slice(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        start = datetime(
-            2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York")
-        )
+        start = datetime(2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York"))
         end = start + timedelta(days=3)
 
         datetime_range = DateTimeRange(start, end)
@@ -424,3 +420,110 @@ def test_client_his_read_by_ids_with_pandas(hc: Client):
     assert "ver" in pts_his_df.attrs["meta"].keys()
     assert "hisStart" in pts_his_df.attrs["meta"].keys()
     assert "hisEnd" in pts_his_df.attrs["meta"].keys()
+
+
+def test_single_commit(hc: Client):
+
+    # create a new rec
+    with hc:
+        data = [{"dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
+        response: Grid = hc.commit(data, CommitFlag.ADD, False)
+
+    new_rec_id = response.rows[0]["id"]
+    mod = response.rows[0]["mod"]
+
+    # verify the response
+    # TODO: check why the server applies response return when not expected
+    assert isinstance(new_rec_id, Ref)
+    assert isinstance(mod, datetime)
+
+    assert response.rows[0]["dis"] == "TestRec"
+    assert response.rows[0]["testing"] == Marker()
+    assert response.rows[0]["pytest"] == Marker()
+
+    # add a new tag called foo to the newly created rec
+    # this time have the response return the full tag defs
+    with hc:
+        data = [{"id": new_rec_id, "mod": mod, "foo": "new tag"}]
+        response: Grid = hc.commit(data, CommitFlag.UPDATE, True)
+
+    new_rec_id = response.rows[0]["id"]
+    mod = response.rows[0]["mod"]
+
+    # verify the response
+    assert isinstance(new_rec_id, Ref)
+    assert isinstance(mod, datetime)
+    assert response.rows[0]["dis"] == "TestRec"
+    assert response.rows[0]["testing"] == Marker()
+    assert response.rows[0]["pytest"] == Marker()
+    assert response.rows[0]["foo"] == "new tag"
+
+    # remove the newly created rec
+    with hc:
+        data = [{"id": new_rec_id, "mod": mod}]
+        response: Grid = hc.commit(data, CommitFlag.REMOVE)
+
+    # Test invalid Refs
+    with pytest.raises(HaystackReadOpUnknownRecError):
+        with hc:
+            response = hc.read_by_ids(new_rec_id)
+
+
+def test_batch_commit(hc: Client):
+
+    # create a new rec
+    with hc:
+        data = [
+            {"dis": "TestRec1", "testing1": Marker(), "pytest": Marker()},
+            {"dis": "TestRec2", "testing2": Marker(), "pytest": Marker()},
+        ]
+        response: Grid = hc.commit(data, CommitFlag.ADD, False)
+
+    new_rec_id1 = response.rows[0]["id"]
+    mod1 = response.rows[0]["mod"]
+
+    new_rec_id2 = response.rows[1]["id"]
+    mod2 = response.rows[1]["mod"]
+
+    # verify the response
+    # TODO: check why the server applies response return when not expected
+    assert isinstance(new_rec_id1, Ref)
+    assert isinstance(mod1, datetime)
+
+    assert isinstance(new_rec_id2, Ref)
+    assert isinstance(mod2, datetime)
+
+    assert response.rows[0]["testing1"] == Marker()
+    assert response.rows[1]["testing2"] == Marker()
+
+    # add a new tag called foo to the newly created rec
+    # this time have the response return the full tag defs
+    with hc:
+        data = [
+            {"id": new_rec_id1, "mod": mod1, "foo": "new tag1"},
+            {"id": new_rec_id2, "mod": mod2, "foo": "new tag2"},
+        ]
+        response: Grid = hc.commit(data, CommitFlag.UPDATE, True)
+
+    new_rec_id1 = response.rows[0]["id"]
+    mod1 = response.rows[0]["mod"]
+    new_rec_id2 = response.rows[1]["id"]
+    mod2 = response.rows[1]["mod"]
+
+    # verify the response
+    assert response.rows[0]["foo"] == "new tag1"
+    assert response.rows[1]["foo"] == "new tag2"
+
+    # remove the newly created recs
+    with hc:
+        data = [{"id": new_rec_id1, "mod": mod1}, {"id": new_rec_id2, "mod": mod2}]
+        response: Grid = hc.commit(data, CommitFlag.REMOVE)
+
+    # Test invalid Refs
+    with pytest.raises(HaystackReadOpUnknownRecError):
+        with hc:
+            response = hc.read_by_ids(new_rec_id1)
+
+    with pytest.raises(HaystackReadOpUnknownRecError):
+        with hc:
+            response = hc.read_by_ids(new_rec_id2)

@@ -13,9 +13,7 @@ from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, U
 def json_to_grid(json_data: dict[str, Any]) -> Grid:
     _parse_kinds(json_data)
 
-    return Grid(
-        meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"]
-    )
+    return Grid(meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"])
 
 
 # TODO: need to make this more robust and add tests, etc.
@@ -65,6 +63,12 @@ def _parse_dict_with_kinds_to_json(
         elif isinstance(row[key], Ref):
             parsed_row[key] = _ref_to_json(val)
         # this case is for dealing with col data in Grid
+        elif isinstance(row[key], Marker):
+            parsed_row[key] = {"_kind": "marker"}
+        elif isinstance(row[key], NA):
+            parsed_row[key] = {"_kind": "na"}
+        elif isinstance(row[key], Remove):
+            parsed_row[key] = {"_kind": "remove"}
         elif isinstance(row[key], dict):
             if "id" in row[key].keys():
                 new_val = row[key]

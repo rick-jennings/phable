@@ -8,11 +8,12 @@ from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
-from phable.parsers.json import grid_to_json
+from phable.parsers.json import _parse_dict_with_kinds_to_json, grid_to_json
 
 if TYPE_CHECKING:
     from ssl import SSLContext
 
+from enum import StrEnum, auto
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -42,6 +43,17 @@ class HaystackErrorGridResponseError(Exception):
 @dataclass
 class HaystackIncompleteDataResponseError(Exception):
     help_msg: str
+
+
+# -----------------------------------------------------------------------------
+# Enums for string inputs
+# -----------------------------------------------------------------------------
+
+
+class CommitFlag(StrEnum):
+    ADD = auto()
+    UPDATE = auto()
+    REMOVE = auto()
 
 
 # -----------------------------------------------------------------------------
@@ -80,9 +92,7 @@ class Client:
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(
-            self.uri, self.username, self._password, self._context
-        )
+        scram = ScramScheme(self.uri, self.username, self._password, self._context)
         self._auth_token = scram.get_auth_token()
         del scram
 
@@ -226,19 +236,34 @@ class Client:
             )
 
     # -------------------------------------------------------------------------
-    # other ops
+    # SkySpark ops
     # -------------------------------------------------------------------------
 
     def eval(self, expr: str) -> Grid:
-        """Evaluates an expression."""
+        """Perform a SkySpark eval op.  Evaluates an expression in SkySpark and returns
+        the results."""
         data = _rows_to_grid_json({"expr": expr})
 
         response = self._call("eval", data)
 
         return response
 
+    def commit(
+        self,
+        data: list[dict[str, Any]],
+        flag: CommitFlag,
+        read_return: bool = False,
+    ) -> Grid:
+        """Perform a SkySpark commit op."""
+
+        data = _create_commit_op_json(data, flag, read_return)
+
+        response = self._call("commit", data)
+
+        return response
+
     # -------------------------------------------------------------------------
-    # base to Haystack and all other ops
+    # base to Haystack and SkySpark ops
     # -------------------------------------------------------------------------
 
     def _call(
@@ -279,15 +304,13 @@ def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
         raise HaystackErrorGridResponseError(
-            "The server returned an error grid with this message:\n"
-            + error_dis
+            "The server returned an error grid with this message:\n" + error_dis
         )
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
         raise HaystackIncompleteDataResponseError(
-            "Incomplete data was returned for these reasons:"
-            f"\n{incomplete_dis}"
+            "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
         )
 
 
@@ -311,9 +334,7 @@ def _create_his_read_req_data(
 
 def _to_single_his_read_json(id: Ref, range: str) -> dict[str, Any]:
     """Creates a Grid in the JSON format using given Ref ID and range."""
-    return _rows_to_grid_json(
-        {"id": {"_kind": "ref", "val": id.val}, "range": range}
-    )
+    return _rows_to_grid_json({"id": {"_kind": "ref", "val": id.val}, "range": range})
 
 
 def _to_batch_his_read_json(ids: list[Ref], range: str) -> dict[str, Any]:
@@ -322,6 +343,26 @@ def _to_batch_his_read_json(ids: list[Ref], range: str) -> dict[str, Any]:
     meta = {"ver": "3.0", "range": range}
     cols = [{"name": "id"}]
     rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+
+    return {
+        "_kind": "grid",
+        "meta": meta,
+        "cols": cols,
+        "rows": rows,
+    }
+
+
+def _create_commit_op_json(
+    data: list[dict[str, Any]], type: CommitFlag, read_return: bool
+):
+
+    meta = {"ver": "3.0", "commit": str(type)}
+
+    if read_return:
+        meta["readReturn"] = {"_kind": "marker"}
+
+    cols = _get_cols_from_rows(data)
+    rows = [_parse_dict_with_kinds_to_json(row) for row in data]
 
     return {
         "_kind": "grid",
@@ -341,9 +382,7 @@ def _to_empty_grid_json() -> dict[str, Any]:
     }
 
 
-def _rows_to_grid_json(rows: list[dict[str, Any]]) -> dict[str, Any]:
-    if isinstance(rows, dict):
-        rows = [rows]
+def _get_cols_from_rows(rows: list[dict[str, Any]]) -> list:
 
     col_names: list[str] = []
     for row in rows:
@@ -352,6 +391,15 @@ def _rows_to_grid_json(rows: list[dict[str, Any]]) -> dict[str, Any]:
                 col_names.append(col_name)
 
     cols = [{"name": name} for name in col_names]
+    return cols
+
+
+def _rows_to_grid_json(rows: list[dict[str, Any]]) -> dict[str, Any]:
+
+    if isinstance(rows, dict):
+        rows = [rows]
+
+    cols = _get_cols_from_rows(rows)
     meta = {"ver": "3.0"}
     rows = rows.copy()
 
