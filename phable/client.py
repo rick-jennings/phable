@@ -6,9 +6,13 @@ from typing import TYPE_CHECKING, Any
 
 from phable.auth.scram import ScramScheme
 from phable.http import post
-from phable.kinds import DateRange, DateTimeRange, Grid, Ref
+from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
-from phable.parsers.json import _parse_dict_with_kinds_to_json, grid_to_json
+from phable.parsers.json import (
+    _number_to_json,
+    _parse_dict_with_kinds_to_json,
+    grid_to_json,
+)
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -234,6 +238,48 @@ class Client:
                 "The server reported an error in response to the client's "
                 "HisWrite op"
             )
+
+    def point_write(
+        self,
+        id: Ref,
+        level: int,
+        val: Number | bool | str | None = None,
+        who: str | None = None,
+        dur: Number | None = None,
+    ) -> Grid:
+        """Uses Project Haystack's PointWrite op to write to a given level of a
+        writable point's priority array."""
+
+        row = {"id": {"_kind": "ref", "val": id.val}, "level": level}
+
+        # add optional parameters to row if applicable
+        if val is not None:
+            if isinstance(val, Number):
+                row["val"] = _number_to_json(val)
+            else:
+                row["val"] = val
+        if who is not None:
+            row["who"] = who
+        if dur is not None:
+            row["dur"] = _number_to_json(dur)
+
+        data = _rows_to_grid_json([row])
+
+        response = self._call("pointWrite", data)
+
+        return response
+
+    def point_write_array(self, id: Ref) -> Grid:
+        """Uses Project Haystack's PointWrite op to read the current status of a
+        writable point's priority array."""
+
+        row = {"id": {"_kind": "ref", "val": id.val}}
+
+        data = _rows_to_grid_json([row])
+
+        response = self._call("pointWrite", data)
+
+        return response
 
     # -------------------------------------------------------------------------
     # SkySpark ops

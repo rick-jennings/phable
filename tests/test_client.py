@@ -527,3 +527,60 @@ def test_batch_commit(hc: Client):
     with pytest.raises(HaystackReadOpUnknownRecError):
         with hc:
             response = hc.read_by_ids(new_rec_id2)
+
+
+def test_point_write_number(hc: Client):
+
+    with hc:
+        response = hc.point_write(Ref("2d6a2714-0d0a79fb"), 1, Number(0, "kW"))
+
+    assert isinstance(response, Grid)
+    assert response.meta["ok"] == Marker()
+    assert response.cols[0]["name"] == "empty"
+    assert response.rows == []
+
+
+def test_point_write_number_who(hc: Client):
+
+    with hc:
+        response = hc.point_write(
+            Ref("2d6a2714-0d0a79fb"), 1, Number(0, "kW"), "Phable"
+        )
+
+    assert isinstance(response, Grid)
+    assert response.meta["ok"] == Marker()
+    assert response.cols[0]["name"] == "empty"
+    assert response.rows == []
+
+
+def test_point_write_number_who_dur(hc: Client):
+
+    with hc:
+        response = hc.point_write(
+            Ref("2d6a2714-0d0a79fb"), 8, Number(0, "kW"), "Phable", Number(0.5, "hr")
+        )
+
+    assert isinstance(response, Grid)
+    assert response.meta["ok"] == Marker()
+    assert response.cols[0]["name"] == "empty"
+    assert response.rows == []
+
+
+def test_point_write_null(hc: Client):
+
+    with hc:
+        response = hc.point_write(Ref("2d6a2714-0d0a79fb"), 1)
+
+    assert isinstance(response, Grid)
+    assert response.meta["ok"] == Marker()
+    assert response.cols[0]["name"] == "empty"
+    assert response.rows == []
+
+
+def test_point_write_array(hc: Client):
+
+    with hc:
+        response = hc.point_write_array(Ref("2d6a2714-0d0a79fb"))
+
+    assert response.rows[0]["level"] == Number(1)
+    assert response.rows[-1]["level"] == Number(17)

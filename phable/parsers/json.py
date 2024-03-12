@@ -46,6 +46,10 @@ def grid_to_json(grid: Grid) -> dict[str, Any]:
     }
 
 
+# TODO
+def parse_kind_to_json(kind: Any) -> dict[str, str | dict[str, str]]: ...
+
+
 def _parse_dict_with_kinds_to_json(
     row: dict[str, Any]
 ) -> dict[str, str | dict[str, str]]:
