@@ -1,30 +1,32 @@
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
+from phable.client import Client
 from phable.kinds import Grid, Number, Ref
 
-foo1 = Ref("1234", "foo1 kW")
-foo2 = Ref("2345", "foo2 kW")
+# define these settings specific to your use case
+uri = "http://localhost:8080/api/demo"
+username = "su"
+password = "su"
 
+
+# define the data we want to write to the server
 ts_now = datetime.now(ZoneInfo("America/New_York"))
-meta = {"ver": "3.0"}
-cols = [
-    {"name": "ts"},
-    {"name": "v0", "meta": {"id": foo1}},
-    {"name": "v1", "meta": {"id": foo2}},
-]
+meta = {"ver": "3.0", "id": Ref("2d6a2714-0d0a79fb")}
+cols = [{"name": "ts"}, {"name": "val"}]
 rows = [
-    {"ts": ts_now - timedelta(seconds=30), "v0": 72.2},
-    {"ts": ts_now, "v1": 123.221},
     {
         "ts": ts_now - timedelta(seconds=30),
-        "v0": 213.213,
-        "v1": Number(122),
+        "val": Number(1_000.0, "kW"),
     },
-    {},
-    {},
+    {
+        "ts": ts_now,
+        "val": Number(2_000.0, "kW"),
+    },
 ]
 
-his_df = Grid(meta, cols, rows).to_pandas()
+write_data = Grid(meta, cols, rows)
 
-print(his_df)
+
+with Client(uri, username, password) as ph:
+    ph.his_write(write_data)
