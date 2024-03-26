@@ -6,19 +6,21 @@ We aimed to make code within Phable's client.py and kinds.py modules self-docume
 
 Installation
 ------------
-Phable requires Python version 3.11 or higher and has no required software dependencies.  Download Phable without its optional dependencies from PyPI using:
+Phable requires Python version 3.11 or higher and generally has no required software dependencies.  Download Phable from PyPI using:
 
 ```console
 $ pip install phable
 ```
 
-Phable has an optional Pandas dependency that is required for phable.kinds.Grid.to_pandas().  Download Phable with its optional Pandas dependency from PyPI using:
+Phable uses the `zoneinfo` module for IANA time zone support, which by default uses the system's time zone data if available.  If no system time zone data is available, then Phable requires the `tzdata` package available on PyPI to be installed.
+
+Phable has an optional `pandas` package dependency that is required for `phable.kinds.Grid.to_pandas()`.  Download Phable with `pandas` from PyPI using:
 
 ```console
 $ pip install "phable[pandas]"
 ```
 
-Note:  Most of the below examples require the optional Pandas dependency.
+Note:  Most of the below examples require the optional `pandas` package dependency.
 
 Example: A Custom SSL Context & Haystack's About op
 ---------------------------------------------------

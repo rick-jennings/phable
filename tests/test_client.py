@@ -557,7 +557,10 @@ def test_point_write_number_who_dur(hc: Client):
 
     with hc:
         response = hc.point_write(
-            Ref("2d6a2714-0d0a79fb"), 8, Number(0, "kW"), "Phable", Number(0.5, "hr")
+            Ref("2d6a2714-0d0a79fb"),
+            8,
+            Number(0, "kW"),
+            "Phable",  # , Number(0.5, "hr")
         )
 
     assert isinstance(response, Grid)

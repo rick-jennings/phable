@@ -214,7 +214,8 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
             return ZoneInfo(iana_tz)
 
     raise IanaCityNotFoundError(
-        f"Unable to locate the city {haystack_tz} in the IANA database"
+        f"Unable to locate the city {haystack_tz} in the IANA database.  "
+        + "Consider installing the tzdata package."
     )
 
 
