@@ -29,6 +29,49 @@ def test_grid():
     assert str(grid) == "Haystack Grid"
 
 
+def test_to_grid_without_meta():
+
+    # test #1
+    rows = [
+        {"ts": "some_time", "v0": "50kW"},
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.meta == {"ver": "3.0"}
+
+    # test #2
+    rows = [
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.meta == {"ver": "3.0"}
+
+    # test #3
+    rows = [
+        {"ts": "some_time", "v0": "45kW"},
+        {"ts": "some_time", "v0": "50kW"},
+    ]
+    grid = Grid.to_grid(rows)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
+    assert grid.meta == {"ver": "3.0"}
+
+
+def test_to_grid_with_meta():
+
+    # test #1
+    meta = {"test_meta": "Hi!"}
+    rows = [
+        {"ts": "some_time", "v0": "50kW"},
+        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+    ]
+    grid = Grid.to_grid(rows, meta)
+    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.meta == {"ver": "3.0", "test_meta": "Hi!"}
+
+
 def test_number() -> None:
     # valid cases
     assert str(Number(10, "kW")) == "10kW"
@@ -95,9 +138,7 @@ def test_datetime_range_no_end() -> None:
     assert str(datetime_range) == dt.isoformat() + " New_York"
 
     # America/New_York
-    dt1 = datetime(
-        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
+    dt1 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
     datetime_range = str(DateTimeRange(dt1))
     assert datetime_range == "2023-03-12T12:12:34-04:00 New_York"
 
@@ -113,15 +154,10 @@ def test_datetime_range_no_end() -> None:
 
 
 def test_datetime_range() -> None:
-    start = datetime(
-        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
-    end = datetime(
-        2023, 4, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
+    start = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
+    end = datetime(2023, 4, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
 
     datetime_range = DateTimeRange(start, end)
     assert str(datetime_range) == (
-        "2023-03-12T12:12:34-04:00 New_York,"
-        "2023-04-12T12:12:34-04:00 New_York"
+        "2023-03-12T12:12:34-04:00 New_York," "2023-04-12T12:12:34-04:00 New_York"
     )

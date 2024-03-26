@@ -9,7 +9,6 @@ The following Haystack types map directly to their Python equivalent types:
  - DateTime
 """
 
-
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -37,6 +36,29 @@ class Grid:
         from phable.parsers.pandas import grid_to_pandas
 
         return grid_to_pandas(self)
+
+    @staticmethod
+    def to_grid(
+        rows: dict[str, Any] | list[dict[str, Any]], meta: dict[str, Any] | None = None
+    ) -> Grid:
+        if isinstance(rows, dict):
+            rows = [rows]
+
+        # might be able to find a nicer way to do this
+        col_names: list[str] = []
+        for row in rows:
+            for col_name in row.keys():
+                if col_name not in col_names:
+                    col_names.append(col_name)
+
+        cols = [{"name": name} for name in col_names]
+
+        grid_meta = {"ver": "3.0"}
+
+        if meta is not None:
+            grid_meta = grid_meta | meta
+
+        return Grid(meta=grid_meta, cols=cols, rows=rows)
 
 
 @dataclass(frozen=True, slots=True)
