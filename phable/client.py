@@ -16,6 +16,7 @@ from phable.parsers.json import (
 
 if TYPE_CHECKING:
     from ssl import SSLContext
+    from datetime import datetime
 
 from enum import StrEnum, auto
 
@@ -26,6 +27,11 @@ from enum import StrEnum, auto
 
 @dataclass
 class HaystackCloseOpServerResponseError(Exception):
+    help_msg: str
+
+
+@dataclass
+class HaystackHisWriteOpParametersError(Exception):
     help_msg: str
 
 
@@ -221,17 +227,76 @@ class Client:
 
         return response
 
-    def his_write(self, his_grid: Grid) -> None:
-        """Write history data to records on the Haystack server.
+    def his_write_by_ids(
+        self,
+        ids: Ref | list[Ref],
+        his_rows: list[dict[str, datetime | bool | Number | str]],
+    ) -> None:
+        """Write history row data to point records on the Haystack server.
 
-        A Haystack Grid object defined in phable.kinds will need to be
-        initialized as an arg. See reference below for more details on how to
-        define the his_grid arg.
-        https://project-haystack.org/doc/docHaystack/Ops#hisWrite
+        --------------------------------------------------------------------------------
+        When parameter ids is a Ref:
 
-        Note:  Future Phable versions may apply a breaking change to this func
-        to make it easier.
+        History row key names must be "ts" or "val".  Values for the column named "val"
+        are for the Ref described by the ids parameter.
+
+        --------------------------------------------------------------------------------
+        When parameter ids is a list of Refs:
+
+        History row key names must be "ts" or "vX" where "X" is an integer equal
+        to or greater than zero.  Also, "X" must not exceed the highest index of ids.
+
+        The index of an id in ids corresponds to the column name used in his_rows.
+
+        For example,
+
+        ids = [Ref("foo0"), Ref("foo1"), Ref("foo2")]
+        his_rows = [{"ts": datetime.now(), "v0": Number(1, "kW"),
+                     "v1": Number(23, "kW"), "v2": Number(8, "kW")}]
+
+        - Column named "v0" corresponds to index 0 of ids, or Ref("foo0")
+        - Column named "v1" corresponds to index 1 of ids, or Ref("foo1")
+        - Column named "v2" corresponds to index 2 of ids, or Ref("foo2")
+
+        --------------------------------------------------------------------------------
+        A `HaystackHisWriteOpParametersError` is raised if the below condition is not
+        met:
+
+            1. Invalid column names are used in parameter his_rows
+
+        --------------------------------------------------------------------------------
+        Additional requirements which are not validated by this method:
+
+            1. Timestamp and value kind of his_row data must match the entity's
+               (Ref) configured timezone and kind
+            2. Numeric data must match the entity's (Ref) configured unit or
+               status of being unitless
+
+        Note:  We are considering to add another method `Client.his_write()` in the
+        future that would validate these requirements.  It would require `pt_data`
+        similar to `Client.his_read()`.
+
+        --------------------------------------------------------------------------------
+        Recommendations for enhanced performance:
+
+            1. Avoid posting out-of-order or duplicate data
         """
+
+        if isinstance(ids, Ref):
+            _validate_his_write_ids_as_ref(ids, his_rows)
+            meta = {"ver": "3.0", "id": ids}
+            cols = [{"name": "ts"}, {"name": "val"}]
+
+        elif isinstance(ids, list):
+            _validate_his_write_ids_as_list(ids, his_rows)
+            meta = {"ver": "3.0"}
+            cols = [{"name": "ts"}]
+
+            for count, id in enumerate(ids):
+                cols.append({"name": f"v{count}", "meta": {"id": id}})
+
+        his_grid = Grid(meta, cols, his_rows)
+
         response = self._call("hisWrite", grid_to_json(his_grid))
         if "err" in response.meta.keys():
             raise HaystackHisWriteOpServerResponseError(
@@ -344,6 +409,38 @@ class Client:
 # -----------------------------------------------------------------------------
 # Misc support functions for Client()
 # -----------------------------------------------------------------------------
+
+
+def _validate_his_write_ids_as_ref(
+    ids: Ref, his_rows: list[dict[str, datetime | bool | Number | str]]
+):
+
+    for his_row in his_rows:
+        for key in his_row.keys():
+            if key not in ["ts", "val"]:
+                raise HaystackHisWriteOpParametersError(
+                    f'There is an invalid column name "{key}" in one of the his_rows.  '
+                    + "Column names in his_rows used for a single HisWrite op are "
+                    + 'expected to be "ts" or "val".'
+                )
+
+
+def _validate_his_write_ids_as_list(
+    ids: list[Ref], his_rows: list[dict[str, datetime | bool | Number | str]]
+):
+    # order does not matter here
+    expected_col_names = [f"v{i}" for i in range(len(ids))]
+    expected_col_names.append("ts")
+
+    for his_row in his_rows:
+        for key in his_row.keys():
+            if key not in expected_col_names:
+                raise HaystackHisWriteOpParametersError(
+                    f'There is an invalid column name "{key}" in one of the his_rows.  '
+                    + "Column names in his_rows used for a batch HisWrite op are "
+                    + 'expected to be "ts" or "vX" where "X" is an integer greater than'
+                    + " zero."
+                )
 
 
 def _validate_response_meta(meta: dict[str, Any]):

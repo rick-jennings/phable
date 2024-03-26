@@ -3,7 +3,12 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.client import Client, CommitFlag, HaystackReadOpUnknownRecError
+from phable.client import (
+    Client,
+    CommitFlag,
+    HaystackHisWriteOpParametersError,
+    HaystackReadOpUnknownRecError,
+)
 from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 
 # Note 1:  These tests are made using SkySpark as the Haystack server
@@ -282,7 +287,7 @@ def test_his_read(hc: Client):
     assert his_grid.rows[0]["v0"].val >= 0
 
 
-def test_single_his_write(hc: Client):
+def test_single_his_write_by_ids(hc: Client):
     with hc:
         # create a test point on the Haystack server and fetch the Ref ID
         axon_expr = """
@@ -293,8 +298,6 @@ def test_single_his_write(hc: Client):
 
         ts_now = datetime.now(ZoneInfo("America/New_York"))
 
-        meta = {"ver": "3.0", "id": test_pt_id}
-        cols = [{"name": "ts"}, {"name": "val"}]
         rows = [
             {
                 "ts": ts_now - timedelta(seconds=30),
@@ -306,10 +309,8 @@ def test_single_his_write(hc: Client):
             },
         ]
 
-        his_grid = Grid(meta, cols, rows)
-
         # write the his data to the test pt
-        hc.his_write(his_grid)
+        hc.his_write_by_ids(test_pt_id, rows)
 
     with hc:
         range = date.today()
@@ -319,7 +320,53 @@ def test_single_his_write(hc: Client):
     assert his_grid.rows[1]["val"] == Number(76.30000305175781)
 
 
-def test_batch_his_write(hc: Client):
+def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
+
+    dt1 = datetime.now()
+    his_rows1 = [
+        {"ts": dt1 - timedelta(minutes=5), "val1": Number(1)},
+        {"ts": dt1, "val1": Number(1)},
+    ]
+
+    with pytest.raises(HaystackHisWriteOpParametersError):
+        with hc:
+            hc.his_write_by_ids(Ref("abc"), his_rows1)
+
+    dt2 = datetime.now()
+    his_rows2 = [
+        {"ts": dt2 - timedelta(minutes=5), "v0": Number(1)},
+        {"ts": dt2, "v1": Number(1)},
+    ]
+
+    with pytest.raises(HaystackHisWriteOpParametersError):
+        with hc:
+            hc.his_write_by_ids(Ref("abc"), his_rows2)
+
+
+def test_batch_his_write_by_ids_wrong_his_rows(hc: Client):
+
+    dt1 = datetime.now()
+    his_rows1 = [
+        {"ts": dt1 - timedelta(minutes=5), "val": Number(1)},
+        {"ts": dt1, "val": Number(1)},
+    ]
+
+    with pytest.raises(HaystackHisWriteOpParametersError):
+        with hc:
+            hc.his_write_by_ids([Ref("abc"), Ref("def")], his_rows1)
+
+    dt2 = datetime.now()
+    his_rows2 = [
+        {"ts": dt2 - timedelta(minutes=5), "v0": Number(1)},
+        {"ts": dt2, "v2": Number(1)},
+    ]
+
+    with pytest.raises(HaystackHisWriteOpParametersError):
+        with hc:
+            hc.his_write_by_ids([Ref("abc"), Ref("def")], his_rows2)
+
+
+def test_batch_his_write_by_ids(hc: Client):
     with hc:
         # create two test points on the Haystack server and fetch the Ref IDs
         axon_expr = """
@@ -331,12 +378,6 @@ def test_batch_his_write(hc: Client):
 
         ts_now = datetime.now(ZoneInfo("America/New_York"))
 
-        meta = {"ver": "3.0"}
-        cols = [
-            {"name": "ts"},
-            {"name": "v0", "meta": {"id": test_pt_id1}},
-            {"name": "v1", "meta": {"id": test_pt_id2}},
-        ]
         rows = [
             {
                 "ts": ts_now - timedelta(seconds=30),
@@ -346,10 +387,8 @@ def test_batch_his_write(hc: Client):
             {"ts": ts_now, "v0": Number(76.3), "v1": Number(72.2)},
         ]
 
-        his_grid = Grid(meta, cols, rows)
-
         # write the his data to the test pt
-        hc.his_write(his_grid)
+        hc.his_write_by_ids([test_pt_id1, test_pt_id2], rows)
 
     with hc:
         range = date.today()
