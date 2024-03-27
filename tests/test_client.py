@@ -184,7 +184,9 @@ def test_his_read_by_ids_with_datetime_range(hc: Client):
 
         # get the his using Date as the range
         datetime_range = DateTimeRange(
-            datetime(2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York"))
+            datetime(
+                2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York")
+            )
         )
         his_grid = hc.his_read_by_ids(point_ref, datetime_range)
 
@@ -231,7 +233,9 @@ def test_his_read_by_ids_with_datetime_slice(hc: Client):
         point_ref = point_grid.rows[0]["id"]
 
         # get the his using Date as the range
-        start = datetime(2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York"))
+        start = datetime(
+            2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York")
+        )
         end = start + timedelta(days=3)
 
         datetime_range = DateTimeRange(start, end)
@@ -555,7 +559,10 @@ def test_batch_commit(hc: Client):
 
     # remove the newly created recs
     with hc:
-        data = [{"id": new_rec_id1, "mod": mod1}, {"id": new_rec_id2, "mod": mod2}]
+        data = [
+            {"id": new_rec_id1, "mod": mod1},
+            {"id": new_rec_id2, "mod": mod2},
+        ]
         response: Grid = hc.commit(data, CommitFlag.REMOVE)
 
     # Test invalid Refs

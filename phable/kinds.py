@@ -39,7 +39,8 @@ class Grid:
 
     @staticmethod
     def to_grid(
-        rows: dict[str, Any] | list[dict[str, Any]], meta: dict[str, Any] | None = None
+        rows: dict[str, Any] | list[dict[str, Any]],
+        meta: dict[str, Any] | None = None,
     ) -> Grid:
         if isinstance(rows, dict):
             rows = [rows]

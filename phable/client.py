@@ -8,11 +8,7 @@ from phable.auth.scram import ScramScheme
 from phable.http import post
 from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
-from phable.parsers.json import (
-    _number_to_json,
-    _parse_dict_with_kinds_to_json,
-    grid_to_json,
-)
+from phable.parsers.json import _dict_to_json, _number_to_json, grid_to_json
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -102,7 +98,9 @@ class Client:
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(self.uri, self.username, self._password, self._context)
+        scram = ScramScheme(
+            self.uri, self.username, self._password, self._context
+        )
         self._auth_token = scram.get_auth_token()
         del scram
 
@@ -447,13 +445,15 @@ def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
         raise HaystackErrorGridResponseError(
-            "The server returned an error grid with this message:\n" + error_dis
+            "The server returned an error grid with this message:\n"
+            + error_dis
         )
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
         raise HaystackIncompleteDataResponseError(
-            "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
+            "Incomplete data was returned for these reasons:"
+            f"\n{incomplete_dis}"
         )
 
 
@@ -477,7 +477,9 @@ def _create_his_read_req_data(
 
 def _to_single_his_read_json(id: Ref, range: str) -> dict[str, Any]:
     """Creates a Grid in the JSON format using given Ref ID and range."""
-    return _rows_to_grid_json({"id": {"_kind": "ref", "val": id.val}, "range": range})
+    return _rows_to_grid_json(
+        {"id": {"_kind": "ref", "val": id.val}, "range": range}
+    )
 
 
 def _to_batch_his_read_json(ids: list[Ref], range: str) -> dict[str, Any]:
@@ -505,7 +507,7 @@ def _create_commit_op_json(
         meta["readReturn"] = {"_kind": "marker"}
 
     cols = _get_cols_from_rows(data)
-    rows = [_parse_dict_with_kinds_to_json(row) for row in data]
+    rows = [_dict_to_json(row) for row in data]
 
     return {
         "_kind": "grid",

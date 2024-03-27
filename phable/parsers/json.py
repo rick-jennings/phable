@@ -9,79 +9,81 @@ from zoneinfo import ZoneInfo, available_timezones
 
 from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
 
-
-def json_to_grid(json_data: dict[str, Any]) -> Grid:
-    _parse_kinds(json_data)
-
-    return Grid(meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"])
+# -----------------------------------------------------------------------------
+# To JSON
+# -----------------------------------------------------------------------------
 
 
-# TODO: need to make this more robust and add tests, etc.
+@dataclass
+class HaystackKindToJsonParsingError(Exception):
+    help_msg: str
+
+
 def grid_to_json(grid: Grid) -> dict[str, Any]:
-    meta = grid.meta
-    cols = grid.cols
-    rows = grid.rows
-
-    # traverse the meta and parse to JSON
-    new_meta: dict[str, Any] = meta.copy()
-    for m in meta.keys():
-        if m == "id":
-            new_meta["id"] = _ref_to_json(new_meta["id"])
-
-    # traverse the cols and parse to JSON
-    new_cols: list[dict[str, Any]] = []
-    for col in cols:
-        new_cols.append(_parse_dict_with_kinds_to_json(col))
-
-    # traverse the rows and parse to JSON
-    new_rows: list[dict[str, str | dict[str, str]]] = []
-    for row in rows:
-        new_rows.append(_parse_dict_with_kinds_to_json(row))
 
     return {
         "_kind": "grid",
-        "meta": new_meta,
-        "cols": new_cols,
-        "rows": new_rows,
+        "meta": _kind_to_json(grid.meta),
+        "cols": _kind_to_json(grid.cols),
+        "rows": _kind_to_json(grid.rows),
     }
 
 
-# TODO
-def parse_kind_to_json(kind: Any) -> dict[str, str | dict[str, str]]: ...
+def _kind_to_json(kind: Any) -> dict[str, Any]:
+
+    if isinstance(kind, datetime):
+        return _datetime_to_json(kind)
+    elif isinstance(kind, date):
+        return {"_kind": "date", "val": kind.isoformat()}
+    elif isinstance(kind, time):
+        return {"_kind": "time", "val": kind.isoformat()}
+    elif isinstance(kind, Number):
+        return _number_to_json(kind)
+    elif isinstance(kind, int):
+        return kind
+    elif isinstance(kind, float):
+        return kind
+    elif isinstance(kind, str):
+        return kind
+    elif isinstance(kind, bool):
+        return kind
+    elif isinstance(kind, Ref):
+        return _ref_to_json(kind)
+    elif isinstance(kind, Symbol):
+        return {"_kind": "symbol", "val": kind.val}
+    elif isinstance(kind, Marker):
+        return {"_kind": "marker"}
+    elif isinstance(kind, NA):
+        return {"_kind": "na"}
+    elif isinstance(kind, Remove):
+        return {"_kind": "remove"}
+    elif isinstance(kind, Uri):
+        return {"_kind": "uri", "val": kind.val}
+    elif isinstance(kind, Coord):
+        return {
+            "_kind": "coord",
+            "lat": float(kind.lat),
+            "lng": float(kind.lng),
+        }
+    elif isinstance(kind, XStr):
+        return {"_kind": "xstr", "type": kind.type, "val": kind.val}
+    elif isinstance(kind, dict):
+        return _dict_to_json(kind)
+    elif isinstance(kind, list):
+        return [_kind_to_json(x) for x in kind]
+    elif isinstance(kind, Grid):
+        return grid_to_json(kind)
+    else:
+        raise HaystackKindToJsonParsingError(
+            f"Unable to parse input {kind} with Python type {type(kind)} into JSON"
+        )
 
 
-def _parse_dict_with_kinds_to_json(
-    row: dict[str, Any]
-) -> dict[str, str | dict[str, str]]:
+def _dict_to_json(row: dict[str, Any]) -> dict[str, Any]:
     parsed_row: dict[str, str | dict[str, str]] = {}
     for key in row.keys():
-        val = row[key]
-        if isinstance(val, datetime):
-            parsed_row[key] = _datetime_to_json(val)
-        elif isinstance(row[key], Number):
-            parsed_row[key] = _number_to_json(val)
-        elif isinstance(row[key], str):
-            parsed_row[key] = val
-        elif isinstance(row[key], bool):
-            parsed_row[key] = val
-        elif isinstance(row[key], Ref):
-            parsed_row[key] = _ref_to_json(val)
-        # this case is for dealing with col data in Grid
-        elif isinstance(row[key], Marker):
-            parsed_row[key] = {"_kind": "marker"}
-        elif isinstance(row[key], NA):
-            parsed_row[key] = {"_kind": "na"}
-        elif isinstance(row[key], Remove):
-            parsed_row[key] = {"_kind": "remove"}
-        elif isinstance(row[key], dict):
-            if "id" in row[key].keys():
-                new_val = row[key]
-                new_val["id"] = _ref_to_json(row[key]["id"])
-                parsed_row[key] = new_val
-            # TODO: add some more checks here
-        else:
-            # TODO: create a unique exception for this case
-            raise Exception
+        parsed_row[key] = _kind_to_json(row[key])
+
     return parsed_row
 
 
@@ -113,6 +115,17 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
     if ref.dis is not None:
         json["dis"] = ref.dis
     return json
+
+
+# -----------------------------------------------------------------------------
+# To Grid
+# -----------------------------------------------------------------------------
+
+
+def json_to_grid(json_data: dict[str, Any]) -> Grid:
+    _parse_kinds(json_data)
+
+    return Grid(meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"])
 
 
 def _parse_kinds(d: dict[str, Any]):

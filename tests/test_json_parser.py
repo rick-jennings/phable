@@ -1,14 +1,16 @@
-from datetime import date, datetime, time
+from datetime import date, datetime, time, timedelta
+from decimal import Decimal
 from zoneinfo import ZoneInfo
 
 import pytest
 
 import phable.kinds as kinds
 from phable.parsers.json import (
+    HaystackKindToJsonParsingError,
     IanaCityNotFoundError,
-    _datetime_to_json,
+    _dict_to_json,
     _haystack_to_iana_tz,
-    _number_to_json,
+    _kind_to_json,
     _parse_date,
     _parse_date_time,
     _parse_marker,
@@ -17,9 +19,302 @@ from phable.parsers.json import (
     _parse_ref,
     _parse_remove,
     _parse_time,
-    _ref_to_json,
     grid_to_json,
 )
+
+# -----------------------------------------------------------------------------
+# To JSON - tests for Kind to JSON
+# -----------------------------------------------------------------------------
+
+
+def test_datetime_to_json():
+    now = datetime.now(ZoneInfo("America/New_York"))
+    assert _kind_to_json(now) == {
+        "_kind": "dateTime",
+        "val": now.isoformat(),
+        "tz": "New_York",
+    }
+
+
+def test_date_to_json():
+    today = date(2024, 3, 27)
+    assert _kind_to_json(today) == {"_kind": "date", "val": "2024-03-27"}
+
+
+def test_time_to_json():
+    t1 = time(12, 12, 59)
+    assert _kind_to_json(t1) == {"_kind": "time", "val": "12:12:59"}
+
+
+def test_number_to_json():
+    x = kinds.Number(20, "kW")
+    assert _kind_to_json(x) == {"_kind": "number", "val": 20, "unit": "kW"}
+
+    y = kinds.Number(20)
+    assert _kind_to_json(y) == {"_kind": "number", "val": 20}
+
+
+def test_int_to_json():
+    x = 24
+    assert _kind_to_json(x) == 24
+
+
+def test_float_to_json():
+    x = 24.1
+    assert _kind_to_json(x) == 24.1
+
+
+def test_str_to_json():
+    x = "Hello World!"
+    assert _kind_to_json(x) == x
+
+
+def test_bool_to_json():
+    x = True
+    assert _kind_to_json(x) == x
+
+
+def test_ref_to_json():
+    ref_id = "abc1234"
+    assert _kind_to_json(kinds.Ref(ref_id)) == {"_kind": "ref", "val": ref_id}
+
+    assert _kind_to_json(kinds.Ref(ref_id, "Carytown")) == {
+        "_kind": "ref",
+        "val": ref_id,
+        "dis": "Carytown",
+    }
+
+
+def test_symbol_to_json():
+    x = kinds.Symbol("abc")
+    assert _kind_to_json(x) == {"_kind": "symbol", "val": "abc"}
+
+
+def test_marker_to_json():
+    x = kinds.Marker()
+    assert _kind_to_json(x) == {"_kind": "marker"}
+
+
+def test_na_to_json():
+    x = kinds.NA()
+    assert _kind_to_json(x) == {"_kind": "na"}
+
+
+def test_remove_to_json():
+    x = kinds.Remove()
+    assert _kind_to_json(x) == {"_kind": "remove"}
+
+
+def test_uri_to_json():
+    x = kinds.Uri("https://project-haystack.org")
+    assert _kind_to_json(x) == {
+        "_kind": "uri",
+        "val": "https://project-haystack.org",
+    }
+
+
+def test_coord_to_json():
+    x = kinds.Coord(Decimal("37.548266"), Decimal("-77.4491888"))
+    assert _kind_to_json(x) == {
+        "_kind": "coord",
+        "lat": 37.548266,
+        "lng": -77.4491888,
+    }
+
+
+def test_xstr_to_json():
+    x = kinds.XStr("value", "red")
+    assert _kind_to_json(x) == {"_kind": "xstr", "type": "value", "val": "red"}
+
+
+def test_list_to_json():
+    x = [
+        kinds.Number(12, "kW"),
+        True,
+        {"test": kinds.Marker()},
+        kinds.Grid.to_grid({"id": kinds.Ref("test1"), "dis": "test1"}),
+    ]
+    assert _kind_to_json(x) == [
+        {"_kind": "number", "val": 12, "unit": "kW"},
+        True,
+        {"test": {"_kind": "marker"}},
+        {
+            "_kind": "grid",
+            "meta": {"ver": "3.0"},
+            "cols": [{"name": "id"}, {"name": "dis"}],
+            "rows": [{"id": {"_kind": "ref", "val": "test1"}, "dis": "test1"}],
+        },
+    ]
+
+
+def test_grid_to_json():
+    nested_grid = kinds.Grid.to_grid([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
+    rows = [
+        {"type": "list", "val": [1, 2, 3]},
+        {"type": "dict", "val": {"dis": "Dict!", "foo": kinds.Marker()}},
+        {"type": "grid", "val": nested_grid},
+        {"type": "scalar", "val": "simple string"},
+    ]
+
+    x = kinds.Grid.to_grid(rows)
+
+    expected_json = {
+        "_kind": "grid",
+        "meta": {"ver": "3.0"},
+        "cols": [{"name": "type"}, {"name": "val"}],
+        "rows": [
+            {"type": "list", "val": [1, 2, 3]},
+            {
+                "type": "dict",
+                "val": {"dis": "Dict!", "foo": {"_kind": "marker"}},
+            },
+            {
+                "type": "grid",
+                "val": {
+                    "_kind": "grid",
+                    "meta": {"ver": "3.0"},
+                    "cols": [{"name": "a"}, {"name": "b"}],
+                    "rows": [{"a": 1, "b": 2}, {"a": 3, "b": 4}],
+                },
+            },
+            {"type": "scalar", "val": "simple string"},
+        ],
+    }
+
+    assert _kind_to_json(x) == expected_json
+
+
+def test_kind_to_json_raises_error():
+    with pytest.raises(HaystackKindToJsonParsingError):
+        _kind_to_json(timedelta(days=5))
+
+
+# -----------------------------------------------------------------------------
+# To JSON - Dictionaries and Grids
+# -----------------------------------------------------------------------------
+
+
+def test__parse_dict_with_kinds_to_json():
+
+    x = {"test_meta": kinds.Marker()}
+
+    assert _dict_to_json(x) == {"test_meta": {"_kind": "marker"}}
+
+
+def test__parse_nested_dict_with_kinds_to_json1():
+
+    x = {
+        "x1": kinds.Marker(),
+        "x2": {"y1": kinds.Marker(), "id": kinds.Ref("y1")},
+    }
+
+    assert _dict_to_json(x) == {
+        "x1": {"_kind": "marker"},
+        "x2": {"y1": {"_kind": "marker"}, "id": {"_kind": "ref", "val": "y1"}},
+    }
+
+
+def test__parse_nested_dict_with_kinds_to_json2():
+
+    x = {
+        "x1": kinds.Marker(),
+        "x2": {"y1": kinds.Marker(), "id": kinds.Ref("y1")},
+        "x3": {
+            "y2": kinds.Marker(),
+            "id": kinds.Ref("y2"),
+            "z1": {"test": kinds.Marker(), "id": kinds.Ref("z1")},
+        },
+    }
+
+    assert _dict_to_json(x) == {
+        "x1": {"_kind": "marker"},
+        "x2": {"y1": {"_kind": "marker"}, "id": {"_kind": "ref", "val": "y1"}},
+        "x3": {
+            "y2": {"_kind": "marker"},
+            "id": {"_kind": "ref", "val": "y2"},
+            "z1": {
+                "test": {"_kind": "marker"},
+                "id": {"_kind": "ref", "val": "z1"},
+            },
+        },
+    }
+
+
+def test_grid_to_json_meta1():
+    meta = {"test_meta": kinds.Marker()}
+    rows = [{"x": 123}, {"y": 456}]
+    test_grid = kinds.Grid.to_grid(rows, meta)
+    test_json = grid_to_json(test_grid)
+
+    assert test_json["meta"] == {
+        "ver": "3.0",
+        "test_meta": {"_kind": "marker"},
+    }
+
+
+def test_grid_to_json_meta2():
+    meta = {"test_meta": kinds.Marker(), "id": kinds.Ref("test")}
+    rows = [{"x": 123}, {"y": 456}]
+    test_grid = kinds.Grid.to_grid(rows, meta)
+    test_json = grid_to_json(test_grid)
+
+    assert test_json["meta"] == {
+        "ver": "3.0",
+        "test_meta": {"_kind": "marker"},
+        "id": {"_kind": "ref", "val": "test"},
+    }
+
+
+def test_grid_to_json_col1():
+    meta = {"ver": "3.0"}
+    cols = [
+        {"name": "ts"},
+        {"name": "v0", "meta": {"id": kinds.Ref("hisA")}},
+        {
+            "name": "v1",
+            "meta": {"id": kinds.Ref("hisB"), "test_col_meta": kinds.Marker()},
+        },
+        {"name": "v2", "meta": {"id": kinds.Ref("hisC")}},
+    ]
+
+    ts1 = datetime.now()
+    rows = [
+        {
+            "ts": ts1 - timedelta(minutes=10),
+            "v0": kinds.Number(23, "kW"),
+            "v1": kinds.Number(40, "kW"),
+            "v2": kinds.Number(50, "kW"),
+        },
+        {
+            "ts": ts1 - timedelta(minutes=5),
+            "v0": kinds.Number(23, "kW"),
+            "v1": kinds.Number(40, "kW"),
+            "v2": kinds.Number(50, "kW"),
+        },
+        {
+            "ts": ts1,
+            "v0": kinds.Number(23, "kW"),
+            "v1": kinds.Number(40, "kW"),
+            "v2": kinds.Number(50, "kW"),
+        },
+    ]
+
+    test_grid = kinds.Grid(meta, cols, rows)
+    test_json = grid_to_json(test_grid)
+
+    assert test_json["meta"] == {"ver": "3.0"}
+    assert test_json["cols"][1] == {
+        "name": "v0",
+        "meta": {"id": {"_kind": "ref", "val": "hisA"}},
+    }
+
+    assert test_json["cols"][2] == {
+        "name": "v1",
+        "meta": {
+            "id": {"_kind": "ref", "val": "hisB"},
+            "test_col_meta": {"_kind": "marker"},
+        },
+    }
 
 
 def test__haystack_to_iana_tz():
@@ -63,7 +358,7 @@ def test_create_single_his_write_grid():
                 "val": "2012-04-21T08:30:00-04:00",
                 "tz": "New_York",
             },
-            "val": _number_to_json(kinds.Number(72.2)),
+            "val": _kind_to_json(kinds.Number(72.2)),
         },
         {
             "ts": {
@@ -71,7 +366,7 @@ def test_create_single_his_write_grid():
                 "val": "2012-04-21T08:45:00-04:00",
                 "tz": "New_York",
             },
-            "val": _number_to_json(kinds.Number(76.3)),
+            "val": _kind_to_json(kinds.Number(76.3)),
         },
     ]
 
@@ -129,8 +424,8 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T08:30:00-04:00",
                 "tz": "New_York",
             },
-            "v0": _number_to_json(kinds.Number(72.2)),
-            "v1": _number_to_json(kinds.Number(10)),
+            "v0": _kind_to_json(kinds.Number(72.2)),
+            "v1": _kind_to_json(kinds.Number(10)),
         },
         {
             "ts": {
@@ -138,7 +433,7 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T08:45:00-04:00",
                 "tz": "New_York",
             },
-            "v0": _number_to_json(kinds.Number(76.3)),
+            "v0": _kind_to_json(kinds.Number(76.3)),
         },
         {
             "ts": {
@@ -146,39 +441,16 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T09:00:00-04:00",
                 "tz": "New_York",
             },
-            "v1": _number_to_json(kinds.Number(12)),
+            "v1": _kind_to_json(kinds.Number(12)),
         },
     ]
 
     assert json_grid["rows"] == rows_json
 
 
-def test__number_to_json():
-    x = kinds.Number(20, "kW")
-    assert _number_to_json(x) == {"_kind": "number", "val": 20, "unit": "kW"}
-
-    y = kinds.Number(20)
-    assert _number_to_json(y) == {"_kind": "number", "val": 20}
-
-
-def test__datetime_to_json():
-    now = datetime.now(ZoneInfo("America/New_York"))
-    assert _datetime_to_json(now) == {
-        "_kind": "dateTime",
-        "val": now.isoformat(),
-        "tz": "New_York",
-    }
-
-
-def test__ref_to_json():
-    ref_id = "abc1234"
-    assert _ref_to_json(kinds.Ref(ref_id)) == {"_kind": "ref", "val": ref_id}
-
-    assert _ref_to_json(kinds.Ref(ref_id, "Carytown")) == {
-        "_kind": "ref",
-        "val": ref_id,
-        "dis": "Carytown",
-    }
+# -----------------------------------------------------------------------------
+# To Grid
+# -----------------------------------------------------------------------------
 
 
 def test__parse_number():
