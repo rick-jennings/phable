@@ -6,9 +6,8 @@ from typing import TYPE_CHECKING, Any
 
 from phable.auth.scram import ScramScheme
 from phable.http import post
-from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
+from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
-from phable.parsers.json import _dict_to_json, _number_to_json, grid_to_json
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -98,9 +97,7 @@ class Client:
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(
-            self.uri, self.username, self._password, self._context
-        )
+        scram = ScramScheme(self.uri, self.username, self._password, self._context)
         self._auth_token = scram.get_auth_token()
         del scram
 
@@ -137,13 +134,13 @@ class Client:
         """Read a record that matches a given filter.  Apply an optional
         limit.
         """
-        if limit is None:
-            data_row = {"filter": filter}
-        else:
-            data_row = {"filter": filter, "limit": limit}
 
-        post_data = _rows_to_grid_json(data_row)
-        response = self._call("read", post_data)
+        data_row = {"filter": filter}
+
+        if limit is not None:
+            data_row["limit"] = limit
+
+        response = self._call("read", Grid.to_grid(data_row))
 
         if len(response.rows) == 0:
             raise HaystackReadOpUnknownRecError(filter)
@@ -159,7 +156,7 @@ class Client:
 
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-        post_data = _rows_to_grid_json(data_rows)
+        post_data = Grid.to_grid(data_rows)
         response = self._call("read", post_data)
 
         # verify the recs were found
@@ -280,22 +277,22 @@ class Client:
             1. Avoid posting out-of-order or duplicate data
         """
 
+        _validate_his_write_parameters(ids, his_rows)
+
         if isinstance(ids, Ref):
-            _validate_his_write_ids_as_ref(ids, his_rows)
-            meta = {"ver": "3.0", "id": ids}
-            cols = [{"name": "ts"}, {"name": "val"}]
+            meta = {"id": ids}
+            his_grid = Grid.to_grid(his_rows, meta)
 
         elif isinstance(ids, list):
-            _validate_his_write_ids_as_list(ids, his_rows)
             meta = {"ver": "3.0"}
             cols = [{"name": "ts"}]
 
             for count, id in enumerate(ids):
                 cols.append({"name": f"v{count}", "meta": {"id": id}})
 
-        his_grid = Grid(meta, cols, his_rows)
+            his_grid = Grid(meta, cols, his_rows)
 
-        response = self._call("hisWrite", grid_to_json(his_grid))
+        response = self._call("hisWrite", his_grid)
         if "err" in response.meta.keys():
             raise HaystackHisWriteOpServerResponseError(
                 "The server reported an error in response to the client's "
@@ -313,36 +310,23 @@ class Client:
         """Uses Project Haystack's PointWrite op to write to a given level of a
         writable point's priority array."""
 
-        row = {"id": {"_kind": "ref", "val": id.val}, "level": level}
+        row = {"id": id, "level": level}
 
         # add optional parameters to row if applicable
         if val is not None:
-            if isinstance(val, Number):
-                row["val"] = _number_to_json(val)
-            else:
-                row["val"] = val
+            row["val"] = val
         if who is not None:
             row["who"] = who
         if dur is not None:
-            row["dur"] = _number_to_json(dur)
+            row["dur"] = dur
 
-        data = _rows_to_grid_json([row])
-
-        response = self._call("pointWrite", data)
-
-        return response
+        return self._call("pointWrite", Grid.to_grid(row))
 
     def point_write_array(self, id: Ref) -> Grid:
         """Uses Project Haystack's PointWrite op to read the current status of a
         writable point's priority array."""
 
-        row = {"id": {"_kind": "ref", "val": id.val}}
-
-        data = _rows_to_grid_json([row])
-
-        response = self._call("pointWrite", data)
-
-        return response
+        return self._call("pointWrite", Grid.to_grid({"id": id}))
 
     # -------------------------------------------------------------------------
     # SkySpark ops
@@ -351,11 +335,8 @@ class Client:
     def eval(self, expr: str) -> Grid:
         """Perform a SkySpark eval op.  Evaluates an expression in SkySpark and returns
         the results."""
-        data = _rows_to_grid_json({"expr": expr})
 
-        response = self._call("eval", data)
-
-        return response
+        return self._call("eval", Grid.to_grid({"expr": expr}))
 
     def commit(
         self,
@@ -365,11 +346,12 @@ class Client:
     ) -> Grid:
         """Perform a SkySpark commit op."""
 
-        data = _create_commit_op_json(data, flag, read_return)
+        meta = {"commit": str(flag)}
 
-        response = self._call("commit", data)
+        if read_return:
+            meta = meta | {"readReturn": Marker()}
 
-        return response
+        return self._call("commit", Grid.to_grid(data, meta))
 
     # -------------------------------------------------------------------------
     # base to Haystack and SkySpark ops
@@ -378,15 +360,10 @@ class Client:
     def _call(
         self,
         op: str,
-        post_data: dict[str, Any] | None = None,
+        post_data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
     ) -> Grid:
         """Sends a POST request based on given parameters, receives a HTTP
         response, and returns JSON data."""
-
-        if post_data is None:
-            post_data = _to_empty_grid_json()
-        else:
-            post_data = post_data.copy()
 
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
@@ -409,35 +386,23 @@ class Client:
 # -----------------------------------------------------------------------------
 
 
-def _validate_his_write_ids_as_ref(
-    ids: Ref, his_rows: list[dict[str, datetime | bool | Number | str]]
+def _validate_his_write_parameters(
+    ids: list[Ref] | Ref, his_rows: list[dict[str, datetime | bool | Number | str]]
 ):
 
-    for his_row in his_rows:
-        for key in his_row.keys():
-            if key not in ["ts", "val"]:
-                raise HaystackHisWriteOpParametersError(
-                    f'There is an invalid column name "{key}" in one of the his_rows.  '
-                    + "Column names in his_rows used for a single HisWrite op are "
-                    + 'expected to be "ts" or "val".'
-                )
-
-
-def _validate_his_write_ids_as_list(
-    ids: list[Ref], his_rows: list[dict[str, datetime | bool | Number | str]]
-):
-    # order does not matter here
-    expected_col_names = [f"v{i}" for i in range(len(ids))]
-    expected_col_names.append("ts")
+    if isinstance(ids, list):
+        # order does not matter here
+        expected_col_names = [f"v{i}" for i in range(len(ids))]
+        expected_col_names.append("ts")
+    elif isinstance(ids, Ref):
+        expected_col_names = ["ts", "val"]
 
     for his_row in his_rows:
         for key in his_row.keys():
             if key not in expected_col_names:
                 raise HaystackHisWriteOpParametersError(
-                    f'There is an invalid column name "{key}" in one of the his_rows.  '
-                    + "Column names in his_rows used for a batch HisWrite op are "
-                    + 'expected to be "ts" or "vX" where "X" is an integer greater than'
-                    + " zero."
+                    f'There is an invalid column name "{key}" in one of the history '
+                    "rows."
                 )
 
 
@@ -445,21 +410,19 @@ def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
         raise HaystackErrorGridResponseError(
-            "The server returned an error grid with this message:\n"
-            + error_dis
+            "The server returned an error grid with this message:\n" + error_dis
         )
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
         raise HaystackIncompleteDataResponseError(
-            "Incomplete data was returned for these reasons:"
-            f"\n{incomplete_dis}"
+            "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
         )
 
 
 def _create_his_read_req_data(
     ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
-) -> dict[str, Any]:
+) -> Grid:
     # convert range to Haystack defined string
     if isinstance(range, date):
         range = range.isoformat()
@@ -468,89 +431,8 @@ def _create_his_read_req_data(
 
     # structure data for HTTP request
     if isinstance(ids, Ref):
-        data = _to_single_his_read_json(ids, range)
+        data = Grid.to_grid({"id": ids, "range": range})
     elif isinstance(ids, list):
-        data = _to_batch_his_read_json(ids, range)
+        data = Grid.to_grid([{"id": id} for id in ids], {"range": range})
 
     return data
-
-
-def _to_single_his_read_json(id: Ref, range: str) -> dict[str, Any]:
-    """Creates a Grid in the JSON format using given Ref ID and range."""
-    return _rows_to_grid_json(
-        {"id": {"_kind": "ref", "val": id.val}, "range": range}
-    )
-
-
-def _to_batch_his_read_json(ids: list[Ref], range: str) -> dict[str, Any]:
-    """Returns a Grid in the JSON format using given Ref IDs and range."""
-
-    meta = {"ver": "3.0", "range": range}
-    cols = [{"name": "id"}]
-    rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
-
-    return {
-        "_kind": "grid",
-        "meta": meta,
-        "cols": cols,
-        "rows": rows,
-    }
-
-
-def _create_commit_op_json(
-    data: list[dict[str, Any]], type: CommitFlag, read_return: bool
-):
-
-    meta = {"ver": "3.0", "commit": str(type)}
-
-    if read_return:
-        meta["readReturn"] = {"_kind": "marker"}
-
-    cols = _get_cols_from_rows(data)
-    rows = [_dict_to_json(row) for row in data]
-
-    return {
-        "_kind": "grid",
-        "meta": meta,
-        "cols": cols,
-        "rows": rows,
-    }
-
-
-def _to_empty_grid_json() -> dict[str, Any]:
-    """Returns an empty Grid in the JSON format."""
-    return {
-        "_kind": "grid",
-        "meta": {"ver": "3.0"},
-        "cols": [{"name": "empty"}],
-        "rows": [],
-    }
-
-
-def _get_cols_from_rows(rows: list[dict[str, Any]]) -> list:
-
-    col_names: list[str] = []
-    for row in rows:
-        for col_name in row.keys():
-            if col_name not in col_names:
-                col_names.append(col_name)
-
-    cols = [{"name": name} for name in col_names]
-    return cols
-
-
-def _rows_to_grid_json(rows: list[dict[str, Any]]) -> dict[str, Any]:
-
-    if isinstance(rows, dict):
-        rows = [rows]
-
-    cols = _get_cols_from_rows(rows)
-    meta = {"ver": "3.0"}
-    rows = rows.copy()
-
-    return {
-        "_kind": "grid",
-        "meta": meta,
-        "cols": cols,
-        "rows": rows,
-    }
