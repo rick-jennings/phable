@@ -30,7 +30,6 @@ def test_grid():
 
 
 def test_to_grid_without_meta():
-
     # test #1
     rows = [
         {"ts": "some_time", "v0": "50kW"},
@@ -60,7 +59,6 @@ def test_to_grid_without_meta():
 
 
 def test_to_grid_with_meta():
-
     # test #1
     meta = {"test_meta": "Hi!"}
     rows = [

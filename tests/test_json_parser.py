@@ -195,14 +195,12 @@ def test_kind_to_json_raises_error():
 
 
 def test__parse_dict_with_kinds_to_json():
-
     x = {"test_meta": kinds.Marker()}
 
     assert _dict_to_json(x) == {"test_meta": {"_kind": "marker"}}
 
 
 def test__parse_nested_dict_with_kinds_to_json1():
-
     x = {
         "x1": kinds.Marker(),
         "x2": {"y1": kinds.Marker(), "id": kinds.Ref("y1")},
@@ -215,7 +213,6 @@ def test__parse_nested_dict_with_kinds_to_json1():
 
 
 def test__parse_nested_dict_with_kinds_to_json2():
-
     x = {
         "x1": kinds.Marker(),
         "x2": {"y1": kinds.Marker(), "id": kinds.Ref("y1")},

@@ -7,7 +7,18 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 # -----------------------------------------------------------------------------
 # To JSON
@@ -20,7 +31,6 @@ class HaystackKindToJsonParsingError(Exception):
 
 
 def grid_to_json(grid: Grid) -> dict[str, Any]:
-
     return {
         "_kind": "grid",
         "meta": _kind_to_json(grid.meta),
@@ -30,7 +40,6 @@ def grid_to_json(grid: Grid) -> dict[str, Any]:
 
 
 def _kind_to_json(kind: Any) -> dict[str, Any]:
-
     if isinstance(kind, datetime):
         return _datetime_to_json(kind)
     elif isinstance(kind, date):
@@ -125,7 +134,9 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
 def json_to_grid(json_data: dict[str, Any]) -> Grid:
     _parse_kinds(json_data)
 
-    return Grid(meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"])
+    return Grid(
+        meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"]
+    )
 
 
 def _parse_kinds(d: dict[str, Any]):

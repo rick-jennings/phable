@@ -58,7 +58,9 @@ def post(
     return response.to_grid()
 
 
-def get_headers(url: str, headers: dict[str, str], context=None) -> dict[str, str]:
+def get_headers(
+    url: str, headers: dict[str, str], context=None
+) -> dict[str, str]:
     return request(url, headers=headers, context=context).headers
 
 
@@ -77,7 +79,9 @@ def request(
 ) -> HttpResponse:
     """Performs an HTTP request."""
     if not url.startswith("http"):
-        raise urllib.error.URLError("Incorrect and possibly insecure protocol in url")
+        raise urllib.error.URLError(
+            "Incorrect and possibly insecure protocol in url"
+        )
     headers = headers or {}
     data = data or {}
 
@@ -95,7 +99,9 @@ def request(
         context = ssl.create_default_context()
 
     try:
-        with urllib.request.urlopen(httprequest, context=context) as httpresponse:
+        with urllib.request.urlopen(
+            httprequest, context=context
+        ) as httpresponse:
             response = HttpResponse(
                 headers=httpresponse.headers,
                 status=httpresponse.status,

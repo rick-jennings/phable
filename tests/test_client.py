@@ -325,7 +325,6 @@ def test_single_his_write_by_ids(hc: Client):
 
 
 def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
-
     dt1 = datetime.now()
     his_rows1 = [
         {"ts": dt1 - timedelta(minutes=5), "val1": Number(1)},
@@ -348,7 +347,6 @@ def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
 
 
 def test_batch_his_write_by_ids_wrong_his_rows(hc: Client):
-
     dt1 = datetime.now()
     his_rows1 = [
         {"ts": dt1 - timedelta(minutes=5), "val": Number(1)},
@@ -466,7 +464,6 @@ def test_client_his_read_by_ids_with_pandas(hc: Client):
 
 
 def test_single_commit(hc: Client):
-
     # create a new rec
     with hc:
         data = [{"dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
@@ -513,7 +510,6 @@ def test_single_commit(hc: Client):
 
 
 def test_batch_commit(hc: Client):
-
     # create a new rec
     with hc:
         data = [
@@ -576,7 +572,6 @@ def test_batch_commit(hc: Client):
 
 
 def test_point_write_number(hc: Client):
-
     with hc:
         response = hc.point_write(Ref("2d6a2714-0d0a79fb"), 1, Number(0, "kW"))
 
@@ -587,7 +582,6 @@ def test_point_write_number(hc: Client):
 
 
 def test_point_write_number_who(hc: Client):
-
     with hc:
         response = hc.point_write(
             Ref("2d6a2714-0d0a79fb"), 1, Number(0, "kW"), "Phable"
@@ -600,7 +594,6 @@ def test_point_write_number_who(hc: Client):
 
 
 def test_point_write_number_who_dur(hc: Client):
-
     with hc:
         response = hc.point_write(
             Ref("2d6a2714-0d0a79fb"),
@@ -616,7 +609,6 @@ def test_point_write_number_who_dur(hc: Client):
 
 
 def test_point_write_null(hc: Client):
-
     with hc:
         response = hc.point_write(Ref("2d6a2714-0d0a79fb"), 1)
 
@@ -627,7 +619,6 @@ def test_point_write_null(hc: Client):
 
 
 def test_point_write_array(hc: Client):
-
     with hc:
         response = hc.point_write_array(Ref("2d6a2714-0d0a79fb"))
 
