@@ -121,7 +121,12 @@ class Client:
         return self._call("about").rows[0]
 
     def close(self) -> None:
-        """Close the connection to the Haystack server."""
+        """Close the connection to the Haystack server.
+
+        Note: Project Haystack recently defined the close op.  Some Project Haystack
+        servers may not support this operation.
+        """
+
         call_result = self._call("close")
 
         if call_result.cols[0]["name"] != "empty":
@@ -189,7 +194,12 @@ class Client:
 
         When there are available point IDs without pt_data, then instead use
         the Client.his_read_by_ids() method.
+
+        Note: Project Haystack recently defined batch history read support.  Some
+        Project Haystack servers may not support reading history data for more than one
+        point at a time.
         """
+
         pt_ids = [pt_row["id"] for pt_row in pt_data.rows]
         data = _create_his_read_req_data(pt_ids, range)
         response = self._call("hisRead", data)
@@ -215,6 +225,10 @@ class Client:
         When there is an existing Grid describing point records, it is worth
         considering to use the Client.his_read() method to store available
         metadata within the returned Grid.
+
+        Note: Project Haystack recently defined batch history read support.  Some
+        Project Haystack servers may not support reading history data for more than one
+        point at a time.
         """
 
         data = _create_his_read_req_data(ids, range)
@@ -275,6 +289,14 @@ class Client:
         Recommendations for enhanced performance:
 
             1. Avoid posting out-of-order or duplicate data
+
+        --------------------------------------------------------------------------------
+        Batch history write support:
+
+        Project Haystack recently defined batch history write support.  Some Project
+        Haystack servers may not support writing history data to more than one point
+        at a time.  For these instances it is recommended to use a Ref type for the ids
+        parameter.
         """
 
         _validate_his_write_parameters(ids, his_rows)
