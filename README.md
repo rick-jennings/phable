@@ -179,8 +179,8 @@ with Client(uri, username, password) as ph:
     ph.his_write_by_ids(Ref("2d6a2714-0d0a79fb"), data_rows)
 ```
 
-Example: History Write to a Multiple Points
--------------------------------------------
+Example: History Write to Multiple Points
+-----------------------------------------
 ```python
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
@@ -212,6 +212,29 @@ ids = [Ref("2d6a2714-0d0a79fb"), Ref("2d6a2714-503317c5")]
 
 with Client(uri, username, password) as ph:
     ph.his_write_by_ids(ids, data_rows)
+```
+
+Example: SkySpark Eval Op
+-------------------------
+```python
+from phable.client import Client
+
+# define these settings specific to your use case
+uri = "http://localhost:8080/api/demo"
+username = "su"
+password = "su"
+
+
+with Client(uri, username, password) as ph:
+    his_df = ph.eval(
+        """read(power and point and equipRef->siteMeter)
+                        .hisRead(lastMonth)"""
+    ).to_pandas()
+
+print("Here is the Pandas DataFrame showing point history data:\n")
+print(his_df)
+print()
+print(f"Here are the DataFrame's attributes:\n{his_df.attrs}")
 ```
 
 Breaking Changes
