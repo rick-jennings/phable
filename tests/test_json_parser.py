@@ -1,4 +1,5 @@
 from datetime import date, datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -19,8 +20,8 @@ from phable.parsers.json import (
     _parse_ref,
     _parse_remove,
     _parse_time,
-    grid_to_json,
-)
+    grid_to_json, json_to_grid, )
+
 
 # -----------------------------------------------------------------------------
 # To JSON - tests for Kind to JSON
@@ -559,3 +560,62 @@ def test__parse_date_time():
     }
     with pytest.raises(IanaCityNotFoundError):
         _parse_date_time(b)
+
+
+def test__parse_grid_with_list_of_sysrefs():
+    json_input_dict = {
+        "_kind": "grid",
+        "meta": {"ver": "3.0"},
+        "cols": [
+            {"name": "id", "meta": {}},
+            {"name": "systemRef", "meta": {}}
+        ],
+        "rows": [
+            {
+                "id": {
+                        "_kind": "ref",
+                        "val": "a1"
+                },
+                "systemRef": [
+                    {
+                        "_kind": "ref",
+                        "val": "b1"
+                    },
+                    {
+                        "_kind": "ref",
+                        "val": "b2"
+                    }
+                ]
+            }
+        ],
+    }
+
+    grid = json_to_grid(json_input_dict)
+    json_again = grid_to_json(grid)
+    assert json_again == json_input_dict
+
+    sys_refs = grid.rows[0]['systemRef']
+    assert isinstance(sys_refs, list)
+    assert isinstance(sys_refs[0], kinds.Ref)
+    assert isinstance(sys_refs[1], kinds.Ref)
+
+
+def test__parse_list_type():
+    json_input_dict = {
+        "_kind": "grid",
+        "meta": {"ver": "3.0"},
+        "cols": [
+            {"name": "type", "meta": {}},
+        ],
+        "rows": [
+            {"type": "list", "val": [1, 2, 3]},
+        ],
+    }
+
+    grid = json_to_grid(json_input_dict)
+    json_again = grid_to_json(grid)
+    assert json_again == json_input_dict
+
+    num_vals = grid.rows[0]['val']
+    assert isinstance(num_vals, list)
+    assert isinstance(num_vals[0], int)
