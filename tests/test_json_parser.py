@@ -1,5 +1,4 @@
 from datetime import date, datetime, time, timedelta
-from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
@@ -14,14 +13,17 @@ from phable.parsers.json import (
     _kind_to_json,
     _parse_date,
     _parse_date_time,
+    _parse_list,
     _parse_marker,
     _parse_na,
     _parse_number,
     _parse_ref,
     _parse_remove,
     _parse_time,
-    grid_to_json, json_to_grid, )
-
+    _parse_value,
+    grid_to_json,
+    json_to_grid,
+)
 
 # -----------------------------------------------------------------------------
 # To JSON - tests for Kind to JSON
@@ -52,7 +54,7 @@ def test_number_to_json():
     assert _kind_to_json(x) == {"_kind": "number", "val": 20, "unit": "kW"}
 
     y = kinds.Number(20)
-    assert _kind_to_json(y) == {"_kind": "number", "val": 20}
+    assert _kind_to_json(y) == 20
 
 
 def test_int_to_json():
@@ -146,43 +148,6 @@ def test_list_to_json():
             "rows": [{"id": {"_kind": "ref", "val": "test1"}, "dis": "test1"}],
         },
     ]
-
-
-def test_grid_to_json():
-    nested_grid = kinds.Grid.to_grid([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
-    rows = [
-        {"type": "list", "val": [1, 2, 3]},
-        {"type": "dict", "val": {"dis": "Dict!", "foo": kinds.Marker()}},
-        {"type": "grid", "val": nested_grid},
-        {"type": "scalar", "val": "simple string"},
-    ]
-
-    x = kinds.Grid.to_grid(rows)
-
-    expected_json = {
-        "_kind": "grid",
-        "meta": {"ver": "3.0"},
-        "cols": [{"name": "type"}, {"name": "val"}],
-        "rows": [
-            {"type": "list", "val": [1, 2, 3]},
-            {
-                "type": "dict",
-                "val": {"dis": "Dict!", "foo": {"_kind": "marker"}},
-            },
-            {
-                "type": "grid",
-                "val": {
-                    "_kind": "grid",
-                    "meta": {"ver": "3.0"},
-                    "cols": [{"name": "a"}, {"name": "b"}],
-                    "rows": [{"a": 1, "b": 2}, {"a": 3, "b": 4}],
-                },
-            },
-            {"type": "scalar", "val": "simple string"},
-        ],
-    }
-
-    assert _kind_to_json(x) == expected_json
 
 
 def test_kind_to_json_raises_error():
@@ -317,16 +282,12 @@ def test_grid_to_json_col1():
 
 def test__haystack_to_iana_tz():
     assert _haystack_to_iana_tz("New_York") == ZoneInfo("America/New_York")
-    assert _haystack_to_iana_tz("Los_Angeles") == ZoneInfo(
-        "America/Los_Angeles"
-    )
+    assert _haystack_to_iana_tz("Los_Angeles") == ZoneInfo("America/Los_Angeles")
     assert _haystack_to_iana_tz("Bangkok") == ZoneInfo("Asia/Bangkok")
     assert _haystack_to_iana_tz("UTC") == ZoneInfo("UTC")
     assert _haystack_to_iana_tz("GMT+1") == ZoneInfo("Etc/GMT+1")
     assert _haystack_to_iana_tz("GMT+11") == ZoneInfo("Etc/GMT+11")
-    assert _haystack_to_iana_tz("La_Rioja") == ZoneInfo(
-        "America/Argentina/La_Rioja"
-    )
+    assert _haystack_to_iana_tz("La_Rioja") == ZoneInfo("America/Argentina/La_Rioja")
 
 
 def test_create_single_his_write_grid():
@@ -401,9 +362,7 @@ def test_create_batch_his_write_grid():
         },
     ]
 
-    haystack_grid = kinds.Grid(
-        meta=meta, cols=cols_haystack, rows=rows_haystack
-    )
+    haystack_grid = kinds.Grid(meta=meta, cols=cols_haystack, rows=rows_haystack)
 
     json_grid = grid_to_json(haystack_grid)
 
@@ -562,60 +521,59 @@ def test__parse_date_time():
         _parse_date_time(b)
 
 
-def test__parse_grid_with_list_of_sysrefs():
-    json_input_dict = {
+def test__parse_json_dict_value_raises_exception():
+    with pytest.raises(HaystackKindToJsonParsingError):
+        _parse_value(Decimal(7))
+
+
+# -----------------------------------------------------------------------------
+# To Grid from JSON and back to JSON again with nested data structures
+# -----------------------------------------------------------------------------
+
+
+def test__parse_grid_with_nested_lists_dicts_and_grids():
+    json_input = {
         "_kind": "grid",
         "meta": {"ver": "3.0"},
-        "cols": [
-            {"name": "id", "meta": {}},
-            {"name": "systemRef", "meta": {}}
-        ],
+        "cols": [{"name": "type"}, {"name": "val"}],
         "rows": [
             {
-                "id": {
-                        "_kind": "ref",
-                        "val": "a1"
+                "type": "list",
+                "val": [{"_kind": "ref", "val": "foo"}, {"_kind": "ref", "val": "bar"}],
+            },
+            {"type": "dict", "val": {"dis": "Dict!", "foo": {"_kind": "marker"}}},
+            {
+                "type": "grid",
+                "val": {
+                    "_kind": "grid",
+                    "meta": {"ver": "3.0"},
+                    "cols": [{"name": "a"}, {"name": "b"}],
+                    "rows": [{"a": 1, "b": 2}, {"a": 3, "b": 4}],
                 },
-                "systemRef": [
-                    {
-                        "_kind": "ref",
-                        "val": "b1"
-                    },
-                    {
-                        "_kind": "ref",
-                        "val": "b2"
-                    }
-                ]
-            }
+            },
+            {"type": "scalar", "val": "simple string"},
         ],
     }
 
-    grid = json_to_grid(json_input_dict)
-    json_again = grid_to_json(grid)
-    assert json_again == json_input_dict
+    nested_list = [kinds.Ref("foo"), kinds.Ref("bar")]
+    nested_dict = {"dis": "Dict!", "foo": kinds.Marker()}
+    nested_grid = kinds.Grid.to_grid(
+        [
+            {"a": kinds.Number(1), "b": kinds.Number(2)},
+            {"a": kinds.Number(3), "b": kinds.Number(4)},
+        ]
+    )
 
-    sys_refs = grid.rows[0]['systemRef']
-    assert isinstance(sys_refs, list)
-    assert isinstance(sys_refs[0], kinds.Ref)
-    assert isinstance(sys_refs[1], kinds.Ref)
+    expected_grid = kinds.Grid.to_grid(
+        [
+            {"type": "list", "val": nested_list},
+            {"type": "dict", "val": nested_dict},
+            {"type": "grid", "val": nested_grid},
+            {"type": "scalar", "val": "simple string"},
+        ]
+    )
 
-
-def test__parse_list_type():
-    json_input_dict = {
-        "_kind": "grid",
-        "meta": {"ver": "3.0"},
-        "cols": [
-            {"name": "type", "meta": {}},
-        ],
-        "rows": [
-            {"type": "list", "val": [1, 2, 3]},
-        ],
-    }
-
-    grid = json_to_grid(json_input_dict)
-    json_again = grid_to_json(grid)
-    assert json_again == json_input_dict
-
-    num_vals = grid.rows[0]['val']
-    assert isinstance(num_vals, list)
-    assert isinstance(num_vals[0], int)
+    grid_from_json = json_to_grid(json_input)
+    json_again = grid_to_json(grid_from_json)
+    assert json_again == json_input
+    assert grid_from_json == expected_grid

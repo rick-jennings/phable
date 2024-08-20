@@ -7,18 +7,7 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import (
-    NA,
-    Coord,
-    Grid,
-    Marker,
-    Number,
-    Ref,
-    Remove,
-    Symbol,
-    Uri,
-    XStr,
-)
+from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
 
 # -----------------------------------------------------------------------------
 # To JSON
@@ -40,52 +29,47 @@ def grid_to_json(grid: Grid) -> dict[str, Any]:
 
 
 def _kind_to_json(kind: Any) -> dict[str, Any]:
-    if isinstance(kind, datetime):
-        return _datetime_to_json(kind)
-    elif isinstance(kind, date):
-        return {"_kind": "date", "val": kind.isoformat()}
-    elif isinstance(kind, time):
-        return {"_kind": "time", "val": kind.isoformat()}
-    elif isinstance(kind, Number):
-        return _number_to_json(kind)
-    elif isinstance(kind, int):
-        return kind
-    elif isinstance(kind, float):
-        return kind
-    elif isinstance(kind, str):
-        return kind
-    elif isinstance(kind, bool):
-        return kind
-    elif isinstance(kind, Ref):
-        return _ref_to_json(kind)
-    elif isinstance(kind, Symbol):
-        return {"_kind": "symbol", "val": kind.val}
-    elif isinstance(kind, Marker):
-        return {"_kind": "marker"}
-    elif isinstance(kind, NA):
-        return {"_kind": "na"}
-    elif isinstance(kind, Remove):
-        return {"_kind": "remove"}
-    elif isinstance(kind, Uri):
-        return {"_kind": "uri", "val": kind.val}
-    elif isinstance(kind, Coord):
-        return {
-            "_kind": "coord",
-            "lat": float(kind.lat),
-            "lng": float(kind.lng),
-        }
-    elif isinstance(kind, XStr):
-        return {"_kind": "xstr", "type": kind.type, "val": kind.val}
-    elif isinstance(kind, dict):
-        return _dict_to_json(kind)
-    elif isinstance(kind, list):
-        return [_kind_to_json(x) for x in kind]
-    elif isinstance(kind, Grid):
-        return grid_to_json(kind)
-    else:
-        raise HaystackKindToJsonParsingError(
-            f"Unable to parse input {kind} with Python type {type(kind)} into JSON"
-        )
+    match kind:
+        case int() | float() | str() | bool():
+            return kind
+        case datetime():
+            return _datetime_to_json(kind)
+        case date():
+            return {"_kind": "date", "val": kind.isoformat()}
+        case time():
+            return {"_kind": "time", "val": kind.isoformat()}
+        case Number():
+            return _number_to_json(kind)
+        case Ref():
+            return _ref_to_json(kind)
+        case Symbol():
+            return {"_kind": "symbol", "val": kind.val}
+        case Marker():
+            return {"_kind": "marker"}
+        case NA():
+            return {"_kind": "na"}
+        case Remove():
+            return {"_kind": "remove"}
+        case Uri():
+            return {"_kind": "uri", "val": kind.val}
+        case Coord():
+            return {
+                "_kind": "coord",
+                "lat": float(kind.lat),
+                "lng": float(kind.lng),
+            }
+        case XStr():
+            return {"_kind": "xstr", "type": kind.type, "val": kind.val}
+        case dict():
+            return _dict_to_json(kind)
+        case list():
+            return [_kind_to_json(x) for x in kind]
+        case Grid():
+            return grid_to_json(kind)
+        case _:
+            raise HaystackKindToJsonParsingError(
+                f"Unable to parse input {kind} with Python type {type(kind)} into JSON"
+            )
 
 
 def _dict_to_json(row: dict[str, Any]) -> dict[str, Any]:
@@ -96,11 +80,10 @@ def _dict_to_json(row: dict[str, Any]) -> dict[str, Any]:
     return parsed_row
 
 
-def _number_to_json(num: Number) -> dict[str, str | float]:
-    json = {"_kind": "number", "val": num.val}
-    if num.unit is not None:
-        json["unit"] = num.unit
-    return json
+def _number_to_json(num: Number) -> int | float | dict[str, str | float]:
+    if num.unit is None:
+        return num.val
+    return {"_kind": "number", "val": num.val, "unit": num.unit}
 
 
 def _datetime_to_json(date_time: datetime) -> dict[str, str]:
@@ -134,9 +117,7 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
 def json_to_grid(json_data: dict[str, Any]) -> Grid:
     dict_data = _parse_dict(json_data)
 
-    return Grid(
-        meta=dict_data["meta"], cols=dict_data["cols"], rows=dict_data["rows"]
-    )
+    return Grid(meta=dict_data["meta"], cols=dict_data["cols"], rows=dict_data["rows"])
 
 
 def _parse_dict(value_dict: dict[str, Any]) -> dict[str, Any]:
@@ -144,23 +125,24 @@ def _parse_dict(value_dict: dict[str, Any]) -> dict[str, Any]:
 
 
 def _parse_list(value_list: list[Any]) -> list[Any]:
-    return [_parse_value(x) if isinstance(x, dict) else x for x in value_list]
+    return [_parse_value(x) for x in value_list]
 
 
 def _parse_value(value: Any) -> Any:
-    if isinstance(value, int):
-        return Number(value, None)
-    elif isinstance(value, float):
-        return Number(value, None)
-    elif isinstance(value, dict):
-        if "_kind" in value.keys():
-            return _to_kind(value)
-        else:
-            return _parse_dict(value)
-    elif isinstance(value, list):
-        return _parse_list(value)
-    else:
-        return value
+    match value:
+        case bool() | str():
+            return value
+        case int() | float():
+            return Number(value, None)
+        case dict():
+            if "_kind" in value.keys():
+                return _to_kind(value)
+            else:
+                return _parse_dict(value)
+        case list():
+            return _parse_list(value)
+        case _:
+            raise HaystackKindToJsonParsingError(f"Unable to parse dict val:  {value}")
 
 
 def _to_kind(d: dict[str, str]):
