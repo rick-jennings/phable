@@ -132,41 +132,35 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
 
 
 def json_to_grid(json_data: dict[str, Any]) -> Grid:
-    _parse_kinds(json_data)
+    dict_data = _parse_dict(json_data)
 
     return Grid(
-        meta=json_data["meta"], cols=json_data["cols"], rows=json_data["rows"]
+        meta=dict_data["meta"], cols=dict_data["cols"], rows=dict_data["rows"]
     )
 
 
-def _parse_kinds(d: dict[str, Any]):
-    """Traverse JSON and convert where needed to Haystack kinds."""
-    new_d = d.copy()
-
-    # parse grid meta
-    _parse_layer(new_d["meta"])
-
-    # parse col meta
-    for i in range(len(new_d["cols"])):
-        if "meta" in new_d["cols"][i].keys():
-            _parse_layer(new_d["cols"][i]["meta"])
-
-    # parse rows
-    for i in range(len(new_d["rows"])):
-        _parse_layer(new_d["rows"][i])
-
-    return new_d
+def _parse_dict(value_dict: dict[str, Any]) -> dict[str, Any]:
+    return {key: _parse_value(value) for key, value in value_dict.items()}
 
 
-def _parse_layer(new_d: dict[str, Any]) -> None:
-    for x in new_d.keys():
-        if isinstance(new_d[x], int):
-            new_d[x] = Number(new_d[x], None)
-        elif isinstance(new_d[x], float):
-            new_d[x] = Number(new_d[x], None)
-        elif isinstance(new_d[x], dict):
-            if "_kind" in new_d[x].keys():
-                new_d[x] = _to_kind(new_d[x])
+def _parse_list(value_list: list[Any]) -> list[Any]:
+    return [_parse_value(x) if isinstance(x, dict) else x for x in value_list]
+
+
+def _parse_value(value: Any) -> Any:
+    if isinstance(value, int):
+        return Number(value, None)
+    elif isinstance(value, float):
+        return Number(value, None)
+    elif isinstance(value, dict):
+        if "_kind" in value.keys():
+            return _to_kind(value)
+        else:
+            return _parse_dict(value)
+    elif isinstance(value, list):
+        return _parse_list(value)
+    else:
+        return value
 
 
 def _to_kind(d: dict[str, str]):
