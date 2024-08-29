@@ -18,6 +18,7 @@ from phable.parsers.json import grid_to_json, json_to_grid
 @dataclass
 class IncorrectHttpResponseStatus(Exception):
     help_msg: str
+    actual_status: int
 
 
 # -----------------------------------------------------------------------------
@@ -52,15 +53,14 @@ def post(
 
     if response.status != 200:
         raise IncorrectHttpResponseStatus(
-            f"Expected status 200 and received status {response.status}."
+            f"Expected status 200 and received status {response.status}.",
+            response.status,
         )
 
     return response.to_grid()
 
 
-def get_headers(
-    url: str, headers: dict[str, str], context=None
-) -> dict[str, str]:
+def get_headers(url: str, headers: dict[str, str], context=None) -> dict[str, str]:
     return request(url, headers=headers, context=context).headers
 
 
@@ -79,9 +79,7 @@ def request(
 ) -> HttpResponse:
     """Performs an HTTP request."""
     if not url.startswith("http"):
-        raise urllib.error.URLError(
-            "Incorrect and possibly insecure protocol in url"
-        )
+        raise urllib.error.URLError("Incorrect and possibly insecure protocol in url")
     headers = headers or {}
     data = data or {}
 
@@ -99,9 +97,7 @@ def request(
         context = ssl.create_default_context()
 
     try:
-        with urllib.request.urlopen(
-            httprequest, context=context
-        ) as httpresponse:
+        with urllib.request.urlopen(httprequest, context=context) as httpresponse:
             response = HttpResponse(
                 headers=httpresponse.headers,
                 status=httpresponse.status,
