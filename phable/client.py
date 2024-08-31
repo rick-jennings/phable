@@ -97,9 +97,7 @@ class Client:
         server is assigned to the _auth_token attribute of this class which
         may be used in future requests to the server by other class methods.
         """
-        scram = ScramScheme(
-            self.uri, self.username, self._password, self._context
-        )
+        scram = ScramScheme(self.uri, self.username, self._password, self._context)
         self._auth_token = scram.get_auth_token()
         del scram
 
@@ -368,7 +366,8 @@ class Client:
         flag: CommitFlag,
         read_return: bool = False,
     ) -> Grid:
-        """Perform a SkySpark commit op."""
+        """Perform a SkySpark commit op.  A HaystackErrorGridResponseError is raised
+        if the operation is unsuccessful."""
 
         meta = {"commit": str(flag)}
 
@@ -384,9 +383,7 @@ class Client:
     def _call(
         self,
         op: str,
-        post_data: Grid = Grid(
-            meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]
-        ),
+        post_data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
     ) -> Grid:
         """Sends a POST request based on given parameters, receives a HTTP
         response, and returns JSON data."""
@@ -436,15 +433,13 @@ def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
         raise HaystackErrorGridResponseError(
-            "The server returned an error grid with this message:\n"
-            + error_dis
+            "The server returned an error grid with this message:\n" + error_dis
         )
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
         raise HaystackIncompleteDataResponseError(
-            "Incomplete data was returned for these reasons:"
-            f"\n{incomplete_dis}"
+            "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
         )
 
 

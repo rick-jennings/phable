@@ -7,6 +7,7 @@ import pytest
 from phable.client import (
     Client,
     CommitFlag,
+    HaystackErrorGridResponseError,
     HaystackHisWriteOpParametersError,
     HaystackReadOpUnknownRecError,
 )
@@ -416,6 +417,14 @@ def test_client_his_read_by_ids_with_pandas(hc: Client):
     assert "ver" in pts_his_df.attrs["meta"].keys()
     assert "hisStart" in pts_his_df.attrs["meta"].keys()
     assert "hisEnd" in pts_his_df.attrs["meta"].keys()
+
+
+def test_failed_commit(create_kw_pt_fn: Callable[[], Ref], hc: Client):
+    pt_id = create_kw_pt_fn()
+    data = [{"id": pt_id, "dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
+
+    with pytest.raises(HaystackErrorGridResponseError):
+        hc.commit(data, CommitFlag.ADD, False)
 
 
 def test_single_commit(hc: Client):
