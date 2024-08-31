@@ -1,22 +1,14 @@
 # Changelog
 
-## 0.1.14 (2024-03-28)
+## 0.1.15 (2024-08-31)
 
-#### New Features
+#### Fixes
 
-* add Grid.to_grid() for convenience
-* enhance HisWrite op with simpler parameters
-    Note:  This is a breaking change.  See examples in the README.
-* add PointWrite op support
-* add SkySpark commit op to Client
+* parse list of refs from json
 #### Refactorings
 
-* make data input to Client._call() type Grid
-* improve Haystack Grid to JSON parsing
-#### Docs
+* improve test code for Client
+* enhance json parsing
+#### Others
 
-* clarify Haystack server support for Close, HisRead and HisWrite ops
-* add example for SkySpark's commit op
-* add example for SkySpark's eval op
-* add HisWrite op examples
-* clarify possible tzdata package dependency
+* verify error raised for failed commit
