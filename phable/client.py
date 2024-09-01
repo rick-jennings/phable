@@ -67,11 +67,38 @@ class CommitFlag(StrEnum):
 
 
 class Client:
-    """A client interface to a Haystack Server used for authentication and
-    Haystack ops.
+    """A client interface to a Project Haystack defined server application used for
+    authentication and operations.
 
-    If the optional SSL context is not provided, then a SSL context with
-    default settings is created and used.
+    The `Client` class can be directly imported as follows:
+
+    ```python
+    from phable.client import Client
+    ```
+
+    ## Context Manager
+
+    An optional context manager may be used to automatically open and close the session
+    with the server. This can help prevent accidentially leaving a session with the
+    server open.
+
+    **Note:** This context manager uses Project Haystack's Close operation, which was
+    recently introduced. Therefore the context manager may not work with some Project
+    Haystack defined servers.
+
+    ### Example
+
+    ```python
+    from phable.client import Client
+
+    # Note: Always use secure login credentials in practice!
+    uri = "http://localhost:8080/api/demo"
+    username = "su"
+    password = "su"
+
+    with Client(uri, username, password) as ph_client:
+        print(ph_client.about())
+    ```
     """
 
     def __init__(
@@ -81,6 +108,13 @@ class Client:
         password: str,
         ssl_context: SSLContext | None = None,
     ):
+        """
+        Parameters:
+            uri: URI of endpoint such as "http://host/api/myProj/".
+            username: Username for the API user.
+            password: Password for the API user.
+            ssl_context: Optional SSL context. If not provided, a SSL context with default settings is created and used.
+        """
         self.uri: str = uri
         self.username: str = username
         self._password: str = password
@@ -92,10 +126,14 @@ class Client:
     # -------------------------------------------------------------------------
 
     def open(self) -> None:
-        """Initiates and executes the SCRAM authentication exchange with the
-        server. Upon a successful exchange an auth token provided by the
-        server is assigned to the _auth_token attribute of this class which
-        may be used in future requests to the server by other class methods.
+        """Initiates and executes the SCRAM authentication exchange with the server.
+
+        Upon a successful exchange an auth token provided by the server is assigned to
+        a private attribute of this class, which is used in future requests to the
+        server by other class methods.
+
+        Returns:
+            `None`
         """
         scram = ScramScheme(self.uri, self.username, self._password, self._context)
         self._auth_token = scram.get_auth_token()
@@ -117,14 +155,21 @@ class Client:
     # -------------------------------------------------------------------------
 
     def about(self) -> dict[str, Any]:
-        """Query basic information about the server."""
+        """Query basic information about the server.
+
+        Returns:
+            A `dict` containing information about the server.
+        """
         return self._call("about").rows[0]
 
     def close(self) -> None:
-        """Close the connection to the Haystack server.
+        """Close the connection to the server.
 
-        Note: Project Haystack recently defined the close op.  Some Project Haystack
-        servers may not support this operation.
+        **Note:** Project Haystack recently defined the Close operation. Some servers
+        may not support this operation.
+
+        Returns:
+            `None`
         """
 
         call_result = self._call("close")
@@ -136,8 +181,25 @@ class Client:
             )
 
     def read(self, filter: str, limit: int | None = None) -> Grid:
-        """Read a record that matches a given filter.  Apply an optional
-        limit.
+        """Read a set of entity records using a Project Haystack defined `filter`.
+
+        **Errors**
+
+        Raises `HaystackReadOpUnknownRecError` if no entities are found.
+
+        Also, after the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            filter: Project Haystack defined [filter](https://project-haystack.org/doc/docHaystack/Filters) for querying the server.
+            limit: Maximum number of entities to return in response.
+
+        Returns:
+            `Grid` with a row for each entity read.
         """
 
         data_row = {"filter": filter}
@@ -153,9 +215,26 @@ class Client:
         return response
 
     def read_by_ids(self, ids: Ref | list[Ref]) -> Grid:
-        """Read records by their ids.  Raises UnknownRecError if any of the
-        recs cannot be found.
+        """Read a set of entity records using their unique identifiers.
+
+        **Errors**
+
+        Raises `HaystackReadOpUnknownRecError` if any of the records cannot be found.
+
+        Also, after the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            ids: Unique identifiers for the records being read.
+
+        Returns:
+            `Grid` with a row for each entity read.
         """
+
         if isinstance(ids, Ref):
             ids = [ids]
 
@@ -183,21 +262,34 @@ class Client:
         pt_data: Grid,
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
-        """Reads history data on point IDs defined within pt_data for the given
-        range.  Appends point attributes within pt_data to the column metadata
-        within the returned Grid.
+        """Reads history data associated with `ids` within `pt_data` for the given
+        `range`.
 
-        Ranges are inclusive of start timestamp and exclusive of end
-        timestamp. If a date is provided without a defined end, then the
-        server should infer the range to be from midnight of the defined date
-        to midnight of the day after the defined date.
+        Appends point attributes within `pt_data` as column metadata in the returned
+        `Grid`.
 
-        When there are available point IDs without pt_data, then instead use
-        the Client.his_read_by_ids() method.
+        When there are `ids` without `pt_data`, then instead use the
+        `Client.his_read_by_ids()` method.
 
-        Note: Project Haystack recently defined batch history read support.  Some
+        **Note:** Project Haystack recently defined batch history read support.  Some
         Project Haystack servers may not support reading history data for more than one
-        point at a time.
+        point record at a time.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            pt_data: A `Grid` that contains a unique point record `id` on each row. Additional data for the point record is appended as column metadata in the returned `Grid`.
+            range: Ranges are inclusive of start timestamp and exclusive of end timestamp. If a date is provided without a defined end, then the server should infer the range to be from midnight of the defined date to midnight of the day after the defined date.
+
+        Returns:
+            `Grid` with history data associated with the `ids` described in `pt_data` for the given `range`. The return `Grid` contains column metadata defined in `pt_data`.
         """
 
         pt_ids = [pt_row["id"] for pt_row in pt_data.rows]
@@ -215,20 +307,31 @@ class Client:
         ids: Ref | list[Ref],
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
-        """Read history data on defined IDs for the given range.
+        """Read history data associated with `ids` for the given `range`.
 
-        Ranges are inclusive of start timestamp and exclusive of end
-        timestamp. If a date is provided without a defined end, then the
-        server should infer the range to be from midnight of the defined date
-        to midnight of the day after the defined date.
+        When there is an existing `Grid` describing point records, it is worth
+        considering to use the `Client.his_read()` method to store available
+        metadata within the returned `Grid`.
 
-        When there is an existing Grid describing point records, it is worth
-        considering to use the Client.his_read() method to store available
-        metadata within the returned Grid.
-
-        Note: Project Haystack recently defined batch history read support.  Some
+        **Note:** Project Haystack recently defined batch history read support.  Some
         Project Haystack servers may not support reading history data for more than one
-        point at a time.
+        point record at a time.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            ids: Unique identifiers for the point records.
+            range: Ranges are inclusive of start timestamp and exclusive of end timestamp. If a date is provided without a defined end, then the server should infer the range to be from midnight of the defined date to midnight of the day after the defined date.
+
+        Returns:
+            `Grid` with history data associated with the `ids` for the given `range`.
         """
 
         data = _create_his_read_req_data(ids, range)
@@ -241,62 +344,70 @@ class Client:
         ids: Ref | list[Ref],
         his_rows: list[dict[str, datetime | bool | Number | str]],
     ) -> None:
-        """Write history row data to point records on the Haystack server.
+        """Write history data to point records on the server.
 
-        --------------------------------------------------------------------------------
-        When parameter ids is a Ref:
+        **When `ids` parameter is a `Ref`**
 
-        History row key names must be "ts" or "val".  Values for the column named "val"
-        are for the Ref described by the ids parameter.
+        History row key names must be `ts` or `val`.  Values in the column named `val`
+        are for the `Ref` described by the `ids` parameter.
 
-        --------------------------------------------------------------------------------
-        When parameter ids is a list of Refs:
+        **When parameter `ids` is a `list[Ref]`**
 
-        History row key names must be "ts" or "vX" where "X" is an integer equal
-        to or greater than zero.  Also, "X" must not exceed the highest index of ids.
+        History row key names must be `ts` or `vX` where `X` is an integer equal
+        to or greater than zero.  Also, `X` must not exceed the highest index of `ids`.
 
-        The index of an id in ids corresponds to the column name used in his_rows.
+        The index of an id in `ids` corresponds to the column name used in `his_rows`.
 
         For example,
-
+        ```python
         ids = [Ref("foo0"), Ref("foo1"), Ref("foo2")]
         his_rows = [{"ts": datetime.now(), "v0": Number(1, "kW"),
                      "v1": Number(23, "kW"), "v2": Number(8, "kW")}]
+        ```
+        - Column named `v0` corresponds to index 0 of ids, or `Ref("foo0")`
+        - Column named `v1` corresponds to index 1 of ids, or `Ref("foo1")`
+        - Column named `v2` corresponds to index 2 of ids, or `Ref("foo2")`
 
-        - Column named "v0" corresponds to index 0 of ids, or Ref("foo0")
-        - Column named "v1" corresponds to index 1 of ids, or Ref("foo1")
-        - Column named "v2" corresponds to index 2 of ids, or Ref("foo2")
+        **Errors**
 
-        --------------------------------------------------------------------------------
-        A `HaystackHisWriteOpParametersError` is raised if the below condition is not
-        met:
+        A `HaystackHisWriteOpParametersError` is raised if invalid column names are
+        used for the `his_rows` parameter.
 
-            1. Invalid column names are used in parameter his_rows
+        Also, after the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
 
-        --------------------------------------------------------------------------------
-        Additional requirements which are not validated by this method:
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
-            1. Timestamp and value kind of his_row data must match the entity's
-               (Ref) configured timezone and kind
-            2. Numeric data must match the entity's (Ref) configured unit or
-               status of being unitless
+        **Additional requirements which are not validated by this method**
 
-        Note:  We are considering to add another method `Client.his_write()` in the
+        1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
+        configured timezone and kind
+        2. Numeric data must match the entity's (Ref) configured unit or status of
+        being unitless
+
+        **Note:**  We are considering to add another method `Client.his_write()` in the
         future that would validate these requirements.  It would require `pt_data`
         similar to `Client.his_read()`.
 
-        --------------------------------------------------------------------------------
-        Recommendations for enhanced performance:
+        **Recommendations for enhanced performance**
 
-            1. Avoid posting out-of-order or duplicate data
+        1. Avoid posting out-of-order or duplicate data
 
-        --------------------------------------------------------------------------------
-        Batch history write support:
+        **Batch history write support**
 
         Project Haystack recently defined batch history write support.  Some Project
         Haystack servers may not support writing history data to more than one point
-        at a time.  For these instances it is recommended to use a Ref type for the ids
-        parameter.
+        at a time.  For these instances it is recommended to use a `Ref` type for the
+        `ids` parameter.
+
+        Parameters:
+            ids: Unique identifiers for the point records.
+            his_rows: History data to be written for the `ids`.
+
+        Returns:
+            `None`
         """
 
         _validate_his_write_parameters(ids, his_rows)
@@ -329,12 +440,30 @@ class Client:
         who: str | None = None,
         dur: Number | None = None,
     ) -> Grid:
-        """Uses Project Haystack's PointWrite op to write to a given level of a
-        writable point's priority array."""
+        """Writes to a given level of a writable point's priority array.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            id: Unique identifier of the writable point.
+            level: Integer from 1 - 17 (17 is default).
+            val: Current value at level or null.
+            who: Optional username/application name performing the write. If not provided, the authenticated user display name is used.
+            duration: Optional number with duration unit if setting level 8.
+
+        Returns:
+            `Grid` with the server's response.
+        """
 
         row = {"id": id, "level": level}
 
-        # add optional parameters to row if applicable
         if val is not None:
             row["val"] = val
         if who is not None:
@@ -345,18 +474,52 @@ class Client:
         return self._call("pointWrite", Grid.to_grid(row))
 
     def point_write_array(self, id: Ref) -> Grid:
-        """Uses Project Haystack's PointWrite op to read the current status of a
-        writable point's priority array."""
+        """Reads the current status of a writable point's priority array.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            id: Unique identifier for the record.
+
+        Returns:
+            `Grid` with the server's response.
+        """
 
         return self._call("pointWrite", Grid.to_grid({"id": id}))
 
     # -------------------------------------------------------------------------
-    # SkySpark ops
+    # Haxall ops
     # -------------------------------------------------------------------------
 
     def eval(self, expr: str) -> Grid:
-        """Perform a SkySpark eval op.  Evaluates an expression in SkySpark and returns
-        the results."""
+        """Evaluates an Axon string expression.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        **Additional info**
+
+        See Haxall's Eval operation docs for more details [here](https://haxall.io/doc/lib-hx/op~eval).
+
+        Parameters:
+            expr: Axon string expression.
+
+        Returns:
+            `Grid` with the server's response.
+        """
 
         return self._call("eval", Grid.to_grid({"expr": expr}))
 
@@ -366,8 +529,31 @@ class Client:
         flag: CommitFlag,
         read_return: bool = False,
     ) -> Grid:
-        """Perform a SkySpark commit op.  A HaystackErrorGridResponseError is raised
-        if the operation is unsuccessful."""
+        """Commits one or more diffs to Haxall's Folio database.
+
+        Commit access requires the API user to have admin permission.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        **Additional info**
+
+        See Haxall's Commit operation docs for more details [here](https://haxall.io/doc/lib-hx/op~commit).
+
+        Parameters:
+            data: Changes to be commited to Haxall's Folio database.
+            flag: `add`, `update`, and `remove` options are selected using `CommitFlag`. `add` adds new records into the database and returns a grid with the newly minted record identifiers. As a general rule you should not have an `id` column in your commit grid. However if you wish to predefine the id of the records, you can specify an `id` column in the commit grid.  `update` modifies existing records, the records must have both an `id` and `mod` column. `remove` removes existing records, the records should have only an `id` and `mod` column.
+            read_return: If true the response contains the full tag definitions of the new/updated records.
+
+        Returns:
+            `Grid` with the server's response.
+        """
 
         meta = {"commit": str(flag)}
 
