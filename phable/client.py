@@ -428,7 +428,7 @@ class Client:
         level: int,
         val: Number | bool | str | None = None,
         who: str | None = None,
-        dur: Number | None = None,
+        duration: Number | None = None,
     ) -> Grid:
         """Writes to a given level of a writable point's priority array.
 
@@ -458,8 +458,8 @@ class Client:
             row["val"] = val
         if who is not None:
             row["who"] = who
-        if dur is not None:
-            row["dur"] = dur
+        if duration is not None:
+            row["duration"] = duration
 
         return self._call("pointWrite", Grid.to_grid(row))
 

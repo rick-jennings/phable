@@ -546,22 +546,38 @@ def test_point_write_number(create_kw_pt_fn: Callable[[], Ref], hc: Client):
 
 def test_point_write_number_who(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 1, Number(0, "kW"), "Phable")
+    response = hc.point_write(pt_id, 1, Number(50, "kW"), "Phable")
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
     assert response.cols[0]["name"] == "empty"
     assert response.rows == []
+
+    check_response = hc.point_write_array(pt_id)
+    check_row = check_response.rows[0]
+
+    assert check_row["val"] == Number(50, "kW")
+    assert "Phable" in check_row["who"]
+    assert "expires" not in check_row.keys()
 
 
 def test_point_write_number_who_dur(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 8, Number(0, "kW"), "Phable")
+    response = hc.point_write(pt_id, 8, Number(100, "kW"), "Phable", Number(5, "min"))
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
     assert response.cols[0]["name"] == "empty"
     assert response.rows == []
+
+    check_response = hc.point_write_array(pt_id)
+    check_row = check_response.rows[7]
+    expires = check_row["expires"]
+
+    assert check_row["val"] == Number(100, "kW")
+    assert "Phable" in check_row["who"]
+    assert expires.unit == "min"
+    assert expires.val > 4.0 and expires.val < 5.0
 
 
 def test_point_write_null(create_kw_pt_fn: Callable[[], Ref], hc: Client):
