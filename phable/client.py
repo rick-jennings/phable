@@ -31,11 +31,6 @@ class HaystackHisWriteOpParametersError(Exception):
 
 
 @dataclass
-class HaystackHisWriteOpServerResponseError(Exception):
-    help_msg: str
-
-
-@dataclass
 class HaystackReadOpUnknownRecError(Exception):
     help_msg: str
 
@@ -425,12 +420,7 @@ class Client:
 
             his_grid = Grid(meta, cols, his_rows)
 
-        response = self._call("hisWrite", his_grid)
-        if "err" in response.meta.keys():
-            raise HaystackHisWriteOpServerResponseError(
-                "The server reported an error in response to the client's "
-                "HisWrite op"
-            )
+        self._call("hisWrite", his_grid)
 
     def point_write(
         self,
