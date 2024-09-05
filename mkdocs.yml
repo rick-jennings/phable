@@ -34,9 +34,15 @@ plugins:
     handlers:
       python:
         options:
+          # merge_init_into_class: true
+          # docstring_options:
+          #   ignore_init_summary: true
           annotations_path: full
-          merge_init_into_class: false
-          # signature_crossrefs: true
-          # ^ this might not do anything since Annotations are not used
+          signature_crossrefs: true
           show_symbol_type_heading: true
           show_symbol_type_toc: true
+          separate_signature: true
+          show_root_heading: true
+          show_root_full_path: false
+          # show_docstring_description: true
+          # show_signature_annotations: true
