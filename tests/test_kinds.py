@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
-from phable.kinds import (
+from phable import (
     NA,
     Coord,
     DateRange,
@@ -136,9 +136,7 @@ def test_datetime_range_no_end() -> None:
     assert str(datetime_range) == dt.isoformat() + " New_York"
 
     # America/New_York
-    dt1 = datetime(
-        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
+    dt1 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
     datetime_range = str(DateTimeRange(dt1))
     assert datetime_range == "2023-03-12T12:12:34-04:00 New_York"
 
@@ -154,15 +152,10 @@ def test_datetime_range_no_end() -> None:
 
 
 def test_datetime_range() -> None:
-    start = datetime(
-        2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
-    end = datetime(
-        2023, 4, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")
-    )
+    start = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
+    end = datetime(2023, 4, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
 
     datetime_range = DateTimeRange(start, end)
     assert str(datetime_range) == (
-        "2023-03-12T12:12:34-04:00 New_York,"
-        "2023-04-12T12:12:34-04:00 New_York"
+        "2023-03-12T12:12:34-04:00 New_York," "2023-04-12T12:12:34-04:00 New_York"
     )

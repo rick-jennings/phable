@@ -68,7 +68,7 @@ class Client:
     The `Client` class can be directly imported as follows:
 
     ```python
-    from phable.client import Client
+    from phable import Client
     ```
 
     ## Context Manager
@@ -84,7 +84,7 @@ class Client:
     ### Example
 
     ```python
-    from phable.client import Client
+    from phable import Client
 
     # Note: Always use secure login credentials in practice!
     uri = "http://localhost:8080/api/demo"

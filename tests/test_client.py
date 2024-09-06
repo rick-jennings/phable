@@ -4,15 +4,20 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.client import (
+from phable import (
     Client,
     CommitFlag,
+    DateRange,
+    DateTimeRange,
+    Grid,
     HaystackErrorGridResponseError,
     HaystackHisWriteOpParametersError,
     HaystackReadOpUnknownRecError,
+    Marker,
+    Number,
+    Ref,
 )
 from phable.http import IncorrectHttpResponseStatus
-from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
 
 # Note:  These tests are made using SkySpark as the Haystack server
 URI = "http://localhost:8080/api/demo"
