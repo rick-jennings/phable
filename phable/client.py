@@ -108,7 +108,9 @@ class Client:
             uri: URI of endpoint such as "http://host/api/myProj/".
             username: Username for the API user.
             password: Password for the API user.
-            ssl_context: Optional SSL context. If not provided, a SSL context with default settings is created and used.
+            ssl_context:
+                Optional SSL context. If not provided, a SSL context with default
+                settings is created and used.
         """
         self.uri: str = uri
         self.username: str = username
@@ -190,7 +192,10 @@ class Client:
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
-            filter: Project Haystack defined [filter](https://project-haystack.org/doc/docHaystack/Filters) for querying the server.
+            filter:
+                Project Haystack defined
+                [filter](https://project-haystack.org/doc/docHaystack/Filters) for
+                querying the server.
             limit: Maximum number of entities to return in response.
 
         Returns:
@@ -280,11 +285,20 @@ class Client:
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
-            pt_data: A `Grid` that contains a unique point record `id` on each row. Additional data for the point record is appended as column metadata in the returned `Grid`.
-            range: Ranges are inclusive of start timestamp and exclusive of end timestamp. If a date is provided without a defined end, then the server should infer the range to be from midnight of the defined date to midnight of the day after the defined date.
+            pt_data:
+                A `Grid` that contains a unique point record `id` on each row.
+                Additional data for the point record is appended as column metadata in
+                the returned `Grid`.
+            range:
+                Ranges are inclusive of start timestamp and exclusive of end timestamp.
+                If a date is provided without a defined end, then the server should
+                infer the range to be from midnight of the defined date to midnight of
+                the day after the defined date.
 
         Returns:
-            `Grid` with history data associated with the `ids` described in `pt_data` for the given `range`. The return `Grid` contains column metadata defined in `pt_data`.
+            `Grid` with history data associated with the `ids` described in `pt_data`
+            for the given `range`. The return `Grid` contains column metadata defined
+            in `pt_data`.
         """
 
         pt_ids = [pt_row["id"] for pt_row in pt_data.rows]
@@ -323,7 +337,11 @@ class Client:
 
         Parameters:
             ids: Unique identifiers for the point records.
-            range: Ranges are inclusive of start timestamp and exclusive of end timestamp. If a date is provided without a defined end, then the server should infer the range to be from midnight of the defined date to midnight of the day after the defined date.
+            range:
+                Ranges are inclusive of start timestamp and exclusive of end timestamp.
+                If a date is provided without a defined end, then the server should
+                infer the range to be from midnight of the defined date to midnight of
+                the day after the defined date.
 
         Returns:
             `Grid` with history data associated with the `ids` for the given `range`.
@@ -445,7 +463,9 @@ class Client:
             id: Unique identifier of the writable point.
             level: Integer from 1 - 17 (17 is default).
             val: Current value at level or null.
-            who: Optional username/application name performing the write. If not provided, the authenticated user display name is used.
+            who:
+                Optional username/application name performing the write. If not
+                provided, the authenticated user display name is used.
             duration: Optional number with duration unit if setting level 8.
 
         Returns:
@@ -502,7 +522,8 @@ class Client:
 
         **Additional info**
 
-        See Haxall's Eval operation docs for more details [here](https://haxall.io/doc/lib-hx/op~eval).
+        See Haxall's Eval operation docs for more details
+        [here](https://haxall.io/doc/lib-hx/op~eval).
 
         Parameters:
             expr: Axon string expression.
@@ -534,12 +555,23 @@ class Client:
 
         **Additional info**
 
-        See Haxall's Commit operation docs for more details [here](https://haxall.io/doc/lib-hx/op~commit).
+        See Haxall's Commit operation docs for more details
+        [here](https://haxall.io/doc/lib-hx/op~commit).
 
         Parameters:
             data: Changes to be commited to Haxall's Folio database.
-            flag: `add`, `update`, and `remove` options are selected using `CommitFlag`. `add` adds new records into the database and returns a grid with the newly minted record identifiers. As a general rule you should not have an `id` column in your commit grid. However if you wish to predefine the id of the records, you can specify an `id` column in the commit grid.  `update` modifies existing records, the records must have both an `id` and `mod` column. `remove` removes existing records, the records should have only an `id` and `mod` column.
-            read_return: If true the response contains the full tag definitions of the new/updated records.
+            flag:
+                `add`, `update`, and `remove` options are selected using `CommitFlag`.
+                `add` adds new records into the database and returns a grid with the
+                newly minted record identifiers. As a general rule you should not have
+                an `id` column in your commit grid. However if you wish to predefine
+                the id of the records, you can specify an `id` column in the commit
+                grid.  `update` modifies existing records, the records must have both
+                an `id` and `mod` column. `remove` removes existing records, the
+                records should have only an `id` and `mod` column.
+            read_return:
+                If true the response contains the full tag definitions of the
+                new/updated records.
 
         Returns:
             `Grid` with the server's response.
