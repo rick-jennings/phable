@@ -6,18 +6,12 @@ from typing import TYPE_CHECKING, Any
 
 from phable.auth.scram import ScramScheme
 from phable.http import post
-from phable.kinds import DateRange, DateTimeRange, Grid, Marker, Number, Ref
+from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
 
 if TYPE_CHECKING:
-    from ssl import SSLContext
     from datetime import datetime
-
-from enum import StrEnum, auto
-
-# -----------------------------------------------------------------------------
-# Module exceptions
-# -----------------------------------------------------------------------------
+    from ssl import SSLContext
 
 
 @dataclass
@@ -43,22 +37,6 @@ class HaystackErrorGridResponseError(Exception):
 @dataclass
 class HaystackIncompleteDataResponseError(Exception):
     help_msg: str
-
-
-# -----------------------------------------------------------------------------
-# Enums for string inputs
-# -----------------------------------------------------------------------------
-
-
-class CommitFlag(StrEnum):
-    ADD = auto()
-    UPDATE = auto()
-    REMOVE = auto()
-
-
-# -----------------------------------------------------------------------------
-# Client core interface
-# -----------------------------------------------------------------------------
 
 
 class Client:
@@ -503,90 +481,6 @@ class Client:
         """
 
         return self._call("pointWrite", Grid.to_grid({"id": id}))
-
-    # -------------------------------------------------------------------------
-    # Haxall ops
-    # -------------------------------------------------------------------------
-
-    def eval(self, expr: str) -> Grid:
-        """Evaluates an Axon string expression.
-
-        **Errors**
-
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `HaystackErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
-
-        **Additional info**
-
-        See Haxall's Eval operation docs for more details
-        [here](https://haxall.io/doc/lib-hx/op~eval).
-
-        Parameters:
-            expr: Axon string expression.
-
-        Returns:
-            `Grid` with the server's response.
-        """
-
-        return self._call("eval", Grid.to_grid({"expr": expr}))
-
-    def commit(
-        self,
-        data: list[dict[str, Any]],
-        flag: CommitFlag,
-        read_return: bool = False,
-    ) -> Grid:
-        """Commits one or more diffs to Haxall's Folio database.
-
-        Commit access requires the API user to have admin permission.
-
-        **Errors**
-
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `HaystackErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
-
-        **Additional info**
-
-        See Haxall's Commit operation docs for more details
-        [here](https://haxall.io/doc/lib-hx/op~commit).
-
-        Parameters:
-            data: Changes to be commited to Haxall's Folio database.
-            flag:
-                `add`, `update`, and `remove` options are selected using `CommitFlag`.
-                `add` adds new records into the database and returns a grid with the
-                newly minted record identifiers. As a general rule you should not have
-                an `id` column in your commit grid. However if you wish to predefine
-                the id of the records, you can specify an `id` column in the commit
-                grid.  `update` modifies existing records, the records must have both
-                an `id` and `mod` column. `remove` removes existing records, the
-                records should have only an `id` and `mod` column.
-            read_return:
-                If true the response contains the full tag definitions of the
-                new/updated records.
-
-        Returns:
-            `Grid` with the server's response.
-        """
-
-        meta = {"commit": str(flag)}
-
-        if read_return:
-            meta = meta | {"readReturn": Marker()}
-
-        return self._call("commit", Grid.to_grid(data, meta))
-
-    # -------------------------------------------------------------------------
-    # base to Haystack and SkySpark ops
-    # -------------------------------------------------------------------------
 
     def _call(
         self,

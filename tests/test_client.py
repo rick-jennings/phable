@@ -1,18 +1,17 @@
 from datetime import date, datetime, timedelta
-from typing import Callable, Generator
+from typing import Any, Callable, Generator
 from zoneinfo import ZoneInfo
 
 import pytest
 
 from phable import (
     Client,
-    CommitFlag,
     DateRange,
     DateTimeRange,
     Grid,
-    HaystackErrorGridResponseError,
     HaystackHisWriteOpParametersError,
     HaystackReadOpUnknownRecError,
+    HxClient,
     Marker,
     Number,
     Ref,
@@ -26,8 +25,9 @@ PASSWORD = "su"
 
 
 @pytest.fixture(scope="module")
-def hc() -> Generator[Client, None, None]:
-    hc = Client(URI, USERNAME, PASSWORD)
+def client() -> Generator[Client, None, None]:
+    # use HxClient's features to test Client
+    hc = HxClient(URI, USERNAME, PASSWORD)
     hc.open()
 
     yield hc
@@ -36,24 +36,26 @@ def hc() -> Generator[Client, None, None]:
 
 
 @pytest.fixture(scope="module")
-def create_kw_pt_fn(hc: Client) -> Generator[Callable[[], Ref], None, None]:
+def create_kw_pt_rec_fn(
+    client: Client,
+) -> Generator[Callable[[], dict[str, Any]], None, None]:
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
         """kind: "Number"}, {add}).commit"""
     )
     created_pt_ids = []
 
-    def _create_pt():
-        response = hc.eval(axon_expr)
-        writable_kw_pt_id = response.rows[0]["id"]
-        created_pt_ids.append(writable_kw_pt_id)
-        return writable_kw_pt_id
+    def _create_pt_rec():
+        response = client.eval(axon_expr)
+        pt_rec = response.rows[0]
+        created_pt_ids.append(pt_rec["id"])
+        return pt_rec
 
-    yield _create_pt
+    yield _create_pt_rec
 
     for pt_id in created_pt_ids:
         axon_expr = f"readById(@{pt_id}).diff({{trash}}).commit"
-        hc.eval(axon_expr)
+        client.eval(axon_expr)
 
 
 # -----------------------------------------------------------------------------
@@ -67,8 +69,8 @@ def test_open():
         hc.open()
 
 
-def test_auth_token(hc: Client):
-    auth_token = hc._auth_token
+def test_auth_token(client: Client):
+    auth_token = client._auth_token
 
     assert len(auth_token) > 40
     assert "web-" in auth_token
@@ -94,64 +96,64 @@ def test_context_manager():
 # -----------------------------------------------------------------------------
 
 
-def test_about_op(hc: Client):
-    assert hc.about()["vendorName"] == "SkyFoundry"
+def test_about_op(client: Client):
+    assert client.about()["vendorName"] == "SkyFoundry"
 
 
-def test_read_site(hc: Client):
-    grid = hc.read('site and dis=="Carytown"')
+def test_read_site(client: Client):
+    grid = client.read('site and dis=="Carytown"')
     assert grid.rows[0]["geoState"] == "VA"
 
 
-def test_read_UnknownRecError(hc: Client):
+def test_read_UnknownRecError(client: Client):
     with pytest.raises(HaystackReadOpUnknownRecError):
-        hc.read("hi")
+        client.read("hi")
 
 
-def test_read_point(hc: Client):
-    grid = hc.read(
+def test_read_point(client: Client):
+    grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
     assert isinstance(grid.rows[0]["power"], Marker)
 
 
-def test_read_by_id(hc: Client):
-    id1 = hc.read("point and power and equipRef->siteMeter").rows[0]["id"]
-    response = hc.read_by_ids(id1)
+def test_read_by_id(client: Client):
+    id1 = client.read("point and power and equipRef->siteMeter").rows[0]["id"]
+    response = client.read_by_ids(id1)
 
     assert response.rows[0]["navName"] == "kW"
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(Ref("invalid-id"))
+        response = client.read_by_ids(Ref("invalid-id"))
 
 
-def test_read_by_ids(hc: Client):
-    ids = hc.read("point and power and equipRef->siteMeter")
+def test_read_by_ids(client: Client):
+    ids = client.read("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
 
-    response = hc.read_by_ids([id1, id2])
+    response = client.read_by_ids([id1, id2])
 
     assert response.rows[0]["tz"] == "New_York"
     assert response.rows[1]["tz"] == "New_York"
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(
+        response = client.read_by_ids(
             [Ref("p:demo:r:2c26ff0c-d04a5b02"), Ref("invalid-id")]
         )
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(
+        response = client.read_by_ids(
             [Ref("invalid-id"), Ref("p:demo:r:2c26ff0c-0b8c49a1")]
         )
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
+        response = client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-def test_his_read_by_ids_with_date_range(hc: Client):
+def test_his_read_by_ids_with_date_range(client: Client):
     # find the point id
-    point_grid = hc.read(
+    point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
@@ -159,7 +161,7 @@ def test_his_read_by_ids_with_date_range(hc: Client):
 
     # get the his using Date as the range
     start = date.today() - timedelta(days=7)
-    his_grid = hc.his_read_by_ids(point_ref, start)
+    his_grid = client.his_read_by_ids(point_ref, start)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -170,9 +172,9 @@ def test_his_read_by_ids_with_date_range(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == start
 
 
-def test_his_read_by_ids_with_datetime_range(hc: Client):
+def test_his_read_by_ids_with_datetime_range(client: Client):
     # find the point id
-    point_grid = hc.read(
+    point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
@@ -182,7 +184,7 @@ def test_his_read_by_ids_with_datetime_range(hc: Client):
     datetime_range = DateTimeRange(
         datetime(2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York"))
     )
-    his_grid = hc.his_read_by_ids(point_ref, datetime_range)
+    his_grid = client.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -193,9 +195,9 @@ def test_his_read_by_ids_with_datetime_range(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == date.today()
 
 
-def test_his_read_by_ids_with_date_slice(hc: Client):
+def test_his_read_by_ids_with_date_slice(client: Client):
     # find the point id
-    point_grid = hc.read(
+    point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
@@ -205,7 +207,7 @@ def test_his_read_by_ids_with_date_slice(hc: Client):
     start = date.today() - timedelta(days=7)
     end = date.today()
     date_range = DateRange(start, end)
-    his_grid = hc.his_read_by_ids(point_ref, date_range)
+    his_grid = client.his_read_by_ids(point_ref, date_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -216,9 +218,9 @@ def test_his_read_by_ids_with_date_slice(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == end
 
 
-def test_his_read_by_ids_with_datetime_slice(hc: Client):
+def test_his_read_by_ids_with_datetime_slice(client: Client):
     # find the point id
-    point_grid = hc.read(
+    point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
@@ -230,7 +232,7 @@ def test_his_read_by_ids_with_datetime_slice(hc: Client):
 
     datetime_range = DateTimeRange(start, end)
 
-    his_grid = hc.his_read_by_ids(point_ref, datetime_range)
+    his_grid = client.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -241,15 +243,15 @@ def test_his_read_by_ids_with_datetime_slice(hc: Client):
     assert his_grid.rows[-1][cols[0]].date() == end.date()
 
 
-def test_batch_his_read_by_ids(hc: Client):
-    ids = hc.read("point and power and equipRef->siteMeter")
+def test_batch_his_read_by_ids(client: Client):
+    ids = client.read("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
     id3 = ids.rows[2]["id"]
     id4 = ids.rows[3]["id"]
 
     ids = [id1, id2, id3, id4]
-    his_grid = hc.his_read_by_ids(ids, date.today())
+    his_grid = client.his_read_by_ids(ids, date.today())
 
     cols = [col["name"] for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[0]], datetime)
@@ -261,9 +263,9 @@ def test_batch_his_read_by_ids(hc: Client):
     assert his_grid.rows[0][cols[4]].val >= 0
 
 
-def test_his_read(hc: Client):
-    pt_grid = hc.read("power and point and equipRef->siteMeter")
-    his_grid = hc.his_read(pt_grid, date.today())
+def test_his_read(client: Client):
+    pt_grid = client.read("power and point and equipRef->siteMeter")
+    his_grid = client.his_read(pt_grid, date.today())
 
     his_grid_cols = his_grid.cols
 
@@ -279,8 +281,10 @@ def test_his_read(hc: Client):
     assert his_grid.rows[0]["v0"].val >= 0
 
 
-def test_single_his_write_by_ids(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    test_pt_id = create_kw_pt_fn()
+def test_single_his_write_by_ids(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: Client
+):
+    test_pt_rec = create_kw_pt_rec_fn()
 
     ts_now = datetime.now(ZoneInfo("America/New_York"))
     rows = [
@@ -295,16 +299,16 @@ def test_single_his_write_by_ids(create_kw_pt_fn: Callable[[], Ref], hc: Client)
     ]
 
     # write the his data to the test pt
-    hc.his_write_by_ids(test_pt_id, rows)
+    client.his_write_by_ids(test_pt_rec["id"], rows)
 
     range = date.today()
-    his_grid = hc.his_read_by_ids(test_pt_id, range)
+    his_grid = client.his_read_by_ids(test_pt_rec["id"], range)
 
     assert his_grid.rows[0]["val"] == Number(72.19999694824219)
     assert his_grid.rows[1]["val"] == Number(76.30000305175781)
 
 
-def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
+def test_single_his_write_by_ids_wrong_his_rows(client: Client):
     dt1 = datetime.now()
     his_rows1 = [
         {"ts": dt1 - timedelta(minutes=5), "val1": Number(1)},
@@ -312,7 +316,7 @@ def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
     ]
 
     with pytest.raises(HaystackHisWriteOpParametersError):
-        hc.his_write_by_ids(Ref("abc"), his_rows1)
+        client.his_write_by_ids(Ref("abc"), his_rows1)
 
     dt2 = datetime.now()
     his_rows2 = [
@@ -321,10 +325,10 @@ def test_single_his_write_by_ids_wrong_his_rows(hc: Client):
     ]
 
     with pytest.raises(HaystackHisWriteOpParametersError):
-        hc.his_write_by_ids(Ref("abc"), his_rows2)
+        client.his_write_by_ids(Ref("abc"), his_rows2)
 
 
-def test_batch_his_write_by_ids_wrong_his_rows(hc: Client):
+def test_batch_his_write_by_ids_wrong_his_rows(client: Client):
     dt1 = datetime.now()
     his_rows1 = [
         {"ts": dt1 - timedelta(minutes=5), "val": Number(1)},
@@ -332,7 +336,7 @@ def test_batch_his_write_by_ids_wrong_his_rows(hc: Client):
     ]
 
     with pytest.raises(HaystackHisWriteOpParametersError):
-        hc.his_write_by_ids([Ref("abc"), Ref("def")], his_rows1)
+        client.his_write_by_ids([Ref("abc"), Ref("def")], his_rows1)
 
     dt2 = datetime.now()
     his_rows2 = [
@@ -341,12 +345,12 @@ def test_batch_his_write_by_ids_wrong_his_rows(hc: Client):
     ]
 
     with pytest.raises(HaystackHisWriteOpParametersError):
-        hc.his_write_by_ids([Ref("abc"), Ref("def")], his_rows2)
+        client.his_write_by_ids([Ref("abc"), Ref("def")], his_rows2)
 
 
-def test_batch_his_write_by_ids(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    test_pt_id1 = create_kw_pt_fn()
-    test_pt_id2 = create_kw_pt_fn()
+def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+    test_pt_rec1 = create_kw_pt_rec_fn()
+    test_pt_rec2 = create_kw_pt_rec_fn()
 
     ts_now = datetime.now(ZoneInfo("America/New_York"))
 
@@ -360,10 +364,10 @@ def test_batch_his_write_by_ids(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     ]
 
     # write the his data to the test pt
-    hc.his_write_by_ids([test_pt_id1, test_pt_id2], rows)
+    client.his_write_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], rows)
 
     range = date.today()
-    his_grid = hc.his_read_by_ids([test_pt_id1, test_pt_id2], range)
+    his_grid = client.his_read_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], range)
 
     assert his_grid.rows[0]["v0"] == Number(72.19999694824219)
     assert his_grid.rows[1]["v0"] == Number(76.30000305175781)
@@ -371,12 +375,12 @@ def test_batch_his_write_by_ids(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     assert his_grid.rows[1]["v1"] == Number(72.19999694824219)
 
 
-def test_client_his_read_with_pandas(hc: Client):
+def test_client_his_read_with_pandas(client: Client):
     # We are importing pandas here only to check that it can be imported.
     # This can be improved in the future.
     pytest.importorskip("pandas")
-    pts = hc.read("point and power and equipRef->siteMeter")
-    pts_his_df = hc.his_read(pts, date.today()).to_pandas()
+    pts = client.read("point and power and equipRef->siteMeter")
+    pts_his_df = client.his_read(pts, date.today()).to_pandas()
 
     for col in pts_his_df.attrs["cols"]:
         if col["name"] == "ts":
@@ -397,12 +401,12 @@ def test_client_his_read_with_pandas(hc: Client):
     assert "hisEnd" in pts_his_df.attrs["meta"].keys()
 
 
-def test_client_his_read_by_ids_with_pandas(hc: Client):
+def test_client_his_read_by_ids_with_pandas(client: Client):
     # We are importing pandas here only to check that it can be imported.
     # This can be improved in the future.
     pytest.importorskip("pandas")
-    pts = hc.read("point and power and equipRef->siteMeter")
-    pts_his_df = hc.his_read_by_ids(
+    pts = client.read("point and power and equipRef->siteMeter")
+    pts_his_df = client.his_read_by_ids(
         [pt_row["id"] for pt_row in pts.rows], date.today()
     ).to_pandas()
 
@@ -424,124 +428,9 @@ def test_client_his_read_by_ids_with_pandas(hc: Client):
     assert "hisEnd" in pts_his_df.attrs["meta"].keys()
 
 
-def test_failed_commit(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    data = [{"id": pt_id, "dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
-
-    with pytest.raises(HaystackErrorGridResponseError):
-        hc.commit(data, CommitFlag.ADD, False)
-
-
-def test_single_commit(hc: Client):
-    # create a new rec
-    data = [{"dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
-    response: Grid = hc.commit(data, CommitFlag.ADD, False)
-
-    new_rec_id = response.rows[0]["id"]
-    mod = response.rows[0]["mod"]
-
-    temp_rows = []
-    for row in response.rows:
-        del row["id"]
-        del row["mod"]
-        temp_rows.append(row)
-
-    assert temp_rows == data
-
-    assert isinstance(new_rec_id, Ref)
-    assert isinstance(mod, datetime)
-
-    assert response.rows[0]["dis"] == "TestRec"
-    assert response.rows[0]["testing"] == Marker()
-    assert response.rows[0]["pytest"] == Marker()
-
-    # add a new tag called foo to the newly created rec
-    # this time have the response return the full tag defs
-    data = [{"id": new_rec_id, "mod": mod, "foo": "new tag"}]
-    response: Grid = hc.commit(data, CommitFlag.UPDATE, True)
-
-    new_rec_id = response.rows[0]["id"]
-    mod = response.rows[0]["mod"]
-
-    # verify the response
-    assert isinstance(new_rec_id, Ref)
-    assert isinstance(mod, datetime)
-    assert response.rows[0]["dis"] == "TestRec"
-    assert response.rows[0]["testing"] == Marker()
-    assert response.rows[0]["pytest"] == Marker()
-    assert response.rows[0]["foo"] == "new tag"
-
-    # remove the newly created rec
-    data = [{"id": new_rec_id, "mod": mod}]
-    response: Grid = hc.commit(data, CommitFlag.REMOVE)
-
-    # Test invalid Refs
-    with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(new_rec_id)
-
-
-def test_batch_commit(hc: Client):
-    data = [
-        {"dis": "TestRec1", "testing1": Marker(), "pytest": Marker()},
-        {"dis": "TestRec2", "testing2": Marker(), "pytest": Marker()},
-    ]
-    response: Grid = hc.commit(data, CommitFlag.ADD, False)
-
-    new_rec_id1 = response.rows[0]["id"]
-    mod1 = response.rows[0]["mod"]
-
-    new_rec_id2 = response.rows[1]["id"]
-    mod2 = response.rows[1]["mod"]
-
-    temp_rows = []
-    for row in response.rows:
-        del row["id"]
-        del row["mod"]
-        temp_rows.append(row)
-
-    assert temp_rows == data
-
-    assert isinstance(new_rec_id1, Ref)
-    assert isinstance(mod1, datetime)
-
-    assert isinstance(new_rec_id2, Ref)
-    assert isinstance(mod2, datetime)
-
-    assert response.rows[0]["testing1"] == Marker()
-    assert response.rows[1]["testing2"] == Marker()
-
-    # add a new tag called foo to the newly created rec
-    # this time have the response return the full tag defs
-    data = [
-        {"id": new_rec_id1, "mod": mod1, "foo": "new tag1"},
-        {"id": new_rec_id2, "mod": mod2, "foo": "new tag2"},
-    ]
-    response: Grid = hc.commit(data, CommitFlag.UPDATE, True)
-
-    new_rec_id1 = response.rows[0]["id"]
-    mod1 = response.rows[0]["mod"]
-    new_rec_id2 = response.rows[1]["id"]
-    mod2 = response.rows[1]["mod"]
-
-    assert response.rows[0]["foo"] == "new tag1"
-    assert response.rows[1]["foo"] == "new tag2"
-
-    data = [
-        {"id": new_rec_id1, "mod": mod1},
-        {"id": new_rec_id2, "mod": mod2},
-    ]
-    response: Grid = hc.commit(data, CommitFlag.REMOVE)
-
-    with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(new_rec_id1)
-
-    with pytest.raises(HaystackReadOpUnknownRecError):
-        response = hc.read_by_ids(new_rec_id2)
-
-
-def test_point_write_number(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 1, Number(0, "kW"))
+def test_point_write_number(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+    pt_rec = create_kw_pt_rec_fn()
+    response = client.point_write(pt_rec["id"], 1, Number(0, "kW"))
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
@@ -549,16 +438,16 @@ def test_point_write_number(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     assert response.rows == []
 
 
-def test_point_write_number_who(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 1, Number(50, "kW"), "Phable")
+def test_point_write_number_who(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+    pt_rec = create_kw_pt_rec_fn()
+    response = client.point_write(pt_rec["id"], 1, Number(50, "kW"), "Phable")
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
     assert response.cols[0]["name"] == "empty"
     assert response.rows == []
 
-    check_response = hc.point_write_array(pt_id)
+    check_response = client.point_write_array(pt_rec["id"])
     check_row = check_response.rows[0]
 
     assert check_row["val"] == Number(50, "kW")
@@ -566,16 +455,20 @@ def test_point_write_number_who(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     assert "expires" not in check_row.keys()
 
 
-def test_point_write_number_who_dur(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 8, Number(100, "kW"), "Phable", Number(5, "min"))
+def test_point_write_number_who_dur(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: Client
+):
+    pt_rec = create_kw_pt_rec_fn()
+    response = client.point_write(
+        pt_rec["id"], 8, Number(100, "kW"), "Phable", Number(5, "min")
+    )
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
     assert response.cols[0]["name"] == "empty"
     assert response.rows == []
 
-    check_response = hc.point_write_array(pt_id)
+    check_response = client.point_write_array(pt_rec["id"])
     check_row = check_response.rows[7]
     expires = check_row["expires"]
 
@@ -585,9 +478,9 @@ def test_point_write_number_who_dur(create_kw_pt_fn: Callable[[], Ref], hc: Clie
     assert expires.val > 4.0 and expires.val < 5.0
 
 
-def test_point_write_null(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    response = hc.point_write(pt_id, 1)
+def test_point_write_null(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+    pt_rec = create_kw_pt_rec_fn()
+    response = client.point_write(pt_rec["id"], 1)
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
@@ -595,9 +488,9 @@ def test_point_write_null(create_kw_pt_fn: Callable[[], Ref], hc: Client):
     assert response.rows == []
 
 
-def test_point_write_array(create_kw_pt_fn: Callable[[], Ref], hc: Client):
-    pt_id = create_kw_pt_fn()
-    response = hc.point_write_array(pt_id)
+def test_point_write_array(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+    pt_rec = create_kw_pt_rec_fn()
+    response = client.point_write_array(pt_rec["id"])
 
     assert response.rows[0]["level"] == Number(1)
     assert response.rows[-1]["level"] == Number(17)

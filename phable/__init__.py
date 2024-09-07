@@ -2,11 +2,11 @@
 
 from phable.client import (
     Client,
-    CommitFlag,
     HaystackErrorGridResponseError,
     HaystackHisWriteOpParametersError,
     HaystackReadOpUnknownRecError,
 )
+from phable.hx_client import HxClient
 from phable.kinds import (
     NA,
     Coord,
