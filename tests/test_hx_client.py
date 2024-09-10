@@ -267,10 +267,10 @@ def test_commit_remove_with_id_and_mod_rec_tags(
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec1["id"])
+        client.read_by_id(pt_rec1["id"])
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec2["id"])
+        client.read_by_id(pt_rec2["id"])
 
 
 def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
@@ -294,10 +294,10 @@ def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec1["id"])
+        client.read_by_id(pt_rec1["id"])
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec2["id"])
+        client.read_by_id(pt_rec2["id"])
 
 
 def test_commit_remove_one_rec(
@@ -312,7 +312,7 @@ def test_commit_remove_one_rec(
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec["id"])
+        client.read_by_id(pt_rec["id"])
 
 
 def test_commit_remove_with_all_rec_tags(
@@ -329,10 +329,10 @@ def test_commit_remove_with_all_rec_tags(
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec1["id"])
+        client.read_by_id(pt_rec1["id"])
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        client.read_by_ids(pt_rec2["id"])
+        client.read_by_id(pt_rec2["id"])
 
 
 def test_commit_remove_with_non_existing_rec(

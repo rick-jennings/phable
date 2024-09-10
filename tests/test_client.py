@@ -120,11 +120,15 @@ def test_read_point(client: Client):
 
 def test_read_by_id(client: Client):
     id1 = client.read("point and power and equipRef->siteMeter").rows[0]["id"]
-    response = client.read_by_ids(id1)
+    response = client.read_by_id(id1)
 
     assert response.rows[0]["navName"] == "kW"
+
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = client.read_by_ids(Ref("invalid-id"))
+        client.read_by_id(Ref("invalid-id"))
+
+    checked_response = client.read_by_id(Ref("invalid-id"), False)
+    assert len(checked_response.rows) == 0
 
 
 def test_read_by_ids(client: Client):
@@ -138,17 +142,13 @@ def test_read_by_ids(client: Client):
     assert response.rows[1]["tz"] == "New_York"
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = client.read_by_ids(
-            [Ref("p:demo:r:2c26ff0c-d04a5b02"), Ref("invalid-id")]
-        )
+        client.read_by_ids([id1, Ref("invalid-id")])
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = client.read_by_ids(
-            [Ref("invalid-id"), Ref("p:demo:r:2c26ff0c-0b8c49a1")]
-        )
+        client.read_by_ids([Ref("invalid-id"), id2])
 
     with pytest.raises(HaystackReadOpUnknownRecError):
-        response = client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
+        client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
 def test_his_read_by_ids_with_date_range(client: Client):

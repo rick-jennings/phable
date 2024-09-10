@@ -192,8 +192,49 @@ class Client:
 
         return response
 
-    def read_by_ids(self, ids: Ref | list[Ref]) -> Grid:
+    def read_by_id(self, id: Ref, checked: bool = True) -> Grid:
+        """Read an entity record using its unique identifier.
+
+        **Errors**
+
+        See `checked` parameter details.
+
+        Also, after the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            id: Unique identifier for the record being read.
+            checked:
+                If `checked` is equal to false and the record cannot be found, an empty
+                `Grid` is returned. If `checked` is equal to true and the record cannot
+                be found, a `HaystackReadOpUnknownRecError` is raised.
+
+        Returns:
+            An empty `Grid` or a `Grid` that has a row for the entity read.
+        """
+
+        data_rows = [{"id": {"_kind": "ref", "val": id.val}}]
+        post_data = Grid.to_grid(data_rows)
+        response = self._call("read", post_data)
+
+        if checked is True:
+            if len(response.rows) == 0:
+                raise HaystackReadOpUnknownRecError(
+                    "Unable to locate the id on the server."
+                )
+
+        return response
+
+    def read_by_ids(self, ids: list[Ref]) -> Grid:
         """Read a set of entity records using their unique identifiers.
+
+        **Note:** Project Haystack recently introduced batch read support, which might
+        not be supported by some servers. If your server does not support the batch
+        read feature, then try using the `Client.read_by_id()` method instead.
 
         **Errors**
 
@@ -213,15 +254,11 @@ class Client:
             `Grid` with a row for each entity read.
         """
 
-        if isinstance(ids, Ref):
-            ids = [ids]
-
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
         post_data = Grid.to_grid(data_rows)
         response = self._call("read", post_data)
 
-        # verify the recs were found
         if len(response.rows) == 0:
             raise HaystackReadOpUnknownRecError(
                 "Unable to locate any of the ids on the server."
