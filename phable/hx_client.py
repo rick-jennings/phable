@@ -25,8 +25,8 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        1. `ErrorGridError` if the operation fails
+        2. `IncompleteDataError` if incomplete data is being returned
 
         **Additional info**
 
@@ -51,15 +51,15 @@ class HxClient(Client):
 
         **Errors**
 
-        An `ErrorGridResponseError` is raised if any of the recs do not exist on
+        An `ErrorGridError` is raised if any of the recs do not exist on
         the server.
 
         Also, after the request `Grid` is successfully read by the server, the server
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        1. `ErrorGridError` if the operation fails
+        2. `IncompleteDataError` if incomplete data is being returned
 
         **Additional info**
 
@@ -90,8 +90,8 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        1. `ErrorGridError` if the operation fails
+        2. `IncompleteDataError` if incomplete data is being returned
 
         **Additional info**
 
@@ -122,8 +122,8 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        1. `ErrorGridError` if the operation fails
+        2. `IncompleteDataError` if incomplete data is being returned
 
         **Additional info**
 

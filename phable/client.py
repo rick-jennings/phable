@@ -21,16 +21,41 @@ class HaystackHisWriteOpParametersError(Exception):
 
 @dataclass
 class UnknownRecError(Exception):
+    """Error raised by `Client` when server's `Grid` response does not include data for
+    one more more recs being requested.
+
+    Parameters:
+        help_msg: A display to help with troubleshooting.
+    """
+
     help_msg: str
 
 
 @dataclass
-class ErrorGridResponseError(Exception):
+class ErrorGridError(Exception):
+    """Error raised by `Client` when server's `Grid` response meta has an `err` marker
+    tag.
+
+    Parameters:
+        response:
+            `Grid` that has `err` marker tag in meta described
+            [here](https://project-haystack.org/doc/docHaystack/HttpApi#errorGrid).
+    """
+
     response: Grid
 
 
 @dataclass
-class IncompleteDataResponseError(Exception):
+class IncompleteDataError(Exception):
+    """Error raised by `Client` when server's `Grid` response meta has an `incomplete`
+    tag.
+
+    Parameters:
+        response:
+            `Grid` that has `incomplete` tag in meta described
+            [here](https://project-haystack.org/doc/docHaystack/HttpApi#incompleteData).
+    """
+
     response: Grid
 
 
@@ -150,14 +175,8 @@ class Client:
 
         **Errors**
 
-        See `checked` parameter details.
-
-        Also, after the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        See `checked` parameter details. Also, this method might raise an
+        `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             filter:
@@ -189,11 +208,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server may
-        respond with a `Grid` that triggers one of the following errors to be raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             filter:
@@ -220,14 +235,8 @@ class Client:
 
         **Errors**
 
-        See `checked` parameter details.
-
-        Also, after the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        See `checked` parameter details. Also, this method might raise an
+        `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id: Unique identifier for the record being read.
@@ -259,14 +268,8 @@ class Client:
 
         **Errors**
 
-        Raises an `UnknownRecError` if any of the records cannot be found.
-
-        Also, after the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        Raises an `UnknownRecError` if any of the records cannot be found. Also, this
+        method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             ids: Unique identifiers for the records being read.
@@ -309,12 +312,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             pt_data:
@@ -356,12 +354,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id:
@@ -399,12 +392,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             ids:
@@ -460,12 +448,7 @@ class Client:
         A `HaystackHisWriteOpParametersError` is raised if invalid column names are
         used for the `his_rows` parameter.
 
-        Also, after the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        Also, this method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         **Additional requirements which are not validated by this method**
 
@@ -542,12 +525,7 @@ class Client:
         A `HaystackHisWriteOpParametersError` is raised if invalid column names are
         used for the `his_rows` parameter.
 
-        Also, after the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        Also, this method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         **Additional requirements which are not validated by this method**
 
@@ -603,12 +581,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id: Unique identifier of the writable point.
@@ -639,12 +612,7 @@ class Client:
 
         **Errors**
 
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridResponseError` if the operation fails
-        2. `IncompleteDataResponseError` if incomplete data is being returned
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id: Unique identifier for the record.
@@ -661,7 +629,10 @@ class Client:
         post_data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
     ) -> Grid:
         """Sends a POST request based on given parameters, receives a HTTP
-        response, and returns JSON data."""
+        response, and returns JSON data.
+
+        This method might raise an `ErrorGridError` or `IncompleteDataError`.
+        """
 
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
@@ -708,10 +679,10 @@ def _validate_response_meta(response: Grid):
 
     meta = response.meta
     if "err" in meta.keys():
-        raise ErrorGridResponseError(response)
+        raise ErrorGridError(response)
 
     if "incomplete" in meta.keys():
-        raise IncompleteDataResponseError(response)
+        raise IncompleteDataError(response)
 
 
 def _create_his_read_req_data(
