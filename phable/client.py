@@ -343,9 +343,48 @@ class Client:
 
         return Grid(meta, cols, rows)
 
+    def his_read_by_id(
+        self,
+        id: Ref,
+        range: date | DateRange | DateTimeRange,
+    ) -> Grid:
+        """Read history data associated with `id` for the given `range`.
+
+        When there is an existing `Grid` describing point records, it is worth
+        considering to use the `Client.his_read()` method to store available
+        metadata within the returned `Grid`.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            id:
+                Unique identifier for the point record associated with the requested
+                history data.
+            range:
+                Ranges are inclusive of start timestamp and exclusive of end timestamp.
+                If a date is provided without a defined end, then the server should
+                infer the range to be from midnight of the defined date to midnight of
+                the day after the defined date.
+
+        Returns:
+            `Grid` with history data associated with the `id` for the given `range`.
+        """
+
+        data = _create_his_read_req_data(id, range)
+        response = self._call("hisRead", data)
+
+        return response
+
     def his_read_by_ids(
         self,
-        ids: Ref | list[Ref],
+        ids: list[Ref],
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
         """Read history data associated with `ids` for the given `range`.
@@ -368,7 +407,9 @@ class Client:
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
-            ids: Unique identifiers for the point records.
+            ids:
+                Unique identifiers for the point records associated with the requested
+                history data.
             range:
                 Ranges are inclusive of start timestamp and exclusive of end timestamp.
                 If a date is provided without a defined end, then the server should

@@ -161,7 +161,7 @@ def test_read_by_ids(client: Client):
         client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-def test_his_read_by_ids_with_date_range(client: Client):
+def test_his_read_by_id_with_date_range(client: Client):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -171,7 +171,7 @@ def test_his_read_by_ids_with_date_range(client: Client):
 
     # get the his using Date as the range
     start = date.today() - timedelta(days=7)
-    his_grid = client.his_read_by_ids(point_ref, start)
+    his_grid = client.his_read_by_id(point_ref, start)
 
     # check his_grid
     cols = [col["name"] for col in his_grid.cols]
@@ -179,6 +179,28 @@ def test_his_read_by_ids_with_date_range(client: Client):
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
     assert his_grid.rows[0][cols[0]].date() == start
+    assert his_grid.rows[-1][cols[0]].date() == start
+
+
+def test_his_read_by_ids_with_date_range(client: Client):
+    # find the point ids
+    point_grid = client.read_all("""point and equipRef->siteMeter and power""")
+    point_ref1 = point_grid.rows[0]["id"]
+    point_ref2 = point_grid.rows[1]["id"]
+
+    # get the his using Date as the range
+    start = date.today() - timedelta(days=7)
+    his_grid = client.his_read_by_ids([point_ref1, point_ref2], start)
+
+    # check his_grid
+    cols = [col["name"] for col in his_grid.cols]
+    assert isinstance(his_grid.rows[0][cols[1]], Number)
+    assert his_grid.rows[0][cols[1]].unit == "kW"
+    assert his_grid.rows[0][cols[1]].val >= 0
+    assert his_grid.rows[0][cols[0]].date() == start
+    assert his_grid.rows[1][cols[1]].unit == "kW"
+    assert his_grid.rows[1][cols[1]].val >= 0
+    assert his_grid.rows[1][cols[0]].date() == start
     assert his_grid.rows[-1][cols[0]].date() == start
 
 
