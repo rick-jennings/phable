@@ -26,7 +26,7 @@ class HxClient(Client):
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
 
@@ -59,7 +59,7 @@ class HxClient(Client):
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
 
@@ -91,7 +91,7 @@ class HxClient(Client):
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
 
@@ -123,7 +123,7 @@ class HxClient(Client):
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
 

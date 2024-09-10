@@ -30,7 +30,7 @@ class ErrorGridResponseError(Exception):
 
 
 @dataclass
-class HaystackIncompleteDataResponseError(Exception):
+class IncompleteDataResponseError(Exception):
     help_msg: str
 
 
@@ -157,7 +157,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             filter:
@@ -193,7 +193,7 @@ class Client:
         respond with a `Grid` that triggers one of the following errors to be raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             filter:
@@ -227,7 +227,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             id: Unique identifier for the record being read.
@@ -266,7 +266,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             ids: Unique identifiers for the records being read.
@@ -314,7 +314,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             pt_data:
@@ -361,7 +361,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             id:
@@ -404,7 +404,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             ids:
@@ -465,7 +465,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional requirements which are not validated by this method**
 
@@ -547,7 +547,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         **Additional requirements which are not validated by this method**
 
@@ -608,7 +608,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             id: Unique identifier of the writable point.
@@ -644,7 +644,7 @@ class Client:
         raised:
 
         1. `ErrorGridResponseError` if the operation fails
-        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+        2. `IncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
             id: Unique identifier for the record.
@@ -713,7 +713,7 @@ def _validate_response_meta(meta: dict[str, Any]):
 
     if "incomplete" in meta.keys():
         incomplete_dis = meta["incomplete"]
-        raise HaystackIncompleteDataResponseError(
+        raise IncompleteDataResponseError(
             "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
         )
 
