@@ -41,7 +41,7 @@ def create_kw_pt_rec_fn(
 ) -> Generator[Callable[[], dict[str, Any]], None, None]:
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
-        """kind: "Number"}, {add}).commit"""
+        """kind: "Number", unit: "kW"}, {add}).commit"""
     )
     created_pt_ids = []
 
@@ -313,31 +313,31 @@ def test_his_read(client: Client):
     assert his_grid.rows[0]["v0"].val >= 0
 
 
-def test_single_his_write_by_ids(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: Client
-):
+def test_single_his_write_by_id(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
     test_pt_rec = create_kw_pt_rec_fn()
 
     ts_now = datetime.now(ZoneInfo("America/New_York"))
     rows = [
         {
             "ts": ts_now - timedelta(seconds=30),
-            "val": Number(72.2),
+            "val": Number(72.2, "kW"),
         },
         {
             "ts": ts_now,
-            "val": Number(76.3),
+            "val": Number(76.3, "kW"),
         },
     ]
 
     # write the his data to the test pt
-    client.his_write_by_ids(test_pt_rec["id"], rows)
+    response = client.his_write_by_id(test_pt_rec["id"], rows)
+
+    assert len(response.rows) == 0
 
     range = date.today()
     his_grid = client.his_read_by_ids(test_pt_rec["id"], range)
 
-    assert his_grid.rows[0]["val"] == Number(72.19999694824219)
-    assert his_grid.rows[1]["val"] == Number(76.30000305175781)
+    assert his_grid.rows[0]["val"] == Number(pytest.approx(72.2), "kW")
+    assert his_grid.rows[1]["val"] == Number(pytest.approx(76.3), "kW")
 
 
 def test_single_his_write_by_ids_wrong_his_rows(client: Client):
@@ -389,22 +389,23 @@ def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: 
     rows = [
         {
             "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2),
-            "v1": Number(76.3),
+            "v0": Number(72.2, "kW"),
+            "v1": Number(76.3, "kW"),
         },
         {"ts": ts_now, "v0": Number(76.3), "v1": Number(72.2)},
     ]
 
     # write the his data to the test pt
-    client.his_write_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], rows)
+    response = client.his_write_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], rows)
+    assert len(response.rows) == 0
 
     range = date.today()
     his_grid = client.his_read_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], range)
 
-    assert his_grid.rows[0]["v0"] == Number(72.19999694824219)
-    assert his_grid.rows[1]["v0"] == Number(76.30000305175781)
-    assert his_grid.rows[0]["v1"] == Number(76.30000305175781)
-    assert his_grid.rows[1]["v1"] == Number(72.19999694824219)
+    assert his_grid.rows[0]["v0"] == Number(pytest.approx(72.2), "kW")
+    assert his_grid.rows[1]["v0"] == Number(pytest.approx(76.3), "kW")
+    assert his_grid.rows[0]["v1"] == Number(pytest.approx(76.3), "kW")
+    assert his_grid.rows[1]["v1"] == Number(pytest.approx(72.2), "kW")
 
 
 def test_client_his_read_with_pandas(client: Client):

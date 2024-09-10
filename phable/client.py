@@ -425,31 +425,114 @@ class Client:
 
         return response
 
-    def his_write_by_ids(
+    def his_write_by_id(
         self,
-        ids: Ref | list[Ref],
+        id: Ref,
         his_rows: list[dict[str, datetime | bool | Number | str]],
-    ) -> None:
+    ) -> Grid:
         """Write history data to point records on the server.
 
-        **When `ids` parameter is a `Ref`**
-
         History row key names must be `ts` or `val`.  Values in the column named `val`
-        are for the `Ref` described by the `ids` parameter.
+        are for the `Ref` described by the `id` parameter.
 
-        **When parameter `ids` is a `list[Ref]`**
+        **Example `his_rows`:
+
+        ```python
+        from datetime import datetime, timedelta
+        from phable import Number
+        from zoneinfo import ZoneInfo
+
+        ts_now = datetime.now(ZoneInfo("America/New_York"))
+        his_rows = [
+            {
+                "ts": ts_now - timedelta(seconds=30),
+                "val": Number(72.2, "kW"),
+            },
+            {
+                "ts": ts_now,
+                "val": Number(76.3, "kW"),
+            },
+        ]
+        ```
+
+        **Errors**
+
+        A `HaystackHisWriteOpParametersError` is raised if invalid column names are
+        used for the `his_rows` parameter.
+
+        Also, after the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        **Additional requirements which are not validated by this method**
+
+        1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
+        configured timezone and kind
+        2. Numeric data must match the entity's (Ref) configured unit or status of
+        being unitless
+
+        **Note:**  We are considering to add another method `Client.his_write()` in the
+        future that would validate these requirements.  It would require `pt_data`
+        similar to `Client.his_read()`.
+
+        **Recommendations for enhanced performance**
+
+        1. Avoid posting out-of-order or duplicate data
+
+        Parameters:
+            id: Unique identifier for the point record.
+            his_rows: History data to be written for the `id`.
+
+        Returns:
+            An empty `Grid`.
+        """
+
+        _validate_his_write_parameters(id, his_rows)
+        meta = {"id": id}
+        his_grid = Grid.to_grid(his_rows, meta)
+        return self._call("hisWrite", his_grid)
+
+    def his_write_by_ids(
+        self,
+        ids: list[Ref],
+        his_rows: list[dict[str, datetime | bool | Number | str]],
+    ) -> Grid:
+        """Write history data to point records on the server.
 
         History row key names must be `ts` or `vX` where `X` is an integer equal
         to or greater than zero.  Also, `X` must not exceed the highest index of `ids`.
 
         The index of an id in `ids` corresponds to the column name used in `his_rows`.
 
-        For example,
+        **Example `his_rows`:**
+
         ```python
+        from datetime import datetime, timedelta
+        from phable import Number, Ref
+        from zoneinfo import ZoneInfo
+
         ids = [Ref("foo0"), Ref("foo1"), Ref("foo2")]
-        his_rows = [{"ts": datetime.now(), "v0": Number(1, "kW"),
-                     "v1": Number(23, "kW"), "v2": Number(8, "kW")}]
+
+        ts_now = datetime.now(ZoneInfo("America/New_York"))
+        his_rows = [
+            {
+                "ts": ts_now - timedelta(seconds=30),
+                "v0": Number(1, "kW"),
+                "v1": Number(23, "kW"),
+                "v2": Number(8, "kW"),
+            },
+            {
+                "ts": ts_now,
+                "v0": Number(50, "kW"),
+                "v1": Number(20, "kW"),
+                "v2": Number(34, "kW"),
+            }
+        ]
         ```
+
         - Column named `v0` corresponds to index 0 of ids, or `Ref("foo0")`
         - Column named `v1` corresponds to index 1 of ids, or `Ref("foo1")`
         - Column named `v2` corresponds to index 2 of ids, or `Ref("foo2")`
@@ -493,25 +576,20 @@ class Client:
             his_rows: History data to be written for the `ids`.
 
         Returns:
-            `None`
+            An empty `Grid`.
         """
 
         _validate_his_write_parameters(ids, his_rows)
 
-        if isinstance(ids, Ref):
-            meta = {"id": ids}
-            his_grid = Grid.to_grid(his_rows, meta)
+        meta = {"ver": "3.0"}
+        cols = [{"name": "ts"}]
 
-        elif isinstance(ids, list):
-            meta = {"ver": "3.0"}
-            cols = [{"name": "ts"}]
+        for count, id in enumerate(ids):
+            cols.append({"name": f"v{count}", "meta": {"id": id}})
 
-            for count, id in enumerate(ids):
-                cols.append({"name": f"v{count}", "meta": {"id": id}})
+        his_grid = Grid(meta, cols, his_rows)
 
-            his_grid = Grid(meta, cols, his_rows)
-
-        self._call("hisWrite", his_grid)
+        return self._call("hisWrite", his_grid)
 
     def point_write(
         self,
