@@ -4,7 +4,7 @@ from phable.client import (
     Client,
     HaystackErrorGridResponseError,
     HaystackHisWriteOpParametersError,
-    HaystackReadOpUnknownRecError,
+    UnknownRecError,
 )
 from phable.hx_client import HxClient
 from phable.kinds import (

@@ -8,11 +8,11 @@ import pytest
 from phable import (
     Grid,
     HaystackErrorGridResponseError,
-    HaystackReadOpUnknownRecError,
     HxClient,
     Marker,
     Number,
     Ref,
+    UnknownRecError,
 )
 
 from .test_client import client, create_kw_pt_rec_fn
@@ -266,10 +266,10 @@ def test_commit_remove_with_id_and_mod_rec_tags(
     assert response.cols == [{"name": "empty"}]
     assert response.meta == {"ver": "3.0"}
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec1["id"])
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec2["id"])
 
 
@@ -293,10 +293,10 @@ def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
     assert response.cols == [{"name": "empty"}]
     assert response.meta == {"ver": "3.0"}
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec1["id"])
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec2["id"])
 
 
@@ -311,7 +311,7 @@ def test_commit_remove_one_rec(
     assert response.cols == [{"name": "empty"}]
     assert response.meta == {"ver": "3.0"}
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec["id"])
 
 
@@ -328,10 +328,10 @@ def test_commit_remove_with_all_rec_tags(
     assert response.cols == [{"name": "empty"}]
     assert response.meta == {"ver": "3.0"}
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec1["id"])
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(pt_rec2["id"])
 
 

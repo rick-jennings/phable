@@ -10,11 +10,11 @@ from phable import (
     DateTimeRange,
     Grid,
     HaystackHisWriteOpParametersError,
-    HaystackReadOpUnknownRecError,
     HxClient,
     Marker,
     Number,
     Ref,
+    UnknownRecError,
 )
 from phable.http import IncorrectHttpResponseStatus
 
@@ -112,7 +112,7 @@ def test_read_site(client: Client):
 
 
 def test_read_UnknownRecError(client: Client):
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read("hi")
 
 
@@ -134,7 +134,7 @@ def test_read_by_id(client: Client):
 
     assert response.rows[0]["navName"] == "kW"
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_id(Ref("invalid-id"))
 
     checked_response = client.read_by_id(Ref("invalid-id"), False)
@@ -151,13 +151,13 @@ def test_read_by_ids(client: Client):
     assert response.rows[0]["tz"] == "New_York"
     assert response.rows[1]["tz"] == "New_York"
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_ids([id1, Ref("invalid-id")])
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_ids([Ref("invalid-id"), id2])
 
-    with pytest.raises(HaystackReadOpUnknownRecError):
+    with pytest.raises(UnknownRecError):
         client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 

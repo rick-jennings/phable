@@ -20,7 +20,7 @@ class HaystackHisWriteOpParametersError(Exception):
 
 
 @dataclass
-class HaystackReadOpUnknownRecError(Exception):
+class UnknownRecError(Exception):
     help_msg: str
 
 
@@ -167,7 +167,7 @@ class Client:
             checked:
                 If `checked` is equal to false and the record cannot be found, an empty
                 `Grid` is returned. If `checked` is equal to true and the record cannot
-                be found, a `HaystackReadOpUnknownRecError` is raised.
+                be found, an `UnknownRecError` is raised.
 
         Returns:
             An empty `Grid` or a `Grid` that has a row for the entity read.
@@ -177,7 +177,7 @@ class Client:
 
         if checked is True:
             if len(response.rows) == 0:
-                raise HaystackReadOpUnknownRecError(
+                raise UnknownRecError(
                     "Unable to locate an entity on the server that matches the filter."
                 )
 
@@ -234,7 +234,7 @@ class Client:
             checked:
                 If `checked` is equal to false and the record cannot be found, an empty
                 `Grid` is returned. If `checked` is equal to true and the record cannot
-                be found, a `HaystackReadOpUnknownRecError` is raised.
+                be found, an `UnknownRecError` is raised.
 
         Returns:
             An empty `Grid` or a `Grid` that has a row for the entity read.
@@ -246,9 +246,7 @@ class Client:
 
         if checked is True:
             if len(response.rows) == 0:
-                raise HaystackReadOpUnknownRecError(
-                    "Unable to locate the id on the server."
-                )
+                raise UnknownRecError("Unable to locate the id on the server.")
 
         return response
 
@@ -261,7 +259,7 @@ class Client:
 
         **Errors**
 
-        Raises `HaystackReadOpUnknownRecError` if any of the records cannot be found.
+        Raises an `UnknownRecError` if any of the records cannot be found.
 
         Also, after the request `Grid` is successfully read by the server, the server
         may respond with a `Grid` that triggers one of the following errors to be
@@ -283,14 +281,10 @@ class Client:
         response = self._call("read", post_data)
 
         if len(response.rows) == 0:
-            raise HaystackReadOpUnknownRecError(
-                "Unable to locate any of the ids on the server."
-            )
+            raise UnknownRecError("Unable to locate any of the ids on the server.")
         for row in response.rows:
             if len(row) == 0:
-                raise HaystackReadOpUnknownRecError(
-                    "Unable to locate one or more ids on the server."
-                )
+                raise UnknownRecError("Unable to locate one or more ids on the server.")
 
         return response
 
