@@ -6,8 +6,8 @@ from typing import Any, Callable, Generator
 import pytest
 
 from phable import (
+    ErrorGridResponseError,
     Grid,
-    HaystackErrorGridResponseError,
     HxClient,
     Marker,
     Number,
@@ -123,7 +123,7 @@ def test_commit_add_with_existing_id_raises_error(
     client: HxClient,
 ):
     pt_rec = create_kw_pt_rec_fn()
-    with pytest.raises(HaystackErrorGridResponseError):
+    with pytest.raises(ErrorGridResponseError):
         client.commit_add(pt_rec)
 
 
@@ -237,7 +237,7 @@ def test_commit_remove_with_only_id_rec_tags(
     pt_rec1 = create_kw_pt_rec_fn()
     pt_rec2 = create_kw_pt_rec_fn()
 
-    with pytest.raises(HaystackErrorGridResponseError):
+    with pytest.raises(ErrorGridResponseError):
         response = client.commit_remove(
             Grid.to_grid(
                 [
@@ -345,7 +345,7 @@ def test_commit_remove_with_non_existing_rec(
         {"id": Ref("dog"), "mod": pt_rec_mod2},
     ]
 
-    with pytest.raises(HaystackErrorGridResponseError):
+    with pytest.raises(ErrorGridResponseError):
         client.commit_remove(sent_recs)
 
 

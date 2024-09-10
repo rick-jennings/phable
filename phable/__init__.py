@@ -2,7 +2,7 @@
 
 from phable.client import (
     Client,
-    HaystackErrorGridResponseError,
+    ErrorGridResponseError,
     HaystackHisWriteOpParametersError,
     UnknownRecError,
 )

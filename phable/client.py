@@ -25,7 +25,7 @@ class UnknownRecError(Exception):
 
 
 @dataclass
-class HaystackErrorGridResponseError(Exception):
+class ErrorGridResponseError(Exception):
     help_msg: str
 
 
@@ -156,7 +156,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -192,7 +192,7 @@ class Client:
         After the request `Grid` is successfully read by the server, the server may
         respond with a `Grid` that triggers one of the following errors to be raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -226,7 +226,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -265,7 +265,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -313,7 +313,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -360,7 +360,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -403,7 +403,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -464,7 +464,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional requirements which are not validated by this method**
@@ -546,7 +546,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional requirements which are not validated by this method**
@@ -607,7 +607,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -643,7 +643,7 @@ class Client:
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         Parameters:
@@ -707,7 +707,7 @@ def _validate_his_write_parameters(
 def _validate_response_meta(meta: dict[str, Any]):
     if "err" in meta.keys():
         error_dis = meta["dis"]
-        raise HaystackErrorGridResponseError(
+        raise ErrorGridResponseError(
             "The server returned an error grid with this message:\n" + error_dis
         )
 

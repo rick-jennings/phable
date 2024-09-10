@@ -25,7 +25,7 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
@@ -51,14 +51,14 @@ class HxClient(Client):
 
         **Errors**
 
-        A `HaystackErrorGridResponseError` is raised if any of the recs do not exist on
+        An `ErrorGridResponseError` is raised if any of the recs do not exist on
         the server.
 
         Also, after the request `Grid` is successfully read by the server, the server
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
@@ -90,7 +90,7 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
@@ -122,7 +122,7 @@ class HxClient(Client):
         may respond with a `Grid` that triggers one of the following errors to be
         raised:
 
-        1. `HaystackErrorGridResponseError` if the operation fails
+        1. `ErrorGridResponseError` if the operation fails
         2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
 
         **Additional info**
