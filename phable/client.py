@@ -15,11 +15,6 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class HaystackCloseOpServerResponseError(Exception):
-    help_msg: str
-
-
-@dataclass
 class HaystackHisWriteOpParametersError(Exception):
     help_msg: str
 
@@ -137,23 +132,17 @@ class Client:
         """
         return self._call("about").rows[0]
 
-    def close(self) -> None:
+    def close(self) -> Grid:
         """Close the connection to the server.
 
         **Note:** Project Haystack recently defined the Close operation. Some servers
         may not support this operation.
 
         Returns:
-            `None`
+            An empty `Grid`.
         """
 
-        call_result = self._call("close")
-
-        if call_result.cols[0]["name"] != "empty":
-            raise HaystackCloseOpServerResponseError(
-                "Expected an empty grid response and instead received:"
-                f"\n{call_result}"
-            )
+        return self._call("close")
 
     def read(self, filter: str, limit: int | None = None) -> Grid:
         """Read a set of entity records using a Project Haystack defined `filter`.

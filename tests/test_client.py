@@ -91,6 +91,12 @@ def test_context_manager():
     assert incorrectHttpResponseStatus.value.actual_status == 403
 
 
+def test_close_op():
+    hc = Client(URI, USERNAME, PASSWORD)
+    hc.open()
+    assert len(hc.close().rows) == 0
+
+
 # -----------------------------------------------------------------------------
 # haystack op tests
 # -----------------------------------------------------------------------------
