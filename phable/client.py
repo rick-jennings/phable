@@ -144,12 +144,13 @@ class Client:
 
         return self._call("close")
 
-    def read(self, filter: str, limit: int | None = None) -> Grid:
-        """Read a set of entity records using a Project Haystack defined `filter`.
+    def read(self, filter: str, checked: bool = True) -> Grid:
+        """Read from the database the first record which matches the
+        [filter](https://project-haystack.org/doc/docHaystack/Filters).
 
         **Errors**
 
-        Raises `HaystackReadOpUnknownRecError` if no entities are found.
+        See `checked` parameter details.
 
         Also, after the request `Grid` is successfully read by the server, the server
         may respond with a `Grid` that triggers one of the following errors to be
@@ -163,10 +164,46 @@ class Client:
                 Project Haystack defined
                 [filter](https://project-haystack.org/doc/docHaystack/Filters) for
                 querying the server.
+            checked:
+                If `checked` is equal to false and the record cannot be found, an empty
+                `Grid` is returned. If `checked` is equal to true and the record cannot
+                be found, a `HaystackReadOpUnknownRecError` is raised.
+
+        Returns:
+            An empty `Grid` or a `Grid` that has a row for the entity read.
+        """
+
+        response = self.read_all(filter, 1)
+
+        if checked is True:
+            if len(response.rows) == 0:
+                raise HaystackReadOpUnknownRecError(
+                    "Unable to locate an entity on the server that matches the filter."
+                )
+
+        return response
+
+    def read_all(self, filter: str, limit: int | None = None) -> Grid:
+        """Read all records from the database which match the
+        [filter](https://project-haystack.org/doc/docHaystack/Filters).
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server may
+        respond with a `Grid` that triggers one of the following errors to be raised:
+
+        1. `HaystackErrorGridResponseError` if the operation fails
+        2. `HaystackIncompleteDataResponseError` if incomplete data is being returned
+
+        Parameters:
+            filter:
+                Project Haystack defined
+                [filter](https://project-haystack.org/doc/docHaystack/Filters) for
+                querying the server.
             limit: Maximum number of entities to return in response.
 
         Returns:
-            `Grid` with a row for each entity read.
+            An empty `Grid` or a `Grid` that has a row for each entity read.
         """
 
         data_row = {"filter": filter}
@@ -175,9 +212,6 @@ class Client:
             data_row["limit"] = limit
 
         response = self._call("read", Grid.to_grid(data_row))
-
-        if len(response.rows) == 0:
-            raise HaystackReadOpUnknownRecError(filter)
 
         return response
 

@@ -116,6 +116,10 @@ def test_read_UnknownRecError(client: Client):
         client.read("hi")
 
 
+def test_read_no_error_when_checked_is_false(client: Client):
+    assert len(client.read("hi", False).rows) == 0
+
+
 def test_read_point(client: Client):
     grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -138,7 +142,7 @@ def test_read_by_id(client: Client):
 
 
 def test_read_by_ids(client: Client):
-    ids = client.read("point and power and equipRef->siteMeter")
+    ids = client.read_all("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
 
@@ -250,7 +254,7 @@ def test_his_read_by_ids_with_datetime_slice(client: Client):
 
 
 def test_batch_his_read_by_ids(client: Client):
-    ids = client.read("point and power and equipRef->siteMeter")
+    ids = client.read_all("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
     id3 = ids.rows[2]["id"]
@@ -385,7 +389,7 @@ def test_client_his_read_with_pandas(client: Client):
     # We are importing pandas here only to check that it can be imported.
     # This can be improved in the future.
     pytest.importorskip("pandas")
-    pts = client.read("point and power and equipRef->siteMeter")
+    pts = client.read_all("point and power and equipRef->siteMeter")
     pts_his_df = client.his_read(pts, date.today()).to_pandas()
 
     for col in pts_his_df.attrs["cols"]:
@@ -411,7 +415,7 @@ def test_client_his_read_by_ids_with_pandas(client: Client):
     # We are importing pandas here only to check that it can be imported.
     # This can be improved in the future.
     pytest.importorskip("pandas")
-    pts = client.read("point and power and equipRef->siteMeter")
+    pts = client.read_all("point and power and equipRef->siteMeter")
     pts_his_df = client.his_read_by_ids(
         [pt_row["id"] for pt_row in pts.rows], date.today()
     ).to_pandas()
