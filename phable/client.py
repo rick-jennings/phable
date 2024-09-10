@@ -26,12 +26,12 @@ class UnknownRecError(Exception):
 
 @dataclass
 class ErrorGridResponseError(Exception):
-    help_msg: str
+    response: Grid
 
 
 @dataclass
 class IncompleteDataResponseError(Exception):
-    help_msg: str
+    response: Grid
 
 
 class Client:
@@ -674,7 +674,7 @@ class Client:
             headers=headers,
             context=self._context,
         )
-        _validate_response_meta(response.meta)
+        _validate_response_meta(response)
 
         return response
 
@@ -704,18 +704,14 @@ def _validate_his_write_parameters(
                 )
 
 
-def _validate_response_meta(meta: dict[str, Any]):
+def _validate_response_meta(response: Grid):
+
+    meta = response.meta
     if "err" in meta.keys():
-        error_dis = meta["dis"]
-        raise ErrorGridResponseError(
-            "The server returned an error grid with this message:\n" + error_dis
-        )
+        raise ErrorGridResponseError(response)
 
     if "incomplete" in meta.keys():
-        incomplete_dis = meta["incomplete"]
-        raise IncompleteDataResponseError(
-            "Incomplete data was returned for these reasons:" f"\n{incomplete_dis}"
-        )
+        raise IncompleteDataResponseError(response)
 
 
 def _create_his_read_req_data(
