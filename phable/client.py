@@ -10,7 +10,6 @@ from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
 
 if TYPE_CHECKING:
-    from datetime import datetime
     from ssl import SSLContext
 
 
@@ -126,7 +125,7 @@ class Client:
         Returns:
             A `dict` containing information about the server.
         """
-        return self._call("about").rows[0]
+        return self.call("about").rows[0]
 
     def close(self) -> Grid:
         """Close the connection to the server.
@@ -138,7 +137,7 @@ class Client:
             An empty `Grid`.
         """
 
-        return self._call("close")
+        return self.call("close")
 
     def read(self, filter: str, checked: bool = True) -> Grid:
         """Read from the database the first record which matches the
@@ -191,7 +190,7 @@ class Client:
         if limit is not None:
             data_row["limit"] = limit
 
-        response = self._call("read", Grid.to_grid(data_row))
+        response = self.call("read", Grid.to_grid(data_row))
 
         return response
 
@@ -214,7 +213,7 @@ class Client:
 
         data_rows = [{"id": {"_kind": "ref", "val": id.val}}]
         post_data = Grid.to_grid(data_rows)
-        response = self._call("read", post_data)
+        response = self.call("read", post_data)
 
         if checked is True:
             if len(response.rows) == 0:
@@ -242,7 +241,7 @@ class Client:
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
         post_data = Grid.to_grid(data_rows)
-        response = self._call("read", post_data)
+        response = self.call("read", post_data)
 
         if len(response.rows) == 0:
             raise UnknownRecError("Unable to locate any of the ids on the server.")
@@ -257,14 +256,11 @@ class Client:
         pt_recs: Grid,
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
-        """Reads history data associated with `ids` within `pt_data` for the given
+        """Reads history data associated with `ids` within `pt_recs` for the given
         `range`.
 
-        Appends point attributes within `pt_data` as column metadata in the returned
+        Appends point attributes within `pt_recs` as column metadata in the returned
         `Grid`.
-
-        When there are `ids` without `pt_data`, then instead use the
-        `Client.his_read_by_ids()` method.
 
         **Note:** Project Haystack recently defined batch history read support.  Some
         Project Haystack servers may not support reading history data for more than one
@@ -287,7 +283,7 @@ class Client:
 
         pt_ids = [pt_row["id"] for pt_row in pt_recs.rows]
         data = _create_his_read_req_data(pt_ids, range)
-        response = self._call("hisRead", data)
+        response = self.call("hisRead", data)
 
         meta = response.meta | pt_recs.meta
         cols = merge_pt_data_to_his_grid_cols(response, pt_recs)
@@ -321,7 +317,7 @@ class Client:
         """
 
         data = _create_his_read_req_data(id, range)
-        response = self._call("hisRead", data)
+        response = self.call("hisRead", data)
 
         return response
 
@@ -355,16 +351,18 @@ class Client:
         """
 
         data = _create_his_read_req_data(ids, range)
-        response = self._call("hisRead", data)
+        response = self.call("hisRead", data)
 
         return response
 
     def his_write_by_id(
         self,
         id: Ref,
-        his_rows: list[dict[str, datetime | bool | Number | str]],
+        his_rows: list[dict[str, Any]],
     ) -> Grid:
         """Write history data to point records on the server.
+
+        History row key values must be valid data types defined for `Phable`.
 
         History row key names must be `ts` or `val`.  Values in the column named `val`
         are for the `Ref` described by the `id` parameter.
@@ -410,14 +408,16 @@ class Client:
 
         meta = {"id": id}
         his_grid = Grid.to_grid(his_rows, meta)
-        return self._call("hisWrite", his_grid)
+        return self.call("hisWrite", his_grid)
 
     def his_write_by_ids(
         self,
         ids: list[Ref],
-        his_rows: list[dict[str, datetime | bool | Number | str]],
+        his_rows: list[dict[str, Any]],
     ) -> Grid:
         """Write history data to point records on the server.
+
+        History row key values must be valid data types defined for `Phable`.
 
         History row key names must be `ts` or `vX` where `X` is an integer equal
         to or greater than zero.  Also, `X` must not exceed the highest index of `ids`.
@@ -488,7 +488,7 @@ class Client:
 
         his_grid = Grid(meta, cols, his_rows)
 
-        return self._call("hisWrite", his_grid)
+        return self.call("hisWrite", his_grid)
 
     def point_write(
         self,
@@ -522,7 +522,7 @@ class Client:
         if duration is not None:
             row["duration"] = duration
 
-        return self._call("pointWrite", Grid.to_grid(row))
+        return self.call("pointWrite", Grid.to_grid(row))
 
     def point_write_array(self, id: Ref) -> Grid:
         """Reads the current status of a writable point's priority array.
@@ -534,21 +534,36 @@ class Client:
             `Grid` with the server's response.
         """
 
-        return self._call("pointWrite", Grid.to_grid({"id": id}))
+        return self.call("pointWrite", Grid.to_grid({"id": id}))
 
-    def _call(
+    def call(
         self,
-        op: str,
-        post_data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
+        path: str,
+        data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
     ) -> Grid:
-        """Sends a POST request based on given parameters, receives a HTTP
-        response, and returns JSON data.
+        """Sends a POST request to `{uri}/{path}` using provided `data`.
+
+        This operation is not defined by Project Haystack. However, other `Client`
+        methods use this method internally.
+
+        Parameters:
+            path:
+                Location on endpoint such that the complete path of the request is
+                `{uri}/{path}`
+
+                **Note:** The `uri` stored in the `Client` instance and the value
+                provided as the `path` parameter of this method are used.
+            data:
+                Data passed in the POST request.
 
         Raises:
             CallError:
                 Error raised by `Client` when server's `Grid` response meta has an
                 `err` marker tag described
                 [here](https://project-haystack.org/doc/docHaystack/HttpApi#errorGrid).
+
+        Returns:
+            HTTP response.
         """
 
         headers = {
@@ -557,8 +572,8 @@ class Client:
         }
 
         response = post(
-            url=f"{self.uri}/{op}",
-            post_data=post_data,
+            url=f"{self.uri}/{path}",
+            post_data=data,
             headers=headers,
             context=self._context,
         )

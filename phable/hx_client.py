@@ -42,7 +42,7 @@ class HxClient(Client):
         meta = {"commit": "add"}
         if isinstance(recs, Grid):
             recs = recs.rows
-        return self._call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", Grid.to_grid(recs, meta))
 
     def commit_remove(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
         """Removes one or more records from the database.
@@ -77,7 +77,7 @@ class HxClient(Client):
         meta = {"commit": "remove"}
         if isinstance(recs, Grid):
             recs = recs.rows
-        return self._call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", Grid.to_grid(recs, meta))
 
     def commit_update(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
         """Updates one or more existing records within the database.
@@ -111,7 +111,7 @@ class HxClient(Client):
         meta = {"commit": "update"}
         if isinstance(recs, Grid):
             recs = recs.rows
-        return self._call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", Grid.to_grid(recs, meta))
 
     def eval(self, expr: str) -> Grid:
         """Evaluates an Axon string expression.
@@ -137,4 +137,4 @@ class HxClient(Client):
             `Grid` with the server's response.
         """
 
-        return self._call("eval", Grid.to_grid({"expr": expr}))
+        return self.call("eval", Grid.to_grid({"expr": expr}))
