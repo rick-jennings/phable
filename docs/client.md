@@ -2,8 +2,6 @@
 
 ::: phable.client.Client
 
+::: phable.client.CallError
+
 ::: phable.client.UnknownRecError
-
-::: phable.client.ErrorGridError
-
-::: phable.client.IncompleteDataError

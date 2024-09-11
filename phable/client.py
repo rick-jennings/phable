@@ -15,24 +15,7 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class HaystackHisWriteOpParametersError(Exception):
-    help_msg: str
-
-
-@dataclass
-class UnknownRecError(Exception):
-    """Error raised by `Client` when server's `Grid` response does not include data for
-    one more more recs being requested.
-
-    Parameters:
-        help_msg: A display to help with troubleshooting.
-    """
-
-    help_msg: str
-
-
-@dataclass
-class ErrorGridError(Exception):
+class CallError(Exception):
     """Error raised by `Client` when server's `Grid` response meta has an `err` marker
     tag.
 
@@ -46,17 +29,15 @@ class ErrorGridError(Exception):
 
 
 @dataclass
-class IncompleteDataError(Exception):
-    """Error raised by `Client` when server's `Grid` response meta has an `incomplete`
-    tag.
+class UnknownRecError(Exception):
+    """Error raised by `Client` when server's `Grid` response does not include data for
+    one or more recs being requested.
 
     Parameters:
-        response:
-            `Grid` that has `incomplete` tag in meta described
-            [here](https://project-haystack.org/doc/docHaystack/HttpApi#incompleteData).
+        help_msg: A display to help with troubleshooting.
     """
 
-    response: Grid
+    help_msg: str
 
 
 class Client:
@@ -68,6 +49,8 @@ class Client:
     ```python
     from phable import Client
     ```
+
+    Methods may raise a `CallError`.
 
     ## Context Manager
 
@@ -116,10 +99,6 @@ class Client:
         self._auth_token: str
         self._context = ssl_context
 
-    # -------------------------------------------------------------------------
-    # open the connection with the server
-    # -------------------------------------------------------------------------
-
     def open(self) -> None:
         """Initiates and executes the SCRAM authentication exchange with the server.
 
@@ -134,20 +113,12 @@ class Client:
         self._auth_token = scram.get_auth_token()
         del scram
 
-    # -------------------------------------------------------------------------
-    # define an optional context manager
-    # -------------------------------------------------------------------------
-
     def __enter__(self):
         self.open()
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):  # type: ignore
         self.close()
-
-    # -------------------------------------------------------------------------
-    # standard Haystack ops
-    # -------------------------------------------------------------------------
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server.
@@ -173,10 +144,8 @@ class Client:
         """Read from the database the first record which matches the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).
 
-        **Errors**
-
-        See `checked` parameter details. Also, this method might raise an
-        `ErrorGridError` or `IncompleteDataError`.
+        Raises:
+            UnknownRecError: Server's response does not include requested rec.
 
         Parameters:
             filter:
@@ -206,10 +175,6 @@ class Client:
         """Read all records from the database which match the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).
 
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
-
         Parameters:
             filter:
                 Project Haystack defined
@@ -233,10 +198,8 @@ class Client:
     def read_by_id(self, id: Ref, checked: bool = True) -> Grid:
         """Read an entity record using its unique identifier.
 
-        **Errors**
-
-        See `checked` parameter details. Also, this method might raise an
-        `ErrorGridError` or `IncompleteDataError`.
+        Raises:
+            UnknownRecError: Server's response does not include requested recs.
 
         Parameters:
             id: Unique identifier for the record being read.
@@ -266,10 +229,8 @@ class Client:
         not be supported by some servers. If your server does not support the batch
         read feature, then try using the `Client.read_by_id()` method instead.
 
-        **Errors**
-
-        Raises an `UnknownRecError` if any of the records cannot be found. Also, this
-        method might raise an `ErrorGridError` or `IncompleteDataError`.
+        Raises:
+            UnknownRecError: Server's response does not include requested recs.
 
         Parameters:
             ids: Unique identifiers for the records being read.
@@ -291,10 +252,9 @@ class Client:
 
         return response
 
-    # TODO: raise exceptions if there are no valid pt ids on HisRead ops?
     def his_read(
         self,
-        pt_data: Grid,
+        pt_recs: Grid,
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
         """Reads history data associated with `ids` within `pt_data` for the given
@@ -310,12 +270,8 @@ class Client:
         Project Haystack servers may not support reading history data for more than one
         point record at a time.
 
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
-
         Parameters:
-            pt_data:
+            pt_recs:
                 A `Grid` that contains a unique point record `id` on each row.
                 Additional data for the point record is appended as column metadata in
                 the returned `Grid`.
@@ -326,17 +282,15 @@ class Client:
                 the day after the defined date.
 
         Returns:
-            `Grid` with history data associated with the `ids` described in `pt_data`
-            for the given `range`. The return `Grid` contains column metadata defined
-            in `pt_data`.
+            History data for the `ids`. Includes metadata from `pt_recs`.
         """
 
-        pt_ids = [pt_row["id"] for pt_row in pt_data.rows]
+        pt_ids = [pt_row["id"] for pt_row in pt_recs.rows]
         data = _create_his_read_req_data(pt_ids, range)
         response = self._call("hisRead", data)
 
-        meta = response.meta | pt_data.meta
-        cols = merge_pt_data_to_his_grid_cols(response, pt_data)
+        meta = response.meta | pt_recs.meta
+        cols = merge_pt_data_to_his_grid_cols(response, pt_recs)
         rows = response.rows
 
         return Grid(meta, cols, rows)
@@ -351,10 +305,6 @@ class Client:
         When there is an existing `Grid` describing point records, it is worth
         considering to use the `Client.his_read()` method to store available
         metadata within the returned `Grid`.
-
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id:
@@ -390,10 +340,6 @@ class Client:
         Project Haystack servers may not support reading history data for more than one
         point record at a time.
 
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
-
         Parameters:
             ids:
                 Unique identifiers for the point records associated with the requested
@@ -423,7 +369,7 @@ class Client:
         History row key names must be `ts` or `val`.  Values in the column named `val`
         are for the `Ref` described by the `id` parameter.
 
-        **Example `his_rows`:
+        **Example `his_rows`:**
 
         ```python
         from datetime import datetime, timedelta
@@ -443,23 +389,12 @@ class Client:
         ]
         ```
 
-        **Errors**
-
-        A `HaystackHisWriteOpParametersError` is raised if invalid column names are
-        used for the `his_rows` parameter.
-
-        Also, this method might raise an `ErrorGridError` or `IncompleteDataError`.
-
-        **Additional requirements which are not validated by this method**
+        **Additional requirements**
 
         1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
         configured timezone and kind
         2. Numeric data must match the entity's (Ref) configured unit or status of
         being unitless
-
-        **Note:**  We are considering to add another method `Client.his_write()` in the
-        future that would validate these requirements.  It would require `pt_data`
-        similar to `Client.his_read()`.
 
         **Recommendations for enhanced performance**
 
@@ -473,7 +408,6 @@ class Client:
             An empty `Grid`.
         """
 
-        _validate_his_write_parameters(id, his_rows)
         meta = {"id": id}
         his_grid = Grid.to_grid(his_rows, meta)
         return self._call("hisWrite", his_grid)
@@ -520,23 +454,12 @@ class Client:
         - Column named `v1` corresponds to index 1 of ids, or `Ref("foo1")`
         - Column named `v2` corresponds to index 2 of ids, or `Ref("foo2")`
 
-        **Errors**
-
-        A `HaystackHisWriteOpParametersError` is raised if invalid column names are
-        used for the `his_rows` parameter.
-
-        Also, this method might raise an `ErrorGridError` or `IncompleteDataError`.
-
-        **Additional requirements which are not validated by this method**
+        **Additional requirements**
 
         1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
         configured timezone and kind
         2. Numeric data must match the entity's (Ref) configured unit or status of
         being unitless
-
-        **Note:**  We are considering to add another method `Client.his_write()` in the
-        future that would validate these requirements.  It would require `pt_data`
-        similar to `Client.his_read()`.
 
         **Recommendations for enhanced performance**
 
@@ -557,8 +480,6 @@ class Client:
             An empty `Grid`.
         """
 
-        _validate_his_write_parameters(ids, his_rows)
-
         meta = {"ver": "3.0"}
         cols = [{"name": "ts"}]
 
@@ -578,10 +499,6 @@ class Client:
         duration: Number | None = None,
     ) -> Grid:
         """Writes to a given level of a writable point's priority array.
-
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
 
         Parameters:
             id: Unique identifier of the writable point.
@@ -610,10 +527,6 @@ class Client:
     def point_write_array(self, id: Ref) -> Grid:
         """Reads the current status of a writable point's priority array.
 
-        **Errors**
-
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
-
         Parameters:
             id: Unique identifier for the record.
 
@@ -631,7 +544,11 @@ class Client:
         """Sends a POST request based on given parameters, receives a HTTP
         response, and returns JSON data.
 
-        This method might raise an `ErrorGridError` or `IncompleteDataError`.
+        Raises:
+            CallError:
+                Error raised by `Client` when server's `Grid` response meta has an
+                `err` marker tag described
+                [here](https://project-haystack.org/doc/docHaystack/HttpApi#errorGrid).
         """
 
         headers = {
@@ -650,39 +567,10 @@ class Client:
         return response
 
 
-# -----------------------------------------------------------------------------
-# Misc support functions for Client()
-# -----------------------------------------------------------------------------
-
-
-def _validate_his_write_parameters(
-    ids: list[Ref] | Ref,
-    his_rows: list[dict[str, datetime | bool | Number | str]],
-):
-    if isinstance(ids, list):
-        # order does not matter here
-        expected_col_names = [f"v{i}" for i in range(len(ids))]
-        expected_col_names.append("ts")
-    elif isinstance(ids, Ref):
-        expected_col_names = ["ts", "val"]
-
-    for his_row in his_rows:
-        for key in his_row.keys():
-            if key not in expected_col_names:
-                raise HaystackHisWriteOpParametersError(
-                    f'There is an invalid column name "{key}" in one of the history '
-                    "rows."
-                )
-
-
 def _validate_response_meta(response: Grid):
-
     meta = response.meta
     if "err" in meta.keys():
-        raise ErrorGridError(response)
-
-    if "incomplete" in meta.keys():
-        raise IncompleteDataError(response)
+        raise CallError(response)
 
 
 def _create_his_read_req_data(

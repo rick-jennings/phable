@@ -44,5 +44,6 @@ plugins:
           separate_signature: true
           show_root_heading: true
           show_root_full_path: false
+          show_docstring_raises: true
           # show_docstring_description: true
           # show_signature_annotations: true

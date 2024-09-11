@@ -9,7 +9,6 @@ from phable import (
     DateRange,
     DateTimeRange,
     Grid,
-    HaystackHisWriteOpParametersError,
     HxClient,
     Marker,
     Number,
@@ -338,46 +337,6 @@ def test_single_his_write_by_id(create_kw_pt_rec_fn: Callable[[], Ref], client: 
 
     assert his_grid.rows[0]["val"] == Number(pytest.approx(72.2), "kW")
     assert his_grid.rows[1]["val"] == Number(pytest.approx(76.3), "kW")
-
-
-def test_single_his_write_by_ids_wrong_his_rows(client: Client):
-    dt1 = datetime.now()
-    his_rows1 = [
-        {"ts": dt1 - timedelta(minutes=5), "val1": Number(1)},
-        {"ts": dt1, "val1": Number(1)},
-    ]
-
-    with pytest.raises(HaystackHisWriteOpParametersError):
-        client.his_write_by_ids(Ref("abc"), his_rows1)
-
-    dt2 = datetime.now()
-    his_rows2 = [
-        {"ts": dt2 - timedelta(minutes=5), "v0": Number(1)},
-        {"ts": dt2, "v1": Number(1)},
-    ]
-
-    with pytest.raises(HaystackHisWriteOpParametersError):
-        client.his_write_by_ids(Ref("abc"), his_rows2)
-
-
-def test_batch_his_write_by_ids_wrong_his_rows(client: Client):
-    dt1 = datetime.now()
-    his_rows1 = [
-        {"ts": dt1 - timedelta(minutes=5), "val": Number(1)},
-        {"ts": dt1, "val": Number(1)},
-    ]
-
-    with pytest.raises(HaystackHisWriteOpParametersError):
-        client.his_write_by_ids([Ref("abc"), Ref("def")], his_rows1)
-
-    dt2 = datetime.now()
-    his_rows2 = [
-        {"ts": dt2 - timedelta(minutes=5), "v0": Number(1)},
-        {"ts": dt2, "v2": Number(1)},
-    ]
-
-    with pytest.raises(HaystackHisWriteOpParametersError):
-        client.his_write_by_ids([Ref("abc"), Ref("def")], his_rows2)
 
 
 def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
