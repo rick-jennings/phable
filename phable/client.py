@@ -139,6 +139,38 @@ class Client:
 
         return self.call("close")
 
+    def defs(self, filter: str | None = None, limit: int | None = None) -> Grid:
+        """Queries [def dicts](https://project-haystack.org/doc/docHaystack/Defs) from
+        the current
+        [namespace](https://project-haystack.org/doc/docHaystack/Namespaces).
+
+        Parameters:
+            filter:
+                An optional Project Haystack defined
+                [filter](https://project-haystack.org/doc/docHaystack/Filters) for
+                querying the server.  If a filter is not specified, all defs are
+                requested from the server.
+            limit:
+                An optional integer that specifies the maximum number of defs to return
+                in the response.
+
+        Returns:
+            A `Grid` with a `dict` representation of each `def`.
+        """
+        data_row = {}
+
+        if filter is not None:
+            data_row["filter"] = filter
+        if limit is not None:
+            data_row["limit"] = limit
+
+        if len(data_row) > 0:
+            response = self.call("defs", Grid.to_grid(data_row))
+        else:
+            response = self.call("defs")
+
+        return response
+
     def read(self, filter: str, checked: bool = True) -> Grid:
         """Read from the database the first record which matches the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).
@@ -159,7 +191,6 @@ class Client:
         Returns:
             An empty `Grid` or a `Grid` that has a row for the entity read.
         """
-
         response = self.read_all(filter, 1)
 
         if checked is True:
@@ -184,7 +215,6 @@ class Client:
         Returns:
             An empty `Grid` or a `Grid` that has a row for each entity read.
         """
-
         data_row = {"filter": filter}
 
         if limit is not None:
@@ -237,7 +267,6 @@ class Client:
         Returns:
             `Grid` with a row for each entity read.
         """
-
         ids = ids.copy()
         data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
         post_data = Grid.to_grid(data_rows)
@@ -280,7 +309,6 @@ class Client:
         Returns:
             History data for the `ids`. Includes metadata from `pt_recs`.
         """
-
         pt_ids = [pt_row["id"] for pt_row in pt_recs.rows]
         data = _create_his_read_req_data(pt_ids, range)
         response = self.call("hisRead", data)
@@ -315,7 +343,6 @@ class Client:
         Returns:
             `Grid` with history data associated with the `id` for the given `range`.
         """
-
         data = _create_his_read_req_data(id, range)
         response = self.call("hisRead", data)
 
@@ -349,7 +376,6 @@ class Client:
         Returns:
             `Grid` with history data associated with the `ids` for the given `range`.
         """
-
         data = _create_his_read_req_data(ids, range)
         response = self.call("hisRead", data)
 
@@ -405,7 +431,6 @@ class Client:
         Returns:
             An empty `Grid`.
         """
-
         meta = {"id": id}
         his_grid = Grid.to_grid(his_rows, meta)
         return self.call("hisWrite", his_grid)
@@ -479,7 +504,6 @@ class Client:
         Returns:
             An empty `Grid`.
         """
-
         meta = {"ver": "3.0"}
         cols = [{"name": "ts"}]
 
@@ -512,7 +536,6 @@ class Client:
         Returns:
             `Grid` with the server's response.
         """
-
         row = {"id": id, "level": level}
 
         if val is not None:
@@ -533,7 +556,6 @@ class Client:
         Returns:
             `Grid` with the server's response.
         """
-
         return self.call("pointWrite", Grid.to_grid({"id": id}))
 
     def call(
@@ -565,7 +587,6 @@ class Client:
         Returns:
             HTTP response.
         """
-
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
             "Accept": "application/json",
