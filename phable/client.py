@@ -223,38 +223,6 @@ class Client(metaclass=NoPublicConstructor):
 
         return self.call("close")
 
-    def defs(self, filter: str | None = None, limit: int | None = None) -> Grid:
-        """Queries [def dicts](https://project-haystack.org/doc/docHaystack/Defs) from
-        the current
-        [namespace](https://project-haystack.org/doc/docHaystack/Namespaces).
-
-        Parameters:
-            filter:
-                An optional Project Haystack defined
-                [filter](https://project-haystack.org/doc/docHaystack/Filters) for
-                querying the server.  If a filter is not specified, all defs are
-                requested from the server.
-            limit:
-                An optional integer that specifies the maximum number of defs to return
-                in the response.
-
-        Returns:
-            A `Grid` with a `dict` representation of each `def`.
-        """
-        data_row = {}
-
-        if filter is not None:
-            data_row["filter"] = filter
-        if limit is not None:
-            data_row["limit"] = limit
-
-        if len(data_row) > 0:
-            response = self.call("defs", Grid.to_grid(data_row))
-        else:
-            response = self.call("defs")
-
-        return response
-
     def read(self, filter: str, checked: bool = True) -> Grid:
         """Read from the database the first record which matches the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).

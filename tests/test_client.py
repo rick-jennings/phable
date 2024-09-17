@@ -115,40 +115,6 @@ def test_about_op(client: Client):
     assert client.about()["vendorName"] == "SkyFoundry"
 
 
-def test_defs_with_no_opts(client: Client):
-    data_rows = client.defs().rows
-
-    assert len(data_rows) > 0
-    assert "def" in data_rows[0].keys()
-
-
-def test_defs_with_limit(client: Client):
-    data_rows = client.defs(limit=1).rows
-
-    assert len(data_rows) == 1
-    assert "def" in data_rows[0].keys()
-
-
-def test_defs_with_filter(client: Client):
-    data_rows = client.defs("func").rows
-
-    assert len(data_rows) > 5
-    assert "def" in data_rows[0].keys()
-
-
-def test_defs_with_limit_and_filter(client: Client):
-    data_rows = client.defs("func", 1).rows
-
-    assert len(data_rows) == 1
-    assert "def" in data_rows[0].keys()
-
-
-def test_defs_with_empty_grid_response(client: Client):
-    data_rows = client.defs("point").rows
-
-    assert len(data_rows) == 0
-
-
 def test_read_site(client: Client):
     grid = client.read('site and dis=="Carytown"')
     assert grid.rows[0]["geoState"] == "VA"
