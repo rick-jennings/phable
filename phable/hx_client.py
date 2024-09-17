@@ -1,7 +1,56 @@
-from typing import Any
+from __future__ import annotations
+
+from contextlib import contextmanager
+from typing import TYPE_CHECKING, Any, Generator
 
 from phable.client import Client
 from phable.kinds import Grid
+
+if TYPE_CHECKING:
+    from ssl import SSLContext
+
+
+@contextmanager
+def open_hx_client(
+    uri: str, username: str, password: str, ssl_context: SSLContext | None = None
+) -> Generator[HxClient, None, None]:
+    """Context manager for opening and closing a session with a
+    [Haxall](https://haxall.io/) application. May help prevent accidentially leaving a
+    session with the server open.
+
+    `open_hx_client` can be directly imported as follows:
+
+    ```python
+    from phable import open_hx_client
+    ```
+
+    **Example:**
+
+    ```python
+    from phable import open_hx_client
+
+    uri = "http://localhost:8080/api/demo"
+    with open_hx_client(uri, "su", "password") as client:
+        print(client.about())
+    ```
+
+    **Note:** This context manager uses Project Haystack's
+    [close op](https://project-haystack.org/doc/docHaystack/Ops#close), which was
+    later introduced. Therefore the context manager may not work with earlier versions
+    of Haxall.
+
+    Parameters:
+        uri: URI of endpoint such as "http://host/api/myProj/".
+        username: Username for the API user.
+        password: Password for the API user.
+        ssl_context:
+            Optional SSL context. If not provided, a SSL context with default
+            settings is created and used.
+    """
+
+    client = HxClient.open(uri, username, password, ssl_context)
+    yield client
+    client.close()
 
 
 class HxClient(Client):

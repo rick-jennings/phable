@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Generator, Self, Type, TypeVar
 
 from phable.auth.scram import ScramScheme
-from phable.http import post
+from phable.http import IncorrectHttpResponseStatus, post
 from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
 from phable.parsers.grid import merge_pt_data_to_his_grid_cols
 
@@ -14,23 +15,15 @@ if TYPE_CHECKING:
 
 
 @dataclass
-class CallError(Exception):
-    """Error raised by `Client` when server's `Grid` response meta has an `err` marker
-    tag.
+class AuthError(Exception):
+    """Error raised when the client is unable to authenticate with the server using the
+    credentials provided.
 
-    Parameters:
-        response:
-            `Grid` that has `err` marker tag in meta described
-            [here](https://project-haystack.org/doc/docHaystack/HttpApi#errorGrid).
-    """
+    `AuthError` can be directly imported as follows:
 
-    response: Grid
-
-
-@dataclass
-class UnknownRecError(Exception):
-    """Error raised by `Client` when server's `Grid` response does not include data for
-    one or more recs being requested.
+    ```python
+    from phable import AuthError
+    ```
 
     Parameters:
         help_msg: A display to help with troubleshooting.
@@ -39,51 +32,153 @@ class UnknownRecError(Exception):
     help_msg: str
 
 
-class Client:
-    """A client interface to a Project Haystack defined server application used for
-    authentication and operations.
+@dataclass
+class CallError(Exception):
+    """Error raised by `Client` when server's `Grid` response meta has an `err` marker
+    tag.
 
-    The `Client` class can be directly imported as follows:
+    `CallError` can be directly imported as follows:
 
     ```python
-    from phable import Client
+    from phable import CallError
     ```
 
-    Methods may raise a `CallError`.
+    Parameters:
+        help_msg:
+            `Grid` that has `err` marker tag in meta described
+            [here](https://project-haystack.org/doc/docHaystack/HttpApi#errorGrid).
+    """
 
-    ## Context Manager
+    help_msg: Grid
 
-    An optional context manager may be used to automatically open and close the session
-    with the server. This can help prevent accidentially leaving a session with the
-    server open.
 
-    **Note:** This context manager uses Project Haystack's Close operation, which was
-    recently introduced. Therefore the context manager may not work with some Project
-    Haystack defined servers.
+@dataclass
+class UnknownRecError(Exception):
+    """Error raised by `Client` when server's `Grid` response does not include data for
+    one or more recs being requested.
 
-    ### Example
+    `UnknownRecError` can be directly imported as follows:
 
     ```python
-    from phable import Client
+    from phable import UnknownRecError
+    ```
 
-    # Note: Always use secure login credentials in practice!
+    Parameters:
+        help_msg: A display to help with troubleshooting.
+    """
+
+    help_msg: str
+
+
+@contextmanager
+def open_client(
+    uri: str, username: str, password: str, ssl_context: SSLContext | None = None
+) -> Generator[Client, None, None]:
+    """Context manager for opening and closing a session with a Project Haystack
+    defined server application. May help prevent accidentially leaving a session with
+    the server open.
+
+    `open_client` can be directly imported as follows:
+
+    ```python
+    from phable import open_client
+    ```
+
+    **Example:**
+
+    ```python
+    from phable import open_client
+
     uri = "http://localhost:8080/api/demo"
-    username = "su"
-    password = "su"
+    with open_client(uri, "su", "password") as client:
+        print(client.about())
+    ```
 
-    with Client(uri, username, password) as ph_client:
-        print(ph_client.about())
+    **Note:** This context manager uses Project Haystack's
+    [close op](https://project-haystack.org/doc/docHaystack/Ops#close), which was
+    later introduced. Therefore the context manager may not work with some servers.
+
+    Parameters:
+        uri: URI of endpoint such as "http://host/api/myProj/".
+        username: Username for the API user.
+        password: Password for the API user.
+        ssl_context:
+            Optional SSL context. If not provided, a SSL context with default
+            settings is created and used.
+    """
+
+    client = Client.open(uri, username, password, ssl_context)
+    yield client
+    client.close()
+
+
+T = TypeVar("T")
+
+
+class NoPublicConstructor(type):
+    """Metaclass that ensures a private constructor.
+
+    For example, if a class uses this metaclass like this:
+
+    ```python
+    class SomeClass(metaclass=NoPublicConstructor):
+        pass
+    ```
+
+    A `TypeError` would be thrown if there was an attempt to instantiate this class as
+    follows:
+
+    ```python
+    SomeClass()
     ```
     """
 
+    def __call__(cls, *args, **kwargs):
+        raise TypeError(
+            f"{cls.__module__}.{cls.__qualname__} has no public constructor"
+        )
+
+    def _create(cls: Type[T], *args: Any, **kwargs: Any) -> T:
+        return super().__call__(*args, **kwargs)
+
+
+class Client(metaclass=NoPublicConstructor):
+    """A client interface to a Project Haystack defined server application used for
+    authentication and operations.
+
+    `Client` can be directly imported as follows:
+
+    ```python
+    from phable import Client
+    ```
+    """
+
+    # Note: this is intended to be an undocumented private initializer enforced by the
+    #       NoPublicConstructor metaclass
     def __init__(
         self,
+        uri: str,
+        auth_token: str,
+        ssl_context: SSLContext | None = None,
+    ):
+        self.uri: str = uri
+        self._auth_token: str = auth_token
+        self._context: SSLContext | None = ssl_context
+
+    @classmethod
+    def open(
+        cls,
         uri: str,
         username: str,
         password: str,
         ssl_context: SSLContext | None = None,
-    ):
-        """
+    ) -> Self:
+        """Opens a session with the server for the URI of the project.
+
+        Raises:
+            AuthError:
+                Unable to authenticate with the server using the credentials provided.
+
         Parameters:
             uri: URI of endpoint such as "http://host/api/myProj/".
             username: Username for the API user.
@@ -91,33 +186,22 @@ class Client:
             ssl_context:
                 Optional SSL context. If not provided, a SSL context with default
                 settings is created and used.
-        """
-        self.uri: str = uri
-        self.username: str = username
-        self._password: str = password
-        self._auth_token: str
-        self._context = ssl_context
-
-    def open(self) -> None:
-        """Initiates and executes the SCRAM authentication exchange with the server.
-
-        Upon a successful exchange an auth token provided by the server is assigned to
-        a private attribute of this class, which is used in future requests to the
-        server by other class methods.
 
         Returns:
-            `None`
+            An instance of the class this method is used on (i.e., Client or HxClient).
         """
-        scram = ScramScheme(self.uri, self.username, self._password, self._context)
-        self._auth_token = scram.get_auth_token()
-        del scram
 
-    def __enter__(self):
-        self.open()
-        return self
+        try:
+            scram = ScramScheme(uri, username, password, ssl_context)
+            auth_token = scram.get_auth_token()
+        except IncorrectHttpResponseStatus as err:
+            if err.actual_status == 403:
+                raise AuthError(
+                    "Unable to authenticate with the server using the credentials "
+                    + "provided."
+                )
 
-    def __exit__(self, exc_type, exc_value, traceback):  # type: ignore
-        self.close()
+        return cls._create(uri, auth_token, ssl_context)
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server.

@@ -60,10 +60,6 @@ def post(
     return response.to_grid()
 
 
-def get_headers(url: str, headers: dict[str, str], context=None) -> dict[str, str]:
-    return request(url, headers=headers, context=context).headers
-
-
 # -----------------------------------------------------------------------------
 # Foundation for all requests
 # -----------------------------------------------------------------------------
@@ -112,5 +108,8 @@ def request(
             status=e.code,
             error_count=error_count + 1,
         )
+
+    if response.status == 403:
+        raise IncorrectHttpResponseStatus("", response.status)
 
     return response

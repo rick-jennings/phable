@@ -5,7 +5,17 @@ from typing import Any, Callable, Generator
 
 import pytest
 
-from phable import CallError, Grid, HxClient, Marker, Number, Ref, UnknownRecError
+from phable import (
+    CallError,
+    Grid,
+    HxClient,
+    Marker,
+    Number,
+    Ref,
+    UnknownRecError,
+    open_hx_client,
+)
+from phable.http import IncorrectHttpResponseStatus
 
 from .test_client import client, create_kw_pt_rec_fn
 
@@ -34,6 +44,30 @@ def create_pt_that_is_not_removed_fn(
         return writable_kw_pt_rec
 
     yield _create_pt
+
+
+def test_open_hx_client():
+    uri = "http://localhost:8080/api/demo"
+    username = "su"
+    password = "su"
+
+    with open_hx_client(uri, username, password) as hc:
+        auth_token = hc._auth_token
+
+        assert len(auth_token) > 40
+        assert "web-" in auth_token
+        assert hc.about()["vendorName"] == "SkyFoundry"
+
+        auth_token = hc._auth_token
+
+        pt_grid = hc.eval("""read(point)""")
+
+        assert len(pt_grid.rows) == 1
+
+    with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
+        HxClient._create(uri, auth_token).about()
+
+    assert incorrectHttpResponseStatus.value.actual_status == 403
 
 
 def test_commit_add_one_rec(client: HxClient, sample_recs: list[dict, Any]):

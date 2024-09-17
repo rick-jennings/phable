@@ -1,10 +1,12 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Callable, Generator
+from urllib.error import URLError
 from zoneinfo import ZoneInfo
 
 import pytest
 
 from phable import (
+    AuthError,
     Client,
     DateRange,
     DateTimeRange,
@@ -14,6 +16,7 @@ from phable import (
     Number,
     Ref,
     UnknownRecError,
+    open_client,
 )
 from phable.http import IncorrectHttpResponseStatus
 
@@ -26,8 +29,7 @@ PASSWORD = "su"
 @pytest.fixture(scope="module")
 def client() -> Generator[Client, None, None]:
     # use HxClient's features to test Client
-    hc = HxClient(URI, USERNAME, PASSWORD)
-    hc.open()
+    hc = HxClient.open(URI, USERNAME, PASSWORD)
 
     yield hc
 
@@ -63,9 +65,17 @@ def create_kw_pt_rec_fn(
 
 
 def test_open():
-    hc = Client(URI, USERNAME, "wrong_password")
-    with pytest.raises(Exception):
-        hc.open()
+    with pytest.raises(AuthError):
+        Client.open(URI, USERNAME, "wrong_password")
+
+    with pytest.raises(AuthError):
+        Client.open(URI, "wrong_username", PASSWORD)
+
+    with pytest.raises(URLError):
+        Client.open("wrong-url", USERNAME, PASSWORD)
+
+    with pytest.raises(TypeError):
+        Client(URI, USERNAME, "wrong_password")
 
 
 def test_auth_token(client: Client):
@@ -75,25 +85,25 @@ def test_auth_token(client: Client):
     assert "web-" in auth_token
 
 
-def test_context_manager():
-    hc = Client(URI, USERNAME, PASSWORD)
-    with hc:
+def test_open_client():
+    with open_client(URI, USERNAME, PASSWORD) as hc:
         auth_token = hc._auth_token
 
         assert len(auth_token) > 40
         assert "web-" in auth_token
         assert hc.about()["vendorName"] == "SkyFoundry"
 
+        auth_token = hc._auth_token
+
     with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
-        hc.about()
+        Client._create(URI, auth_token).about()
 
     assert incorrectHttpResponseStatus.value.actual_status == 403
 
 
 def test_close_op():
-    hc = Client(URI, USERNAME, PASSWORD)
-    hc.open()
-    assert len(hc.close().rows) == 0
+    client = Client.open(URI, USERNAME, PASSWORD)
+    assert len(client.close().rows) == 0
 
 
 # -----------------------------------------------------------------------------

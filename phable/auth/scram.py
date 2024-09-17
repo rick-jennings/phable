@@ -14,7 +14,7 @@ from functools import cached_property
 from hashlib import pbkdf2_hmac
 from uuid import uuid4
 
-from phable.http import get_headers
+from phable.http import request
 
 # -----------------------------------------------------------------------------
 # Module exceptions
@@ -23,11 +23,6 @@ from phable.http import get_headers
 
 @dataclass
 class ScramServerSignatureNotEqualError(Exception):
-    help_msg: str
-
-
-@dataclass
-class ScramAuthError(Exception):
     help_msg: str
 
 
@@ -62,14 +57,9 @@ class ScramScheme:
     # Send HTTP messages following scram to get auth token
     # -------------------------------------------------------------------------
     def get_auth_token(self) -> str:
-        try:
-            self._hello_call()
-            self._first_call()
-            self._final_call()
-        except Exception:
-            raise ScramAuthError(
-                "Unable to authenticate with the server using scram"
-            )
+        self._hello_call()
+        self._first_call()
+        self._final_call()
 
         return self._auth_token
 
@@ -79,16 +69,12 @@ class ScramScheme:
         instructions.
         """
 
-        headers = {
-            "Authorization": f"HELLO username={_to_base64(self.username)}"
-        }
-        response = get_headers(
-            self.uri + "/about", headers, context=self._context
-        )
+        headers = {"Authorization": f"HELLO username={_to_base64(self.username)}"}
+        response = request(self.uri + "/about", headers=headers, context=self._context)
 
         try:
             self._handshake_token, self._hash = _parse_hello_call_result(
-                response
+                response.headers
             )
         except Exception:
             raise ScramServerResponseParsingError(
@@ -105,16 +91,14 @@ class ScramScheme:
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
             f"hash={self._hash}, data={_to_base64(gs2_header+self._c1_bare)}"
         }
-        response = get_headers(
-            self.uri + "/about", headers, context=self._context
-        )
+        response = request(self.uri + "/about", headers=headers, context=self._context)
 
         try:
             (
                 self._s_nonce,
                 self._salt,
                 self._iter_count,
-            ) = _parse_first_call_result(response)
+            ) = _parse_first_call_result(response.headers)
         except Exception:
             raise ScramServerResponseParsingError(
                 "Unable to parse the server's response to the client's First"
@@ -141,13 +125,11 @@ class ScramScheme:
             )
         }
 
-        response = get_headers(
-            self.uri + "/about", headers, context=self._context
-        )
+        response = request(self.uri + "/about", headers=headers, context=self._context)
 
         try:
             self._auth_token, server_signature = _parse_final_call_result(
-                response
+                response.headers
             )
         except Exception:
             raise ScramServerResponseParsingError(
@@ -194,9 +176,7 @@ class ScramScheme:
 
     @property
     def _client_signature(self) -> bytes:
-        return _hmac(
-            self._stored_key, self._auth_message.encode("utf-8"), self._hash
-        )
+        return _hmac(self._stored_key, self._auth_message.encode("utf-8"), self._hash)
 
     @property
     def _client_proof(self) -> str:
@@ -269,9 +249,7 @@ def _parse_first_call_result(
 
     start_index = len(exclude_msg)
     decoded_scram_data = _from_base64(scram_data.group(0)[start_index:])
-    s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(
-        ","
-    )
+    s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(",")
 
     return (
         s_nonce.replace("r=", "", 1),
@@ -340,9 +318,7 @@ def _salted_password(
     salt: str, iterations: int, hash_func: str, password: str
 ) -> bytes:
     """Generates a salted password according to RFC5802."""
-    dk = pbkdf2_hmac(
-        hash_func, password.encode(), urlsafe_b64decode(salt), iterations
-    )
+    dk = pbkdf2_hmac(hash_func, password.encode(), urlsafe_b64decode(salt), iterations)
     return dk
 
 

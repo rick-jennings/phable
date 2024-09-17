@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from typing import Generator
 from zoneinfo import ZoneInfo
 
 import pandas as pd
@@ -10,13 +11,18 @@ from phable.kinds import NA, Grid, Number, Ref, Uri
 phable_parsers_pandas = pytest.importorskip("phable.parsers.pandas")
 
 
-@pytest.fixture
-def hc() -> Client:
-    uri = "http://localhost:8080/api/demo"
-    username = "su"
-    password = "su"
+URI = "http://localhost:8080/api/demo"
+USERNAME = "su"
+PASSWORD = "su"
 
-    return Client(uri, username, password)
+
+@pytest.fixture(scope="module")
+def client() -> Generator[Client, None, None]:
+    hc = Client.open(URI, USERNAME, PASSWORD)
+
+    yield hc
+
+    hc.close()
 
 
 def test_to_pandas_df_attributes() -> None:
@@ -139,9 +145,7 @@ def test_get_col_meta() -> None:
 
     df_attrs = {"cols": [col_meta1, col_meta2]}
     assert (
-        phable_parsers_pandas.get_col_meta(
-            df_attrs, "Headquarters ElecMeter-Main kW"
-        )
+        phable_parsers_pandas.get_col_meta(df_attrs, "Headquarters ElecMeter-Main kW")
         == col_meta1
     )
 
@@ -188,7 +192,7 @@ def test_get_col_meta_raises_not_found_error() -> None:
         phable_parsers_pandas.get_col_meta(df_attrs, "Hello World!")
 
 
-def test_get_col_meta_raises_unit_mismatch_error(hc: Client) -> None:
+def test_get_col_meta_raises_unit_mismatch_error(client: Client) -> None:
     meta = {"id": Ref("435", "Test")}
     rows = [
         {
@@ -231,9 +235,7 @@ def test_single_col_his_grid_to_pandas() -> None:
     assert df.loc[ts_now - timedelta(seconds=30)]["foo kW"] == 72.2
     assert {
         "name": "val",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(
-            df.attrs["cols"], "val"
-        ),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "val"),
     } == {
         "name": "val",
         "meta": {
@@ -306,9 +308,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
 
     assert {
         "name": "v0",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(
-            df.attrs["cols"], "v0"
-        ),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "v0"),
     } == {
         "name": "v0",
         "meta": {
@@ -320,9 +320,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
 
     assert {
         "name": "v1",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(
-            df.attrs["cols"], "v1"
-        ),
+        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "v1"),
     } == {
         "name": "v1",
         "meta": {
@@ -336,9 +334,7 @@ def test_multi_col_his_grid_to_pandas() -> None:
     assert df.attrs["meta"]["ver"] == "3.0"
 
 
-def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> (
-    None
-):
+def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> None:
     foo1 = Ref("1234", "foo1 kW")
     foo2 = Ref("2345", "foo1 kW")
 
@@ -365,9 +361,7 @@ def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> (
 
 
 def test_grid_to_pandas() -> None:
-    server_time = datetime(
-        2021, 5, 31, 11, 23, 23, tzinfo=ZoneInfo("America/New_York")
-    )
+    server_time = datetime(2021, 5, 31, 11, 23, 23, tzinfo=ZoneInfo("America/New_York"))
 
     meta = {"ver": "3.0"}
     cols = [
