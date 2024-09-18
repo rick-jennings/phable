@@ -1,3 +1,9 @@
 # Welcome
 
-More information will be coming soon!
+**Note:** More information will be coming soon!
+
+## About
+
+Phable is an open source, simple, modern Python toolkit for basic client connectivity to a [Project Haystack](https://project-haystack.org/) server.
+
+Learn more about `Phable` by exploring the documentation!
