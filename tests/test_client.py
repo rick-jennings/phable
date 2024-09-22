@@ -304,24 +304,6 @@ def test_batch_his_read_by_ids(client: Client):
     assert his_grid.rows[0][cols[4]].val >= 0
 
 
-def test_his_read(client: Client):
-    pt_grid = client.read("power and point and equipRef->siteMeter")
-    his_grid = client.his_read(pt_grid, date.today())
-
-    his_grid_cols = his_grid.cols
-
-    assert his_grid_cols[0]["name"] == "ts"
-    assert his_grid_cols[1]["meta"]["power"] == Marker()
-    assert his_grid_cols[1]["meta"]["point"] == Marker()
-    assert his_grid_cols[-1]["meta"]["power"] == Marker()
-    assert his_grid_cols[-1]["meta"]["point"] == Marker()
-
-    assert isinstance(his_grid.rows[0]["ts"], datetime)
-    assert isinstance(his_grid.rows[0]["v0"], Number)
-    assert his_grid.rows[0]["v0"].unit == "kW"
-    assert his_grid.rows[0]["v0"].val >= 0
-
-
 def test_single_his_write_by_id(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
     test_pt_rec = create_kw_pt_rec_fn()
 
@@ -375,32 +357,6 @@ def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: 
     assert his_grid.rows[1]["v0"] == Number(pytest.approx(76.3), "kW")
     assert his_grid.rows[0]["v1"] == Number(pytest.approx(76.3), "kW")
     assert his_grid.rows[1]["v1"] == Number(pytest.approx(72.2), "kW")
-
-
-def test_client_his_read_with_pandas(client: Client):
-    # We are importing pandas here only to check that it can be imported.
-    # This can be improved in the future.
-    pytest.importorskip("pandas")
-    pts = client.read_all("point and power and equipRef->siteMeter")
-    pts_his_df = client.his_read(pts, date.today()).to_pandas()
-
-    for col in pts_his_df.attrs["cols"]:
-        if col["name"] == "ts":
-            continue
-        assert col["meta"]["power"] == Marker()
-        assert col["meta"]["point"] == Marker()
-        assert col["meta"]["kind"] == "Number"
-        assert col["meta"]["unit"] == "kW"
-
-    assert pts_his_df.attrs["cols"][0]["name"] == "ts"
-    assert pts_his_df.attrs["cols"][1]["name"] == "v0"
-    assert pts_his_df.attrs["cols"][2]["name"] == "v1"
-    assert pts_his_df.attrs["cols"][3]["name"] == "v2"
-    assert pts_his_df.attrs["cols"][4]["name"] == "v3"
-    assert len(pts_his_df.attrs["cols"]) == 5
-    assert "ver" in pts_his_df.attrs["meta"].keys()
-    assert "hisStart" in pts_his_df.attrs["meta"].keys()
-    assert "hisEnd" in pts_his_df.attrs["meta"].keys()
 
 
 def test_client_his_read_by_ids_with_pandas(client: Client):

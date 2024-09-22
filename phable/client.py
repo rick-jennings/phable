@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any, Generator, Self, Type, TypeVar
 from phable.auth.scram import ScramScheme
 from phable.http import IncorrectHttpResponseStatus, post
 from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
-from phable.parsers.grid import merge_pt_data_to_his_grid_cols
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -331,45 +330,6 @@ class Client(metaclass=NoPublicConstructor):
                 raise UnknownRecError("Unable to locate one or more ids on the server.")
 
         return response
-
-    def his_read(
-        self,
-        pt_recs: Grid,
-        range: date | DateRange | DateTimeRange,
-    ) -> Grid:
-        """Reads history data associated with `ids` within `pt_recs` for the given
-        `range`.
-
-        Appends point attributes within `pt_recs` as column metadata in the returned
-        `Grid`.
-
-        **Note:** Project Haystack recently defined batch history read support.  Some
-        Project Haystack servers may not support reading history data for more than one
-        point record at a time.
-
-        Parameters:
-            pt_recs:
-                A `Grid` that contains a unique point record `id` on each row.
-                Additional data for the point record is appended as column metadata in
-                the returned `Grid`.
-            range:
-                Ranges are inclusive of start timestamp and exclusive of end timestamp.
-                If a date is provided without a defined end, then the server should
-                infer the range to be from midnight of the defined date to midnight of
-                the day after the defined date.
-
-        Returns:
-            History data for the `ids`. Includes metadata from `pt_recs`.
-        """
-        pt_ids = [pt_row["id"] for pt_row in pt_recs.rows]
-        data = _create_his_read_req_data(pt_ids, range)
-        response = self.call("hisRead", data)
-
-        meta = response.meta | pt_recs.meta
-        cols = merge_pt_data_to_his_grid_cols(response, pt_recs)
-        rows = response.rows
-
-        return Grid(meta, cols, rows)
 
     def his_read_by_id(
         self,
