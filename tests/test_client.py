@@ -359,33 +359,6 @@ def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: 
     assert his_grid.rows[1]["v1"] == Number(pytest.approx(72.2), "kW")
 
 
-def test_client_his_read_by_ids_with_pandas(client: Client):
-    # We are importing pandas here only to check that it can be imported.
-    # This can be improved in the future.
-    pytest.importorskip("pandas")
-    pts = client.read_all("point and power and equipRef->siteMeter")
-    pts_his_df = client.his_read_by_ids(
-        [pt_row["id"] for pt_row in pts.rows], date.today()
-    ).to_pandas()
-
-    for col in pts_his_df.attrs["cols"]:
-        if col["name"] == "ts":
-            continue
-        assert col["meta"]["kind"] == "Number"
-        assert col["meta"]["unit"] == "kW"
-        assert len(col["meta"]) == 3
-
-    assert pts_his_df.attrs["cols"][0]["name"] == "ts"
-    assert pts_his_df.attrs["cols"][1]["name"] == "v0"
-    assert pts_his_df.attrs["cols"][2]["name"] == "v1"
-    assert pts_his_df.attrs["cols"][3]["name"] == "v2"
-    assert pts_his_df.attrs["cols"][4]["name"] == "v3"
-    assert len(pts_his_df.attrs["cols"]) == 5
-    assert "ver" in pts_his_df.attrs["meta"].keys()
-    assert "hisStart" in pts_his_df.attrs["meta"].keys()
-    assert "hisEnd" in pts_his_df.attrs["meta"].keys()
-
-
 def test_point_write_number(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1, Number(0, "kW"))

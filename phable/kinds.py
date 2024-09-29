@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal, getcontext
 from typing import Any
 
@@ -211,23 +211,15 @@ class Grid:
     def __str__(self):
         return "Haystack Grid"
 
-    def to_pandas(self):
-        """Converts a `Grid` into a Pandas DataFrame.
-
-        Requires Phable's optional Pandas dependency to be installed.
-
-        **Note:** This method is experimental and subject to change.
-        """
-        from phable.parsers.pandas import grid_to_pandas
-
-        return grid_to_pandas(self)
-
     @staticmethod
     def to_grid(
         rows: dict[str, Any] | list[dict[str, Any]],
         meta: dict[str, Any] | None = None,
     ) -> Grid:
         """Creates a `Grid` using row data and optional metadata.
+
+        If parameters include history data, assumes the history rows are in
+        chronological order to establish `hisStart` and `hisEnd` in `meta`.
 
         Parameters:
             rows: Row data for `Grid`.
@@ -250,7 +242,98 @@ class Grid:
         if meta is not None:
             grid_meta = grid_meta | meta
 
+        his_start = rows[0].get("ts", None)
+        his_end = rows[-1].get("ts", None)
+
+        if his_start is not None and his_end is not None:
+            grid_meta["hisStart"] = his_start
+            grid_meta["hisEnd"] = his_end + timedelta(minutes=1)
+
         return Grid(meta=grid_meta, cols=cols, rows=rows)
+
+    def get_df_meta(self) -> dict[str, dict[str, Any]]:
+        """Gets metadata for a DataFrame describing data from a `Grid`.
+
+        In the returned dictionary:
+
+         - Value for `meta` key is data used in Grid's `meta` attribute.
+         - Value for `cols` key is data used in Grid's `cols` attribute.
+
+        Returns:
+            Dictionary with keys `meta` and `cols`.
+        """
+
+        df_meta = {}
+        df_meta["meta"] = self.meta.copy()
+        df_meta["cols"] = self.cols.copy()
+        return df_meta
+
+    def to_pandas(self):
+        """Converts rows in the `Grid` to a Pandas DataFrame.
+
+        Requires Phable's optional Pandas dependency to be installed.
+
+        For Grids with rows that do not have history data, Phable defined data types
+        are passed as the `data` input to the DataFrame.
+
+        For Grids with rows that have history data, an opinionated mashing process is
+        applied to data passed to the DataFrame's `data` input:
+
+         - Phable's `NA` objects are converted to `None`
+         - Missing column values are converted to `None`
+         - `Number` objects are converted to unitless `float` values
+
+        The resultant Pandas DataFrame's data types are converted to the `pyarrow` data
+        format.
+
+        **Notes:**
+
+         - This method is experimental and subject to change.
+         - This method assumes all `Number` objects in a given column has the same unit.
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+
+        from phable import Grid, Number
+
+        ts_now = datetime.now()
+        data = [
+            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
+            {"ts": ts_now, "val": Number(38, "kW")},
+        ]
+        data = Grid.to_grid(data)
+        df = data.to_pandas()
+        ```
+        """
+        import pandas as pd
+
+        data = _get_data_for_df(self)
+        df = pd.DataFrame(data=data).convert_dtypes(dtype_backend="pyarrow")
+
+        return df
+
+    def to_pandas_all(self):
+        """Returns a tuple:  `(Grid.get_df_meta(), Grid.to_pandas())`
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+
+        from phable import Grid, Number
+
+        ts_now = datetime.now()
+        data = [
+            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
+            {"ts": ts_now, "val": Number(38, "kW")},
+        ]
+        data = Grid.to_grid(data)
+        df_meta, df = data.to_pandas_all()
+        ```
+        """
+        return self.get_df_meta(), self.to_pandas()
 
 
 @dataclass(frozen=True, slots=True)
@@ -312,3 +395,40 @@ def _to_haystack_datetime(x: datetime) -> str:
         dt = x.isoformat(timespec="milliseconds")
 
     return f"{dt} {haystack_tz}"
+
+
+def _get_data_for_df(grid: Grid):
+    if "hisStart" in grid.meta.keys():
+        data = _structure_his_data_for_df(grid)
+    else:
+        data = grid.rows
+
+    return data
+
+
+def _structure_his_data_for_df(grid: Grid) -> dict[str, list[Any]]:
+    col_names = [col["name"] for col in grid.cols]
+    data = {}
+    for col_name in col_names:
+        data[col_name] = []
+
+    for row in grid.rows:
+        for col_name in col_names:
+            col_val = row.get(col_name, None)
+
+            if col_val is None:
+                data[col_name].append(None)
+            elif isinstance(col_val, datetime):
+                data[col_name].append(col_val)
+            elif isinstance(col_val, NA):
+                data[col_name].append(None)
+            elif isinstance(col_val, Number):
+                data[col_name].append(col_val.val)
+            elif isinstance(col_val, bool):
+                data[col_name].append(col_val)
+            elif isinstance(col_val, str):
+                data[col_name].append(col_val)
+            else:
+                raise ValueError
+
+    return data

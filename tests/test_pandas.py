@@ -1,363 +1,176 @@
+from __future__ import annotations
+
 from datetime import datetime, timedelta
-from typing import Generator
+
+# from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 import pandas as pd
 import pytest
+from pandas.testing import assert_frame_equal
 
-from phable.client import Client
 from phable.kinds import NA, Grid, Number, Ref, Uri
 
-phable_parsers_pandas = pytest.importorskip("phable.parsers.pandas")
-
-
-URI = "http://localhost:8080/api/demo"
-USERNAME = "su"
-PASSWORD = "su"
+TS_NOW = datetime.now(ZoneInfo("America/New_York"))
 
 
 @pytest.fixture(scope="module")
-def client() -> Generator[Client, None, None]:
-    hc = Client.open(URI, USERNAME, PASSWORD)
-
-    yield hc
-
-    hc.close()
-
-
-def test_to_pandas_df_attributes() -> None:
-    # case 1
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0", "id": Ref("1234", "foo kW")}
+def one_col_grid() -> Grid:
+    meta = {
+        "ver": "3.0",
+        "id": Ref("1234", "foo kW"),
+        "hisStart": TS_NOW - timedelta(hours=1),
+        "hisEnd": TS_NOW,
+    }
 
     cols = [{"name": "ts"}, {"name": "val"}]
     rows = [
         {
-            "ts": ts_now - timedelta(seconds=30),
+            "ts": TS_NOW - timedelta(seconds=60),
+            "val": NA(),
+        },
+        {
+            "ts": TS_NOW - timedelta(seconds=30),
             "val": Number(72.2, "kW"),
         },
         {
-            "ts": ts_now,
+            "ts": TS_NOW,
             "val": Number(76.3, "kW"),
         },
     ]
 
-    his_grid = Grid(meta, cols, rows)
-    df = his_grid.to_pandas()
+    return Grid(meta, cols, rows)
 
-    assert df.attrs["meta"] == meta
-    # assert df.attrs["cols"] == cols
-    assert df.attrs["cols"] == [
-        {"name": "ts"},
-        {
-            "name": "val",
-            "meta": {
-                "id": Ref("1234", "foo kW"),
-                "kind": "Number",
-                "unit": "kW",
-            },
-        },
-    ]
 
-    # verify we made a copy of meta and cols
-    meta["test"] = "123"
-    cols.append({"test": "123"})
+def test_get_df_meta_on_one_col_grid(one_col_grid: Grid) -> None:
 
-    assert df.attrs["meta"] != meta
-    assert df.attrs["cols"] != cols
+    expected_meta = {
+        "ver": "3.0",
+        "id": Ref("1234", "foo kW"),
+        "hisStart": TS_NOW - timedelta(hours=1),
+        "hisEnd": TS_NOW,
+    }
+    expected_cols = [{"name": "ts"}, {"name": "val"}]
 
-    # case 2
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0"}
+    df_meta = one_col_grid.get_df_meta()
+
+    assert df_meta["meta"] == expected_meta
+    assert df_meta["cols"] == expected_cols
+
+
+def test_get_his_df_with_one_col(one_col_grid: Grid) -> None:
+    df = one_col_grid.to_pandas()
+    expected_df = pd.DataFrame(
+        data={
+            "ts": [
+                one_col_grid.rows[0]["ts"],
+                one_col_grid.rows[1]["ts"],
+                one_col_grid.rows[2]["ts"],
+            ],
+            "val": [None, 72.2, 76.3],
+        }
+    ).convert_dtypes(dtype_backend="pyarrow")
+
+    assert isinstance(df["ts"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_datetime64_any_dtype(df["ts"].dtype)
+    assert isinstance(df["val"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_float_dtype(df["val"].dtype)
+
+    assert_frame_equal(df, expected_df)
+
+
+@pytest.fixture(scope="module")
+def multi_col_grid() -> Grid:
+    meta = {
+        "ver": "3.0",
+        "id": Ref("1234", "foo kW"),
+        "hisStart": TS_NOW - timedelta(hours=1),
+        "hisEnd": TS_NOW,
+    }
+
     cols = [
         {"name": "ts"},
-        {"name": "v0", "meta": {"id": Ref("1234", "foo1 kW")}},
-        {"name": "v1", "meta": {"id": Ref("2345", "foo2 W")}},
+        {"name": "v0"},
+        {"name": "v1"},
+        {"name": "v2"},
+        {"name": "v3"},
+        {"name": "v4"},
     ]
     rows = [
+        {"ts": TS_NOW - timedelta(seconds=60), "v0": NA(), "v4": True},
         {
-            "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2, "kW"),
-            "v1": Number(76.3, "W"),
+            "ts": TS_NOW - timedelta(seconds=30),
+            "v1": Number(72.2, "kW"),
+            "v3": "available",
+            "v4": NA(),
         },
-        {"ts": ts_now, "v0": Number(76.3, "kW"), "v1": Number(72.2, "W")},
+        {"ts": TS_NOW, "v2": Number(76.3, "kW"), "v3": "occupied", "v4": False},
     ]
 
-    his_grid = Grid(meta, cols, rows)
-    df = phable_parsers_pandas.grid_to_pandas(his_grid)
+    return Grid(meta, cols, rows)
 
-    assert df.attrs["meta"] == meta
 
-    cols_with_new_meta = cols = [
+def test_get_df_meta_on_multi_col_grid(multi_col_grid: Grid) -> None:
+
+    expected_meta = {
+        "ver": "3.0",
+        "id": Ref("1234", "foo kW"),
+        "hisStart": TS_NOW - timedelta(hours=1),
+        "hisEnd": TS_NOW,
+    }
+
+    expected_cols = [
         {"name": "ts"},
-        {
-            "name": "v0",
-            "meta": {
-                "id": Ref("1234", "foo1 kW"),
-                "kind": "Number",
-                "unit": "kW",
-            },
-        },
-        {
-            "name": "v1",
-            "meta": {
-                "id": Ref("2345", "foo2 W"),
-                "kind": "Number",
-                "unit": "W",
-            },
-        },
+        {"name": "v0"},
+        {"name": "v1"},
+        {"name": "v2"},
+        {"name": "v3"},
+        {"name": "v4"},
     ]
 
-    assert df.attrs["cols"] == cols_with_new_meta
+    df_meta = multi_col_grid.get_df_meta()
 
-    # verify we made a copy of meta and cols
-    meta["test"] = "123"
-    cols.append({"test": "123"})
-
-    assert df.attrs["meta"] != meta
-    assert df.attrs["cols"] != cols
+    assert df_meta["meta"] == expected_meta
+    assert df_meta["cols"] == expected_cols
 
 
-def test_get_col_meta() -> None:
-    col_meta1 = {
-        "name": "v0",
-        "meta": {
-            "id": Ref(
-                val="p:demo:r:2caffc8e-5a197a29",
-                dis="Headquarters ElecMeter-Main kW",
-            ),
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
+def test_get_his_df_with_multi_cols(multi_col_grid: Grid) -> None:
 
-    col_meta2 = {
-        "name": "v1",
-        "meta": {
-            "id": Ref(
-                val="p:demo:r:2caffc8e-43db8fe3",
-                dis="Gaithersburg ElecMeter-Lighting kW",
-            ),
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
+    df = multi_col_grid.to_pandas()
 
-    df_attrs = {"cols": [col_meta1, col_meta2]}
-    assert (
-        phable_parsers_pandas.get_col_meta(df_attrs, "Headquarters ElecMeter-Main kW")
-        == col_meta1
-    )
-
-    assert (
-        phable_parsers_pandas.get_col_meta(
-            df_attrs,
-            Ref(
-                val="p:demo:r:2caffc8e-43db8fe3",
-                dis="Gaithersburg ElecMeter-Lighting kW",
-            ),
-        )
-        == col_meta2
-    )
-
-
-def test_get_col_meta_raises_not_found_error() -> None:
-    col_meta1 = {
-        "name": "v0",
-        "meta": {
-            "id": Ref(
-                val="p:demo:r:2caffc8e-5a197a29",
-                dis="Headquarters ElecMeter-Main kW",
-            ),
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
-
-    col_meta2 = {
-        "name": "v1",
-        "meta": {
-            "id": Ref(
-                val="p:demo:r:2caffc8e-43db8fe3",
-                dis="Gaithersburg ElecMeter-Lighting kW",
-            ),
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
-
-    df_attrs = {"cols": [col_meta1, col_meta2]}
-
-    with pytest.raises(phable_parsers_pandas.NotFoundError):
-        phable_parsers_pandas.get_col_meta(df_attrs, "Hello World!")
-
-
-def test_get_col_meta_raises_unit_mismatch_error(client: Client) -> None:
-    meta = {"id": Ref("435", "Test")}
-    rows = [
+    expected_df = pd.DataFrame(
         {
-            "ts": datetime.now() - timedelta(minutes=5),
-            "val": Number(12, "kW"),
-        },
-        {
-            "ts": datetime.now(),
-            "val": Number(24, "W"),
-        },
-    ]
-    cols = [{"name": "ts"}, {"name": "val"}]
-    his_grid = Grid(meta, cols, rows)
-    with pytest.raises(phable_parsers_pandas.UnitMismatchError):
-        his_grid.to_pandas()
+            "ts": [
+                multi_col_grid.rows[0]["ts"],
+                multi_col_grid.rows[1]["ts"],
+                multi_col_grid.rows[2]["ts"],
+            ],
+            "v0": [None, None, None],
+            "v1": [None, 72.2, None],
+            "v2": [None, None, 76.3],
+            "v3": [None, "available", "occupied"],
+            "v4": [True, None, False],
+        }
+    ).convert_dtypes(dtype_backend="pyarrow")
 
+    assert isinstance(df["ts"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_datetime64_any_dtype(df["ts"].dtype)
 
-def test_single_col_his_grid_to_pandas() -> None:
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
+    assert isinstance(df["v0"].dtype, pd.ArrowDtype)
 
-    foo = Ref("1234", "foo kW")
+    assert isinstance(df["v1"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_float_dtype(df["v1"].dtype)
 
-    meta = {"ver": "3.0", "id": foo}
-    cols = [{"name": "ts"}, {"name": "val"}]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "val": Number(72.2, "kW"),
-        },
-        {
-            "ts": ts_now,
-            "val": Number(76.3, "kW"),
-        },
-    ]
+    assert isinstance(df["v2"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_float_dtype(df["v2"].dtype)
 
-    his_grid = Grid(meta, cols, rows)
-    df = phable_parsers_pandas.grid_to_pandas(his_grid)
+    assert isinstance(df["v3"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_string_dtype(df["v3"].dtype)
 
-    assert df.loc[ts_now]["foo kW"] == 76.3
-    assert df.loc[ts_now - timedelta(seconds=30)]["foo kW"] == 72.2
-    assert {
-        "name": "val",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "val"),
-    } == {
-        "name": "val",
-        "meta": {
-            "id": foo,
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
+    assert isinstance(df["v4"].dtype, pd.ArrowDtype)
+    assert pd.api.types.is_bool_dtype(df["v4"].dtype)
 
-    assert isinstance(df.attrs["meta"], dict)
-    assert df.attrs["meta"]["ver"] == "3.0"
-
-
-def test_multi_col_his_grid_to_pandas() -> None:
-    # define refs
-    foo1 = Ref("1234", "foo1 kW")
-    foo2 = Ref("2345", "foo2 kW")
-
-    # test 1
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0"}
-    cols = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": foo1}},
-        {"name": "v1", "meta": {"id": foo2}},
-    ]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2, "kW"),
-            "v1": Number(76.3, "kW"),
-        },
-        {"ts": ts_now, "v0": Number(76.3, "kW"), "v1": Number(72.2, "kW")},
-    ]
-
-    his_grid = Grid(meta, cols, rows)
-    df = phable_parsers_pandas.grid_to_pandas(his_grid)
-
-    assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
-    assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
-
-    assert df.loc[ts_now]["foo1 kW"] == 76.3
-    assert df.loc[ts_now]["foo2 kW"] == 72.2
-
-    # test 2
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0"}
-    cols = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": foo1}},
-        {"name": "v1", "meta": {"id": foo2}},
-    ]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2, "kW"),
-            "v1": Number(76.3, "kW"),
-        },
-        {"ts": ts_now, "v0": Number(76.3, "kW"), "v1": Number(72.2, "kW")},
-    ]
-
-    his_grid = Grid(meta, cols, rows)
-    df = phable_parsers_pandas.grid_to_pandas(his_grid)
-
-    assert df.loc[ts_now - timedelta(seconds=30)]["foo1 kW"] == 72.2
-    assert df.loc[ts_now - timedelta(seconds=30)]["foo2 kW"] == 76.3
-
-    assert df.loc[ts_now]["foo1 kW"] == 76.3
-    assert df.loc[ts_now]["foo2 kW"] == 72.2
-
-    assert {
-        "name": "v0",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "v0"),
-    } == {
-        "name": "v0",
-        "meta": {
-            "id": foo1,
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
-
-    assert {
-        "name": "v1",
-        "meta": phable_parsers_pandas._get_col_meta_by_name(df.attrs["cols"], "v1"),
-    } == {
-        "name": "v1",
-        "meta": {
-            "id": foo2,
-            "kind": "Number",
-            "unit": "kW",
-        },
-    }
-
-    assert isinstance(df.attrs["meta"], dict)
-    assert df.attrs["meta"]["ver"] == "3.0"
-
-
-def test_multi_col_his_grid_to_pandas_raises_duplicate_col_name_error() -> None:
-    foo1 = Ref("1234", "foo1 kW")
-    foo2 = Ref("2345", "foo1 kW")
-
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0"}
-    cols = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": foo1}},
-        {"name": "v1", "meta": {"id": foo2}},
-    ]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2, "kW"),
-            "v1": Number(76.3, "kW"),
-        },
-        {"ts": ts_now, "v0": Number(76.3, "kW"), "v1": Number(72.2, "kW")},
-    ]
-
-    his_grid = Grid(meta, cols, rows)
-
-    with pytest.raises(phable_parsers_pandas.DuplicateColNameError):
-        phable_parsers_pandas.grid_to_pandas(his_grid)
+    assert_frame_equal(df, expected_df)
 
 
 def test_grid_to_pandas() -> None:
@@ -392,57 +205,10 @@ def test_grid_to_pandas() -> None:
     ]
 
     grid = Grid(meta, cols, rows)
-    df = phable_parsers_pandas.grid_to_pandas(grid)
+    df = grid.to_pandas()
 
     assert df.iloc[0]["productName"] == "Acme Haystack Server"
     assert df.iloc[0]["tz"] == "New_York"
     assert df.iloc[0]["haystackVersion"] == "4.0"
     assert df.iloc[0]["vendorUri"] == Uri("http://acme.com/")
     assert df.iloc[0]["serverTime"] == server_time
-
-
-def test_grid_with_na_to_pandas():
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-
-    foo = Ref("1234", "foo kW")
-
-    meta = {"ver": "3.0", "id": foo}
-    cols = [{"name": "ts"}, {"name": "val"}]
-    rows = [
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "val": Number(0, "kW"),
-        },
-        {"ts": ts_now, "val": NA()},
-    ]
-
-    his_df = Grid(meta, cols, rows).to_pandas()
-
-    assert pd.isna(his_df.iloc[1]["foo kW"])
-
-
-def test_grid_with_diff_cols_in_rows():
-    foo1 = Ref("1234", "foo1 kW")
-    foo2 = Ref("2345", "foo2 kW")
-
-    ts_now = datetime.now(ZoneInfo("America/New_York"))
-    meta = {"ver": "3.0"}
-    cols = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": foo1}},
-        {"name": "v1", "meta": {"id": foo2}},
-    ]
-    rows = [
-        {"ts": ts_now - timedelta(seconds=30), "v0": Number(72.2, "kW")},
-        {"ts": ts_now, "v1": Number(72.2, "kW")},
-        {
-            "ts": ts_now - timedelta(seconds=30),
-            "v0": Number(72.2, "kW"),
-            "v1": Number(76.3, "kW"),
-        },
-    ]
-
-    his_df = Grid(meta, cols, rows).to_pandas()
-
-    assert pd.isna(his_df.iloc[0]["foo2 kW"])
-    assert pd.isna(his_df.iloc[1]["foo1 kW"])

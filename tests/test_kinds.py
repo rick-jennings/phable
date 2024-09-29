@@ -21,6 +21,8 @@ from phable import (
 # Haystack kind tests
 # -----------------------------------------------------------------------------
 
+TS_NOW = datetime.now()
+
 
 def test_grid():
     grid = Grid(meta={}, cols=[], rows=[])
@@ -32,42 +34,59 @@ def test_grid():
 def test_to_grid_without_meta():
     # test #1
     rows = [
-        {"ts": "some_time", "v0": "50kW"},
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+        {"ts": TS_NOW - timedelta(minutes=5), "v0": "50kW"},
+        {"ts": TS_NOW, "v0": "45kW", "v1": "50kW"},
     ]
     grid = Grid.to_grid(rows)
     assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
-    assert grid.meta == {"ver": "3.0"}
+    assert grid.meta == {
+        "ver": "3.0",
+        "hisStart": TS_NOW - timedelta(minutes=5),
+        "hisEnd": TS_NOW + timedelta(minutes=1),
+    }
 
     # test #2
     rows = [
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
-        {"ts": "some_time", "v0": "50kW"},
+        {"ts": TS_NOW - timedelta(minutes=5), "v0": "45kW", "v1": "50kW"},
+        {"ts": TS_NOW, "v0": "50kW"},
     ]
     grid = Grid.to_grid(rows)
     assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
-    assert grid.meta == {"ver": "3.0"}
+    assert grid.meta == {
+        "ver": "3.0",
+        "hisStart": TS_NOW - timedelta(minutes=5),
+        "hisEnd": TS_NOW + timedelta(minutes=1),
+    }
 
     # test #3
     rows = [
-        {"ts": "some_time", "v0": "45kW"},
-        {"ts": "some_time", "v0": "50kW"},
+        {"ts": TS_NOW - timedelta(minutes=5), "v0": "45kW"},
+        {"ts": TS_NOW, "v0": "50kW"},
     ]
     grid = Grid.to_grid(rows)
     assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
-    assert grid.meta == {"ver": "3.0"}
+    assert grid.meta == {
+        "ver": "3.0",
+        "hisStart": TS_NOW - timedelta(minutes=5),
+        "hisEnd": TS_NOW + timedelta(minutes=1),
+    }
 
 
 def test_to_grid_with_meta():
     # test #1
     meta = {"test_meta": "Hi!"}
     rows = [
-        {"ts": "some_time", "v0": "50kW"},
-        {"ts": "some_time", "v0": "45kW", "v1": "50kW"},
+        {"ts": TS_NOW - timedelta(minutes=5), "v0": "50kW"},
+        {"ts": TS_NOW, "v0": "45kW", "v1": "50kW"},
     ]
     grid = Grid.to_grid(rows, meta)
     assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
-    assert grid.meta == {"ver": "3.0", "test_meta": "Hi!"}
+    assert grid.meta == {
+        "ver": "3.0",
+        "test_meta": "Hi!",
+        "hisStart": TS_NOW - timedelta(minutes=5),
+        "hisEnd": TS_NOW + timedelta(minutes=1),
+    }
 
 
 def test_number() -> None:
