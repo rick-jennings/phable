@@ -3,7 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generator
 
-from phable.client import Client
+from phable.haystack_client import HaystackClient
 from phable.kinds import Grid
 
 if TYPE_CHECKING:
@@ -11,26 +11,26 @@ if TYPE_CHECKING:
 
 
 @contextmanager
-def open_hx_client(
+def open_haxall_client(
     uri: str, username: str, password: str, ssl_context: SSLContext | None = None
-) -> Generator[HxClient, None, None]:
+) -> Generator[HaxallClient, None, None]:
     """Context manager for opening and closing a session with a
     [Haxall](https://haxall.io/) application. May help prevent accidentially leaving a
     session with the server open.
 
-    `open_hx_client` can be directly imported as follows:
+    `open_haxall_client` can be directly imported as follows:
 
     ```python
-    from phable import open_hx_client
+    from phable import open_haxall_client
     ```
 
     **Example:**
 
     ```python
-    from phable import open_hx_client
+    from phable import open_haxall_client
 
     uri = "http://localhost:8080/api/demo"
-    with open_hx_client(uri, "su", "password") as client:
+    with open_haxall_client(uri, "su", "password") as client:
         print(client.about())
     ```
 
@@ -48,13 +48,13 @@ def open_hx_client(
             settings is created and used.
     """
 
-    client = HxClient.open(uri, username, password, ssl_context)
+    client = HaxallClient.open(uri, username, password, ssl_context)
     yield client
     client.close()
 
 
-class HxClient(Client):
-    """A superset of `Client` with support for Haxall specific operations.
+class HaxallClient(HaystackClient):
+    """A superset of `HaystackClient` with support for Haxall specific operations.
 
     Learn more about Haxall [here](https://haxall.io/).
     """

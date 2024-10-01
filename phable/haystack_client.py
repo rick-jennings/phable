@@ -33,8 +33,8 @@ class AuthError(Exception):
 
 @dataclass
 class CallError(Exception):
-    """Error raised by `Client` when server's `Grid` response meta has an `err` marker
-    tag.
+    """Error raised by `HaystackClient` when server's `Grid` response meta has an `err`
+    marker tag.
 
     `CallError` can be directly imported as follows:
 
@@ -53,8 +53,8 @@ class CallError(Exception):
 
 @dataclass
 class UnknownRecError(Exception):
-    """Error raised by `Client` when server's `Grid` response does not include data for
-    one or more recs being requested.
+    """Error raised by `HaystackClient` when server's `Grid` response does not include
+    data for one or more recs being requested.
 
     `UnknownRecError` can be directly imported as follows:
 
@@ -70,26 +70,26 @@ class UnknownRecError(Exception):
 
 
 @contextmanager
-def open_client(
+def open_haystack_client(
     uri: str, username: str, password: str, ssl_context: SSLContext | None = None
-) -> Generator[Client, None, None]:
+) -> Generator[HaystackClient, None, None]:
     """Context manager for opening and closing a session with a Project Haystack
     defined server application. May help prevent accidentially leaving a session with
     the server open.
 
-    `open_client` can be directly imported as follows:
+    `open_haystack_client` can be directly imported as follows:
 
     ```python
-    from phable import open_client
+    from phable import open_haystack_client
     ```
 
     **Example:**
 
     ```python
-    from phable import open_client
+    from phable import open_haystack_client
 
     uri = "http://localhost:8080/api/demo"
-    with open_client(uri, "su", "password") as client:
+    with open_haystack_client(uri, "su", "password") as client:
         print(client.about())
     ```
 
@@ -106,7 +106,7 @@ def open_client(
             settings is created and used.
     """
 
-    client = Client.open(uri, username, password, ssl_context)
+    client = HaystackClient.open(uri, username, password, ssl_context)
     yield client
     client.close()
 
@@ -141,14 +141,14 @@ class NoPublicConstructor(type):
         return super().__call__(*args, **kwargs)
 
 
-class Client(metaclass=NoPublicConstructor):
+class HaystackClient(metaclass=NoPublicConstructor):
     """A client interface to a Project Haystack defined server application used for
     authentication and operations.
 
-    `Client` can be directly imported as follows:
+    `HaystackClient` can be directly imported as follows:
 
     ```python
-    from phable import Client
+    from phable import HaystackClient
     ```
     """
 

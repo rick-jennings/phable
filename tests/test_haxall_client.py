@@ -8,16 +8,16 @@ import pytest
 from phable import (
     CallError,
     Grid,
-    HxClient,
+    HaxallClient,
     Marker,
     Number,
     Ref,
     UnknownRecError,
-    open_hx_client,
+    open_haxall_client,
 )
 from phable.http import IncorrectHttpResponseStatus
 
-from .test_client import client, create_kw_pt_rec_fn
+from .test_haystack_client import client, create_kw_pt_rec_fn
 
 
 @pytest.fixture
@@ -31,7 +31,7 @@ def sample_recs() -> list[dict[str, Any]]:
 
 @pytest.fixture(scope="module")
 def create_pt_that_is_not_removed_fn(
-    client: HxClient,
+    client: HaxallClient,
 ) -> Generator[Callable[[], dict[str, Any]], None, None]:
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
@@ -51,7 +51,7 @@ def test_open_hx_client():
     username = "su"
     password = "su"
 
-    with open_hx_client(uri, username, password) as hc:
+    with open_haxall_client(uri, username, password) as hc:
         auth_token = hc._auth_token
 
         assert len(auth_token) > 40
@@ -65,12 +65,12 @@ def test_open_hx_client():
         assert len(pt_grid.rows) == 1
 
     with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
-        HxClient._create(uri, auth_token).about()
+        HaxallClient._create(uri, auth_token).about()
 
     assert incorrectHttpResponseStatus.value.actual_status == 403
 
 
-def test_commit_add_one_rec(client: HxClient, sample_recs: list[dict, Any]):
+def test_commit_add_one_rec(client: HaxallClient, sample_recs: list[dict, Any]):
     data = sample_recs[0].copy()
     response = client.commit_add(data)
 
@@ -87,7 +87,7 @@ def test_commit_add_one_rec(client: HxClient, sample_recs: list[dict, Any]):
     client.commit_remove(Grid.to_grid(response.rows))
 
 
-def test_commit_add_multiple_recs(client: HxClient, sample_recs: list[dict, Any]):
+def test_commit_add_multiple_recs(client: HaxallClient, sample_recs: list[dict, Any]):
     data = sample_recs.copy()
     response = client.commit_add(data)
 
@@ -109,7 +109,7 @@ def test_commit_add_multiple_recs(client: HxClient, sample_recs: list[dict, Any]
 
 
 def test_commit_add_multiple_recs_as_grid(
-    client: HxClient, sample_recs: list[dict, Any]
+    client: HaxallClient, sample_recs: list[dict, Any]
 ):
     data = sample_recs.copy()
     response = client.commit_add(Grid.to_grid(data))
@@ -132,7 +132,7 @@ def test_commit_add_multiple_recs_as_grid(
 
 
 def test_commit_add_with_new_id_does_not_raise_error(
-    client: HxClient, sample_recs: list[dict, Any]
+    client: HaxallClient, sample_recs: list[dict, Any]
 ):
     data = sample_recs[0].copy()
     data["id"] = Ref("2e006480-5896960d")
@@ -146,7 +146,7 @@ def test_commit_add_with_new_id_does_not_raise_error(
 
 def test_commit_add_with_existing_id_raises_error(
     create_kw_pt_rec_fn: Callable[[], dict[str, Any]],
-    client: HxClient,
+    client: HaxallClient,
 ):
     pt_rec = create_kw_pt_rec_fn()
     with pytest.raises(CallError):
@@ -154,7 +154,7 @@ def test_commit_add_with_existing_id_raises_error(
 
 
 def test_commit_update_with_one_rec(
-    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     rec_sent = pt_rec.copy()
@@ -166,7 +166,7 @@ def test_commit_update_with_one_rec(
 
 
 def test_commit_update_with_multiple_recs(
-    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_kw_pt_rec_fn()
     pt_rec2 = create_kw_pt_rec_fn()
@@ -184,7 +184,7 @@ def test_commit_update_with_multiple_recs(
 
 
 def test_commit_update_with_multiple_recs_as_grid(
-    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_kw_pt_rec_fn()
     pt_rec2 = create_kw_pt_rec_fn()
@@ -216,7 +216,7 @@ def assert_commit_update_recs_sent_and_recv_match(
 
 
 def test_commit_update_recs_with_only_id_and_mod_tags_sent(
-    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ) -> None:
     pt_rec1 = create_kw_pt_rec_fn()
     new_pt_rec1 = pt_rec1.copy()
@@ -236,7 +236,7 @@ def test_commit_update_recs_with_only_id_and_mod_tags_sent(
 
 
 def test_commit_update_recs_with_only_id_mod_and_new_tag_sent(
-    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ) -> None:
     pt_rec1 = create_kw_pt_rec_fn()
     new_pt_rec1 = pt_rec1.copy()
@@ -258,7 +258,7 @@ def test_commit_update_recs_with_only_id_mod_and_new_tag_sent(
 
 
 def test_commit_remove_with_only_id_rec_tags(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec1 = create_kw_pt_rec_fn()
     pt_rec2 = create_kw_pt_rec_fn()
@@ -275,7 +275,7 @@ def test_commit_remove_with_only_id_rec_tags(
 
 
 def test_commit_remove_with_id_and_mod_rec_tags(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HxClient
+    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -300,7 +300,7 @@ def test_commit_remove_with_id_and_mod_rec_tags(
 
 
 def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HxClient
+    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -327,7 +327,7 @@ def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
 
 
 def test_commit_remove_one_rec(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HxClient
+    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec = create_pt_that_is_not_removed_fn()
 
@@ -342,7 +342,7 @@ def test_commit_remove_one_rec(
 
 
 def test_commit_remove_with_all_rec_tags(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HxClient
+    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -362,7 +362,7 @@ def test_commit_remove_with_all_rec_tags(
 
 
 def test_commit_remove_with_non_existing_rec(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HxClient
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaxallClient
 ):
     pt_rec_mod1 = create_kw_pt_rec_fn()
     pt_rec_mod2 = create_kw_pt_rec_fn()["mod"]
@@ -375,7 +375,7 @@ def test_commit_remove_with_non_existing_rec(
         client.commit_remove(sent_recs)
 
 
-def test_eval(client: HxClient):
+def test_eval(client: HaxallClient):
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
         """kind: "Number"}, {add}).commit"""

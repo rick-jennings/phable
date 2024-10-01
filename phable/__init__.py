@@ -1,7 +1,13 @@
 # flake8: noqa
 
-from phable.client import AuthError, CallError, Client, UnknownRecError, open_client
-from phable.hx_client import HxClient, open_hx_client
+from phable.haxall_client import HaxallClient, open_haxall_client
+from phable.haystack_client import (
+    AuthError,
+    CallError,
+    HaystackClient,
+    UnknownRecError,
+    open_haystack_client,
+)
 from phable.kinds import (
     NA,
     Coord,

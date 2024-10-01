@@ -7,16 +7,16 @@ import pytest
 
 from phable import (
     AuthError,
-    Client,
     DateRange,
     DateTimeRange,
     Grid,
-    HxClient,
+    HaxallClient,
+    HaystackClient,
     Marker,
     Number,
     Ref,
     UnknownRecError,
-    open_client,
+    open_haystack_client,
 )
 from phable.http import IncorrectHttpResponseStatus
 
@@ -27,9 +27,9 @@ PASSWORD = "su"
 
 
 @pytest.fixture(scope="module")
-def client() -> Generator[Client, None, None]:
+def client() -> Generator[HaystackClient, None, None]:
     # use HxClient's features to test Client
-    hc = HxClient.open(URI, USERNAME, PASSWORD)
+    hc = HaxallClient.open(URI, USERNAME, PASSWORD)
 
     yield hc
 
@@ -38,7 +38,7 @@ def client() -> Generator[Client, None, None]:
 
 @pytest.fixture(scope="module")
 def create_kw_pt_rec_fn(
-    client: Client,
+    client: HaystackClient,
 ) -> Generator[Callable[[], dict[str, Any]], None, None]:
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
@@ -66,19 +66,19 @@ def create_kw_pt_rec_fn(
 
 def test_open():
     with pytest.raises(AuthError):
-        Client.open(URI, USERNAME, "wrong_password")
+        HaystackClient.open(URI, USERNAME, "wrong_password")
 
     with pytest.raises(AuthError):
-        Client.open(URI, "wrong_username", PASSWORD)
+        HaystackClient.open(URI, "wrong_username", PASSWORD)
 
     with pytest.raises(URLError):
-        Client.open("wrong-url", USERNAME, PASSWORD)
+        HaystackClient.open("wrong-url", USERNAME, PASSWORD)
 
     with pytest.raises(TypeError):
-        Client(URI, USERNAME, "wrong_password")
+        HaystackClient(URI, USERNAME, "wrong_password")
 
 
-def test_auth_token(client: Client):
+def test_auth_token(client: HaystackClient):
     auth_token = client._auth_token
 
     assert len(auth_token) > 40
@@ -86,7 +86,7 @@ def test_auth_token(client: Client):
 
 
 def test_open_client():
-    with open_client(URI, USERNAME, PASSWORD) as hc:
+    with open_haystack_client(URI, USERNAME, PASSWORD) as hc:
         auth_token = hc._auth_token
 
         assert len(auth_token) > 40
@@ -96,13 +96,13 @@ def test_open_client():
         auth_token = hc._auth_token
 
     with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
-        Client._create(URI, auth_token).about()
+        HaystackClient._create(URI, auth_token).about()
 
     assert incorrectHttpResponseStatus.value.actual_status == 403
 
 
 def test_close_op():
-    client = Client.open(URI, USERNAME, PASSWORD)
+    client = HaystackClient.open(URI, USERNAME, PASSWORD)
     assert len(client.close().rows) == 0
 
 
@@ -111,25 +111,25 @@ def test_close_op():
 # -----------------------------------------------------------------------------
 
 
-def test_about_op(client: Client):
+def test_about_op(client: HaystackClient):
     assert client.about()["vendorName"] == "SkyFoundry"
 
 
-def test_read_site(client: Client):
+def test_read_site(client: HaystackClient):
     grid = client.read('site and dis=="Carytown"')
     assert grid.rows[0]["geoState"] == "VA"
 
 
-def test_read_UnknownRecError(client: Client):
+def test_read_UnknownRecError(client: HaystackClient):
     with pytest.raises(UnknownRecError):
         client.read("hi")
 
 
-def test_read_no_error_when_checked_is_false(client: Client):
+def test_read_no_error_when_checked_is_false(client: HaystackClient):
     assert len(client.read("hi", False).rows) == 0
 
 
-def test_read_point(client: Client):
+def test_read_point(client: HaystackClient):
     grid = client.read(
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
@@ -137,7 +137,7 @@ def test_read_point(client: Client):
     assert isinstance(grid.rows[0]["power"], Marker)
 
 
-def test_read_by_id(client: Client):
+def test_read_by_id(client: HaystackClient):
     id1 = client.read("point and power and equipRef->siteMeter").rows[0]["id"]
     response = client.read_by_id(id1)
 
@@ -150,7 +150,7 @@ def test_read_by_id(client: Client):
     assert len(checked_response.rows) == 0
 
 
-def test_read_by_ids(client: Client):
+def test_read_by_ids(client: HaystackClient):
     ids = client.read_all("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
@@ -170,7 +170,7 @@ def test_read_by_ids(client: Client):
         client.read_by_ids([Ref("invalid-id1"), Ref("invalid-id2")])
 
 
-def test_his_read_by_id_with_date_range(client: Client):
+def test_his_read_by_id_with_date_range(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -191,7 +191,7 @@ def test_his_read_by_id_with_date_range(client: Client):
     assert his_grid.rows[-1][cols[0]].date() == start
 
 
-def test_his_read_by_ids_with_date_range(client: Client):
+def test_his_read_by_ids_with_date_range(client: HaystackClient):
     # find the point ids
     point_grid = client.read_all("""point and equipRef->siteMeter and power""")
     point_ref1 = point_grid.rows[0]["id"]
@@ -213,7 +213,7 @@ def test_his_read_by_ids_with_date_range(client: Client):
     assert his_grid.rows[-1][cols[0]].date() == start
 
 
-def test_his_read_by_ids_with_datetime_range(client: Client):
+def test_his_read_by_ids_with_datetime_range(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -236,7 +236,7 @@ def test_his_read_by_ids_with_datetime_range(client: Client):
     assert his_grid.rows[-1][cols[0]].date() == date.today()
 
 
-def test_his_read_by_ids_with_date_slice(client: Client):
+def test_his_read_by_ids_with_date_slice(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -259,7 +259,7 @@ def test_his_read_by_ids_with_date_slice(client: Client):
     assert his_grid.rows[-1][cols[0]].date() == end
 
 
-def test_his_read_by_ids_with_datetime_slice(client: Client):
+def test_his_read_by_ids_with_datetime_slice(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
@@ -284,7 +284,7 @@ def test_his_read_by_ids_with_datetime_slice(client: Client):
     assert his_grid.rows[-1][cols[0]].date() == end.date()
 
 
-def test_batch_his_read_by_ids(client: Client):
+def test_batch_his_read_by_ids(client: HaystackClient):
     ids = client.read_all("point and power and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
@@ -304,7 +304,9 @@ def test_batch_his_read_by_ids(client: Client):
     assert his_grid.rows[0][cols[4]].val >= 0
 
 
-def test_single_his_write_by_id(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_single_his_write_by_id(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     test_pt_rec = create_kw_pt_rec_fn()
 
     ts_now = datetime.now(ZoneInfo("America/New_York"))
@@ -331,7 +333,9 @@ def test_single_his_write_by_id(create_kw_pt_rec_fn: Callable[[], Ref], client: 
     assert his_grid.rows[1]["val"] == Number(pytest.approx(76.3), "kW")
 
 
-def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_batch_his_write_by_ids(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     test_pt_rec1 = create_kw_pt_rec_fn()
     test_pt_rec2 = create_kw_pt_rec_fn()
 
@@ -359,7 +363,9 @@ def test_batch_his_write_by_ids(create_kw_pt_rec_fn: Callable[[], Ref], client: 
     assert his_grid.rows[1]["v1"] == Number(pytest.approx(72.2), "kW")
 
 
-def test_point_write_number(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_point_write_number(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1, Number(0, "kW"))
 
@@ -369,7 +375,9 @@ def test_point_write_number(create_kw_pt_rec_fn: Callable[[], Ref], client: Clie
     assert response.rows == []
 
 
-def test_point_write_number_who(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_point_write_number_who(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1, Number(50, "kW"), "Phable")
 
@@ -387,7 +395,7 @@ def test_point_write_number_who(create_kw_pt_rec_fn: Callable[[], Ref], client: 
 
 
 def test_point_write_number_who_dur(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: Client
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(
@@ -409,7 +417,9 @@ def test_point_write_number_who_dur(
     assert expires.val > 4.0 and expires.val < 5.0
 
 
-def test_point_write_null(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_point_write_null(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1)
 
@@ -419,7 +429,9 @@ def test_point_write_null(create_kw_pt_rec_fn: Callable[[], Ref], client: Client
     assert response.rows == []
 
 
-def test_point_write_array(create_kw_pt_rec_fn: Callable[[], Ref], client: Client):
+def test_point_write_array(
+    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write_array(pt_rec["id"])
 
