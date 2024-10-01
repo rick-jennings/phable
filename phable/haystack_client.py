@@ -106,7 +106,7 @@ def open_haystack_client(
             settings is created and used.
     """
 
-    client = HaystackClient.open(uri, username, password, ssl_context)
+    client = HaystackClient.open(uri, username, password, ssl_context=ssl_context)
     yield client
     client.close()
 
@@ -170,6 +170,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         uri: str,
         username: str,
         password: str,
+        *,
         ssl_context: SSLContext | None = None,
     ) -> Self:
         """Opens a session with the server for the URI of the project.

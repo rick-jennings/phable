@@ -48,7 +48,7 @@ def open_haxall_client(
             settings is created and used.
     """
 
-    client = HaxallClient.open(uri, username, password, ssl_context)
+    client = HaxallClient.open(uri, username, password, ssl_context=ssl_context)
     yield client
     client.close()
 
