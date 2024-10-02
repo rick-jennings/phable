@@ -251,7 +251,7 @@ class Grid:
 
         return Grid(meta=grid_meta, cols=cols, rows=rows)
 
-    def get_df_meta(self) -> dict[str, dict[str, Any]]:
+    def get_df_meta(self) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
         """Gets metadata for a DataFrame describing data from a `Grid`.
 
         In the returned dictionary:
@@ -334,6 +334,71 @@ class Grid:
         ```
         """
         return self.get_df_meta(), self.to_pandas()
+
+    def to_polars(self):
+        """Converts rows in the `Grid` to a Polars DataFrame.
+
+        Requires Phable's optional Polars dependency to be installed.
+
+        For Grids with rows that do not have history data, Phable defined data types
+        are passed as the `data` input to the DataFrame.
+
+        For Grids with rows that have history data, an opinionated mashing process is
+        applied to data passed to the DataFrame's `data` input:
+
+         - Phable's `NA` objects are converted to `None`
+         - Missing column values are converted to `None`
+         - `Number` objects are converted to unitless `float` values
+
+        **Notes:**
+
+         - This method is experimental and subject to change.
+         - This method assumes all `Number` objects in a given column has the same unit.
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+
+        from phable import Grid, Number
+
+        ts_now = datetime.now()
+        data = [
+            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
+            {"ts": ts_now, "val": Number(38, "kW")},
+        ]
+        data = Grid.to_grid(data)
+        df = data.to_polars()
+        ```
+        """
+
+        import polars as pl
+
+        data = _get_data_for_df(self)
+        df = pl.DataFrame(data=data)
+
+        return df
+
+    def to_polars_all(self):
+        """Returns a tuple:  `(Grid.get_df_meta(), Grid.to_polars())`
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+
+        from phable import Grid, Number
+
+        ts_now = datetime.now()
+        data = [
+            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
+            {"ts": ts_now, "val": Number(38, "kW")},
+        ]
+        data = Grid.to_grid(data)
+        df_meta, df = data.to_polars_all()
+        ```
+        """
+        return self.get_df_meta(), self.to_polars()
 
 
 @dataclass(frozen=True, slots=True)
