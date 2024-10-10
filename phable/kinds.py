@@ -71,7 +71,7 @@ class Number:
     [here](https://project-haystack.org/doc/docHaystack/Kinds#number).
 
     Parameters:
-        val: Integer or floating point value.
+        val: Floating point value.
         unit:
             Optional unit of measurement defined in Project Haystack's standard unit
             database [here](https://project-haystack.org/doc/docHaystack/Units).
@@ -79,7 +79,7 @@ class Number:
             **Note**: Phable does not validate a defined unit at this time.
     """
 
-    val: int | float
+    val: float
     unit: str | None = None
 
     def __str__(self):

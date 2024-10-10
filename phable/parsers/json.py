@@ -80,7 +80,7 @@ def _dict_to_json(row: dict[str, Any]) -> dict[str, Any]:
     return parsed_row
 
 
-def _number_to_json(num: Number) -> int | float | dict[str, str | float]:
+def _number_to_json(num: Number) -> float | dict[str, str | float]:
     if num.unit is None:
         return num.val
     return {"_kind": "number", "val": num.val, "unit": num.unit}
@@ -168,9 +168,6 @@ def _to_kind(d: dict[str, str]):
 def _parse_number(d: dict[str, str]) -> Number:
     unit = d.get("unit", None)
     num = float(d["val"])
-
-    if num % 1 == 0:
-        num = int(num)
 
     return Number(num, unit)
 
