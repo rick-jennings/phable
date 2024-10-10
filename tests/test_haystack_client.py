@@ -117,7 +117,7 @@ def test_about_op(client: HaystackClient):
 
 def test_read_site(client: HaystackClient):
     grid = client.read('site and dis=="Carytown"')
-    assert grid.rows[0]["geoState"] == "VA"
+    assert grid["geoState"] == "VA"
 
 
 def test_read_UnknownRecError(client: HaystackClient):
@@ -126,7 +126,7 @@ def test_read_UnknownRecError(client: HaystackClient):
 
 
 def test_read_no_error_when_checked_is_false(client: HaystackClient):
-    assert len(client.read("hi", False).rows) == 0
+    assert len(client.read("hi", False)) == 0
 
 
 def test_read_point(client: HaystackClient):
@@ -134,11 +134,11 @@ def test_read_point(client: HaystackClient):
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
-    assert isinstance(grid.rows[0]["power"], Marker)
+    assert isinstance(grid["power"], Marker)
 
 
 def test_read_by_id(client: HaystackClient):
-    id1 = client.read("point and power and equipRef->siteMeter").rows[0]["id"]
+    id1 = client.read("point and power and equipRef->siteMeter")["id"]
     response = client.read_by_id(id1)
 
     assert response["navName"] == "kW"
@@ -176,7 +176,7 @@ def test_his_read_by_id_with_date_range(client: HaystackClient):
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
-    point_ref = point_grid.rows[0]["id"]
+    point_ref = point_grid["id"]
 
     # get the his using Date as the range
     start = date.today() - timedelta(days=7)
@@ -219,7 +219,7 @@ def test_his_read_by_ids_with_datetime_range(client: HaystackClient):
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
-    point_ref = point_grid.rows[0]["id"]
+    point_ref = point_grid["id"]
 
     # get the his using Date as the range
     datetime_range = DateTimeRange(
@@ -242,7 +242,7 @@ def test_his_read_by_ids_with_date_slice(client: HaystackClient):
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
-    point_ref = point_grid.rows[0]["id"]
+    point_ref = point_grid["id"]
 
     # get the his using Date as the range
     start = date.today() - timedelta(days=7)
@@ -265,7 +265,7 @@ def test_his_read_by_ids_with_datetime_slice(client: HaystackClient):
         """point and siteRef->dis=="Carytown" and """
         """equipRef->siteMeter and power"""
     )
-    point_ref = point_grid.rows[0]["id"]
+    point_ref = point_grid["id"]
 
     # get the his using Date as the range
     start = datetime(2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York"))

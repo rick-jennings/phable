@@ -223,7 +223,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
 
         return self.call("close")
 
-    def read(self, filter: str, checked: bool = True) -> Grid:
+    def read(self, filter: str, checked: bool = True) -> dict[Any, Any]:
         """Read from the database the first record which matches the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).
 
@@ -237,19 +237,23 @@ class HaystackClient(metaclass=NoPublicConstructor):
                 querying the server.
             checked:
                 If `checked` is equal to false and the record cannot be found, an empty
-                `Grid` is returned. If `checked` is equal to true and the record cannot
+                `dict` is returned. If `checked` is equal to true and the record cannot
                 be found, an `UnknownRecError` is raised.
 
         Returns:
-            An empty `Grid` or a `Grid` that has a row for the entity read.
+            An empty `dict` or a `dict` that describes the entity read.
         """
         response = self.read_all(filter, 1)
 
-        if checked is True:
-            if len(response.rows) == 0:
+        if len(response.rows) == 0:
+            if checked is True:
                 raise UnknownRecError(
                     "Unable to locate an entity on the server that matches the filter."
                 )
+            else:
+                response = {}
+        else:
+            response = response.rows[0]
 
         return response
 
