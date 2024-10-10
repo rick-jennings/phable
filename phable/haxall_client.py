@@ -82,6 +82,24 @@ class HaxallClient(HaystackClient):
         See Haxall's Commit operation docs for more details
         [here](https://haxall.io/doc/lib-hx/op~commit).
 
+        **Example:**
+
+        ```python
+        from phable import Marker, open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # define the rec to add
+        rec = [{"dis": "TestRec", "testing": Marker(), "pytest": Marker()}]
+
+        with open_haxall_client(uri, username, password) as client:
+            # commit the rec and capture response
+            rec_added_grid = client.commit_add(rec)
+        ```
+
         Parameters:
             recs: Records to be added to the database.
 
@@ -89,6 +107,61 @@ class HaxallClient(HaystackClient):
             The full tag definitions for each of the newly added records.
         """
         meta = {"commit": "add"}
+        if isinstance(recs, Grid):
+            recs = recs.rows
+        return self.call("commit", Grid.to_grid(recs, meta))
+
+    def commit_update(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
+        """Updates one or more existing records within the database.
+
+        Commit access requires the API user to have admin permission.
+
+        **Errors**
+
+        After the request `Grid` is successfully read by the server, the server
+        may respond with a `Grid` that triggers one of the following errors to be
+        raised:
+
+        1. `ErrorGridError` if the operation fails
+        2. `IncompleteDataError` if incomplete data is being returned
+
+        **Additional info**
+
+        See Haxall's Commit operation docs for more details
+        [here](https://haxall.io/doc/lib-hx/op~commit).
+
+        **Example:**
+
+        ```python
+        from phable import Ref, open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        with open_haxall_client(uri, username, password) as client:
+            # query entire rec we want to modify to get the mod tag
+            rec = client.read_by_id(Ref("2e9ab42e-c9822ff9"))
+
+            # define new tag to add to rec
+            rec["foo"] = "new tag"
+
+            # commit update to rec and capture response
+            rec_modified_grid = client.commit_update(rec)
+        ```
+
+        Parameters:
+            recs:
+                Existing records within the database to be updated. Each record (or
+                row) must at minimum have tags for the rec's existing `id` and `mod`
+                columns (defined by the server) and the columns being updated (defined
+                by the client).
+
+        Returns:
+            The latest full tag definitions for each of the updated records.
+        """
+        meta = {"commit": "update"}
         if isinstance(recs, Grid):
             recs = recs.rows
         return self.call("commit", Grid.to_grid(recs, meta))
@@ -115,6 +188,24 @@ class HaxallClient(HaystackClient):
         See Haxall's Commit operation docs for more details
         [here](https://haxall.io/doc/lib-hx/op~commit).
 
+        **Example:**
+
+        ```python
+        from phable import Ref, open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        with open_haxall_client(uri, username, password) as client:
+            # query entire rec you want to delete to get the mod tag
+            rec = client.read_by_id(Ref("2e9ab42e-c9822ff9"))
+
+            # delete the rec
+            client.commit_remove(rec)
+        ```
+
         Parameters:
             recs:
                 Records to be removed from the database. Each record (or row) must at
@@ -124,40 +215,6 @@ class HaxallClient(HaystackClient):
             An empty `Grid`.
         """
         meta = {"commit": "remove"}
-        if isinstance(recs, Grid):
-            recs = recs.rows
-        return self.call("commit", Grid.to_grid(recs, meta))
-
-    def commit_update(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
-        """Updates one or more existing records within the database.
-
-        Commit access requires the API user to have admin permission.
-
-        **Errors**
-
-        After the request `Grid` is successfully read by the server, the server
-        may respond with a `Grid` that triggers one of the following errors to be
-        raised:
-
-        1. `ErrorGridError` if the operation fails
-        2. `IncompleteDataError` if incomplete data is being returned
-
-        **Additional info**
-
-        See Haxall's Commit operation docs for more details
-        [here](https://haxall.io/doc/lib-hx/op~commit).
-
-        Parameters:
-            recs:
-                Existing records within the database to be updated. Each record (or
-                row) must at minimum have tags for the rec's existing `id` and `mod`
-                columns (defined by the server) and the columns being updated (defined
-                by the client).
-
-        Returns:
-            The latest full tag definitions for each of the updated records.
-        """
-        meta = {"commit": "update"}
         if isinstance(recs, Grid):
             recs = recs.rows
         return self.call("commit", Grid.to_grid(recs, meta))
@@ -178,6 +235,25 @@ class HaxallClient(HaystackClient):
 
         See Haxall's Eval operation docs for more details
         [here](https://haxall.io/doc/lib-hx/op~eval).
+
+        **Example:**
+
+        ```python
+        from phable import open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # define an axon expression to evaluate on the server
+        axon_expr = "read(power and point and equipRef->siteMeter).hisRead(lastMonth)"
+
+        with open_haxall_client(uri, username, password) as client:
+            his_grid = client.eval(axon_expr)
+
+        his_df_meta, his_df = his_grid.to_polars_all()
+        ```
 
         Parameters:
             expr: Axon string expression.

@@ -343,6 +343,31 @@ class HaystackClient(metaclass=NoPublicConstructor):
         considering to use the `Client.his_read()` method to store available
         metadata within the returned `Grid`.
 
+        **Example:**
+
+        ```python
+        from datetime import date, timedelta
+
+        from phable import DateRange, Ref, open_haystack_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # update the id for your server
+        id1 = Ref("2e749080-d2645928")
+
+        end = date.today()
+        start = end - timedelta(days=2)
+        range = DateRange(start, end)
+
+        with open_haystack_client(uri, username, password) as client:
+            his_grid = client.his_read_by_id(id1, range)
+
+        his_df_meta, his_df = his_grid.to_polars_all()
+        ```
+
         Parameters:
             id:
                 Unique identifier for the point record associated with the requested
@@ -376,6 +401,32 @@ class HaystackClient(metaclass=NoPublicConstructor):
         Project Haystack servers may not support reading history data for more than one
         point record at a time.
 
+        **Example:**
+
+        ```python
+        from datetime import date, timedelta
+
+        from phable import DateRange, Ref, open_haystack_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # update the ids for your server
+        id1 = Ref("2e749080-d2645928")
+        id2 = Ref("2e749080-4719193b")
+
+        end = date.today()
+        start = end - timedelta(days=2)
+        range = DateRange(start, end)
+
+        with open_haystack_client(uri, username, password) as client:
+            his_grid = client.his_read_by_ids([id1, id2], range)
+
+        his_df_meta, his_df = his_grid.to_polars_all()
+        ```
+
         Parameters:
             ids:
                 Unique identifiers for the point records associated with the requested
@@ -406,26 +457,6 @@ class HaystackClient(metaclass=NoPublicConstructor):
         History row key names must be `ts` or `val`.  Values in the column named `val`
         are for the `Ref` described by the `id` parameter.
 
-        **Example `his_rows`:**
-
-        ```python
-        from datetime import datetime, timedelta
-        from phable import Number
-        from zoneinfo import ZoneInfo
-
-        ts_now = datetime.now(ZoneInfo("America/New_York"))
-        his_rows = [
-            {
-                "ts": ts_now - timedelta(seconds=30),
-                "val": Number(72.2, "kW"),
-            },
-            {
-                "ts": ts_now,
-                "val": Number(76.3, "kW"),
-            },
-        ]
-        ```
-
         **Additional requirements**
 
         1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
@@ -436,6 +467,40 @@ class HaystackClient(metaclass=NoPublicConstructor):
         **Recommendations for enhanced performance**
 
         1. Avoid posting out-of-order or duplicate data
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        from phable import Number, Ref, open_haystack_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # make sure datetime objects are timezone aware
+        ts_now = datetime.now(ZoneInfo("America/New_York"))
+
+        his_rows = [
+            {
+                "ts": ts_now - timedelta(seconds=30),
+                "val": Number(1_000.0, "kW"),
+            },
+            {
+                "ts": ts_now,
+                "val": Number(2_000.0, "kW"),
+            },
+        ]
+
+        # update the id for your server
+        id1 = Ref("2e749080-3cad46c0")
+
+        with open_haystack_client(uri, username, password) as client:
+            client.his_write_by_id(id1, data_rows)
+        ```
 
         Parameters:
             id: Unique identifier for the point record.
@@ -462,36 +527,6 @@ class HaystackClient(metaclass=NoPublicConstructor):
 
         The index of an id in `ids` corresponds to the column name used in `his_rows`.
 
-        **Example `his_rows`:**
-
-        ```python
-        from datetime import datetime, timedelta
-        from phable import Number, Ref
-        from zoneinfo import ZoneInfo
-
-        ids = [Ref("foo0"), Ref("foo1"), Ref("foo2")]
-
-        ts_now = datetime.now(ZoneInfo("America/New_York"))
-        his_rows = [
-            {
-                "ts": ts_now - timedelta(seconds=30),
-                "v0": Number(1, "kW"),
-                "v1": Number(23, "kW"),
-                "v2": Number(8, "kW"),
-            },
-            {
-                "ts": ts_now,
-                "v0": Number(50, "kW"),
-                "v1": Number(20, "kW"),
-                "v2": Number(34, "kW"),
-            }
-        ]
-        ```
-
-        - Column named `v0` corresponds to index 0 of ids, or `Ref("foo0")`
-        - Column named `v1` corresponds to index 1 of ids, or `Ref("foo1")`
-        - Column named `v2` corresponds to index 2 of ids, or `Ref("foo2")`
-
         **Additional requirements**
 
         1. Timestamp and value kind of `his_row` data must match the entity's (Ref)
@@ -509,6 +544,35 @@ class HaystackClient(metaclass=NoPublicConstructor):
         Haystack servers may not support writing history data to more than one point
         at a time.  For these instances it is recommended to use a `Ref` type for the
         `ids` parameter.
+
+        **Example:**
+
+        ```python
+        from datetime import datetime, timedelta
+        from zoneinfo import ZoneInfo
+
+        from phable import Number, Ref, open_haystack_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        # make sure datetime objects are timezone aware
+        ts_now = datetime.now(ZoneInfo("America/New_York"))
+
+        his_rows = [
+            {"ts": ts_now - timedelta(seconds=30), "v0": Number(1, "kW")},
+            {"ts": ts_now, "v0": Number(50, "kW"), "v1": Number(20, "kW")},
+        ]
+
+        # update the ids for your server
+        id1 = Ref("2e749080-3cad46c0")
+        id2 = Ref("2e749080-520f621b")
+
+        with open_haystack_client(uri, username, password) as client:
+            client.his_write_by_ids([id1, id2], his_rows)
+        ```
 
         Parameters:
             ids: Unique identifiers for the point records.
