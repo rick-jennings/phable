@@ -276,30 +276,34 @@ class HaystackClient(metaclass=NoPublicConstructor):
 
         return response
 
-    def read_by_id(self, id: Ref, checked: bool = True) -> Grid:
+    def read_by_id(self, id: Ref, checked: bool = True) -> dict[Any, Any]:
         """Read an entity record using its unique identifier.
 
         Raises:
-            UnknownRecError: Server's response does not include requested recs.
+            UnknownRecError: Server's response does not include requested rec.
 
         Parameters:
             id: Unique identifier for the record being read.
             checked:
                 If `checked` is equal to false and the record cannot be found, an empty
-                `Grid` is returned. If `checked` is equal to true and the record cannot
+                `dict` is returned. If `checked` is equal to true and the record cannot
                 be found, an `UnknownRecError` is raised.
 
         Returns:
-            An empty `Grid` or a `Grid` that has a row for the entity read.
+            An empty `dict` or a `dict` that describes the entity read.
         """
 
         data_rows = [{"id": {"_kind": "ref", "val": id.val}}]
         post_data = Grid.to_grid(data_rows)
         response = self.call("read", post_data)
 
-        if checked is True:
-            if len(response.rows) == 0:
+        if len(response.rows) == 0:
+            if checked is True:
                 raise UnknownRecError("Unable to locate the id on the server.")
+            else:
+                response = {}
+        else:
+            response = response.rows[0]
 
         return response
 

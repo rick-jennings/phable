@@ -141,13 +141,13 @@ def test_read_by_id(client: HaystackClient):
     id1 = client.read("point and power and equipRef->siteMeter").rows[0]["id"]
     response = client.read_by_id(id1)
 
-    assert response.rows[0]["navName"] == "kW"
+    assert response["navName"] == "kW"
 
     with pytest.raises(UnknownRecError):
         client.read_by_id(Ref("invalid-id"))
 
     checked_response = client.read_by_id(Ref("invalid-id"), False)
-    assert len(checked_response.rows) == 0
+    assert len(checked_response) == 0
 
 
 def test_read_by_ids(client: HaystackClient):
