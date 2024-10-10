@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "phable"
-version = "0.1.15"
+version = "0.1.16"
 description = ""
 authors = ["Rick Jennings <rjennings055@gmail.com>"]
 readme = "README.md"
