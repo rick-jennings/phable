@@ -12,10 +12,10 @@ $ pip install phable
 
 Phable uses the `zoneinfo` module for IANA time zone support, which by default uses the system's time zone data if available.  If no system time zone data is available, then Phable requires the `tzdata` package available on PyPI to be installed.
 
-Phable has an optional `pandas` package dependency that is required for `phable.Grid.to_pandas()` and `phable.Grid.to_pandas_all()`.  Download Phable with `pandas` from PyPI using:
+Phable has optional `pandas` and `pyarrow` package dependencies that are required for `phable.Grid.to_pandas()` and `phable.Grid.to_pandas_all()`.  Download Phable with `pandas` and `pyarrow` from PyPI using:
 
 ```console
-$ pip install "phable[pandas]"
+$ pip install "phable[pandas,pyarrow]"
 ```
 
 Similarly, Phable has an optional `polars` package dependency that is required for `phable.Grid.to_polars()` and `phable.Grid.to_polars_all()`.  Download Phable with `polars` from PyPI using:
