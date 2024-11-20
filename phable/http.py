@@ -1,3 +1,4 @@
+import importlib.metadata
 import json
 import ssl
 import urllib.error
@@ -84,6 +85,7 @@ def request(
 
     request_data = json.dumps(data).encode()
     headers["Content-Type"] = "application/json; charset=UTF-8"
+    headers["User-Agent"] = f"phable/{importlib.metadata.version('phable')}"
 
     httprequest = urllib.request.Request(
         url, data=request_data, headers=headers, method=method
