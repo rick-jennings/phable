@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from decimal import Decimal, getcontext
 from typing import Any
+from zoneinfo import ZoneInfo
 
 
 class Marker:
@@ -424,13 +425,34 @@ class DateTimeRange:
     """`DateTimeRange` data type, defined by `Phable`, describes a time range using
     date, time, and timezone information.
 
+    `datetime` objects used for `start` and `end` must be timezone aware using
+    `ZoneInfo` as a concrete implementation of the `datetime.tzinfo` abstract base
+    class.
+
+    **Example:**
+
+    ```python
+    from datetime import datetime
+    from zoneinfo import ZoneInfo
+
+    from phable.kinds import DateTimeRange
+
+    tzinfo = ZoneInfo("America/New_York")
+    start = datetime(2024, 11, 22, 8, 19, 0, tzinfo=tzinfo)
+    end = datetime(2024, 11, 22, 9, 19, 0, tzinfo=tzinfo)
+
+    range_with_end = DateTimeRange(start, end)
+    range_without_end = DateTimeRange(start)
+    ```
+
     **Note:** Project Haystack does not define a kind for `DateTimeRange`.
 
     Parameters:
-        start: Start timestamp (inclusive) which is timezone aware.
+        start: Start timestamp (inclusive) which is timezone aware using `ZoneInfo`.
         end:
-            Optional end timestamp (exclusive) which is timezone aware. If end is
-            undefined, then assume end to be when the last data value was recorded.
+            Optional end timestamp (exclusive) which is timezone aware using
+            `ZoneInfo`. If end is undefined, then assume end to be when the last data
+            value was recorded.
     """
 
     start: datetime
@@ -445,6 +467,16 @@ class DateTimeRange:
                 + ","
                 + _to_haystack_datetime(self.end)
             )
+
+    def __post_init__(self):
+        start_ok = isinstance(self.start.tzinfo, ZoneInfo)
+        end_ok = self.end is None
+
+        if isinstance(self.end, datetime):
+            end_ok = isinstance(self.end.tzinfo, ZoneInfo)
+
+        if start_ok is False or end_ok is False:
+            raise ValueError
 
 
 def _to_haystack_datetime(x: datetime) -> str:

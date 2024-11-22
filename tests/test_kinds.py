@@ -2,6 +2,8 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 from zoneinfo import ZoneInfo
 
+import pytest
+
 from phable import (
     NA,
     Coord,
@@ -178,3 +180,25 @@ def test_datetime_range() -> None:
     assert str(datetime_range) == (
         "2023-03-12T12:12:34-04:00 New_York," "2023-04-12T12:12:34-04:00 New_York"
     )
+
+
+def test_datetime_range_raises_error() -> None:
+    tzinfo = ZoneInfo("America/New_York")
+
+    start_with_tz = datetime(2024, 11, 22, 8, 19, 0, tzinfo=tzinfo)
+    end_with_tz = datetime(2024, 11, 22, 9, 19, 0, tzinfo=tzinfo)
+
+    start = datetime(2024, 11, 22, 8, 19, 0)
+    end = datetime(2024, 11, 22, 9, 19, 0)
+
+    with pytest.raises(ValueError):
+        DateTimeRange(start, end)
+
+    with pytest.raises(ValueError):
+        DateTimeRange(start, end_with_tz)
+
+    with pytest.raises(ValueError):
+        DateTimeRange(start_with_tz, end)
+
+    with pytest.raises(ValueError):
+        DateTimeRange(start, None)
