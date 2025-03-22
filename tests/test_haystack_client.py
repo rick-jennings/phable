@@ -132,13 +132,13 @@ def test_read_no_error_when_checked_is_false(client: HaystackClient):
 def test_read_point(client: HaystackClient):
     grid = client.read(
         """point and siteRef->dis=="Carytown" and """
-        """equipRef->siteMeter and power"""
+        """equipRef->siteMeter and demand"""
     )
-    assert isinstance(grid["power"], Marker)
+    assert isinstance(grid["demand"], Marker)
 
 
 def test_read_by_id(client: HaystackClient):
-    id1 = client.read("point and power and equipRef->siteMeter")["id"]
+    id1 = client.read("point and demand and equipRef->siteMeter")["id"]
     response = client.read_by_id(id1)
 
     assert response["navName"] == "kW"
@@ -151,7 +151,7 @@ def test_read_by_id(client: HaystackClient):
 
 
 def test_read_by_ids(client: HaystackClient):
-    ids = client.read_all("point and power and equipRef->siteMeter")
+    ids = client.read_all("point and demand and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
 
@@ -174,7 +174,7 @@ def test_his_read_by_id_with_date_range(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
-        """equipRef->siteMeter and power"""
+        """equipRef->siteMeter and demand"""
     )
     point_ref = point_grid["id"]
 
@@ -193,7 +193,7 @@ def test_his_read_by_id_with_date_range(client: HaystackClient):
 
 def test_his_read_by_ids_with_date_range(client: HaystackClient):
     # find the point ids
-    point_grid = client.read_all("""point and equipRef->siteMeter and power""")
+    point_grid = client.read_all("""point and equipRef->siteMeter and demand""")
     point_ref1 = point_grid.rows[0]["id"]
     point_ref2 = point_grid.rows[1]["id"]
 
@@ -217,13 +217,13 @@ def test_his_read_by_ids_with_datetime_range(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
-        """equipRef->siteMeter and power"""
+        """equipRef->siteMeter and demand"""
     )
     point_ref = point_grid["id"]
 
     # get the his using Date as the range
     datetime_range = DateTimeRange(
-        datetime(2023, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York"))
+        datetime(2024, 8, 20, 10, 12, 12, tzinfo=ZoneInfo("America/New_York"))
     )
     his_grid = client.his_read_by_ids(point_ref, datetime_range)
 
@@ -240,7 +240,7 @@ def test_his_read_by_ids_with_date_slice(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
-        """equipRef->siteMeter and power"""
+        """equipRef->siteMeter and demand"""
     )
     point_ref = point_grid["id"]
 
@@ -263,12 +263,12 @@ def test_his_read_by_ids_with_datetime_slice(client: HaystackClient):
     # find the point id
     point_grid = client.read(
         """point and siteRef->dis=="Carytown" and """
-        """equipRef->siteMeter and power"""
+        """equipRef->siteMeter and demand"""
     )
     point_ref = point_grid["id"]
 
     # get the his using Date as the range
-    start = datetime(2023, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York"))
+    start = datetime(2024, 8, 20, 12, 12, 23, tzinfo=ZoneInfo("America/New_York"))
     end = start + timedelta(days=3)
 
     datetime_range = DateTimeRange(start, end)
@@ -285,7 +285,7 @@ def test_his_read_by_ids_with_datetime_slice(client: HaystackClient):
 
 
 def test_batch_his_read_by_ids(client: HaystackClient):
-    ids = client.read_all("point and power and equipRef->siteMeter")
+    ids = client.read_all("point and demand and equipRef->siteMeter")
     id1 = ids.rows[0]["id"]
     id2 = ids.rows[1]["id"]
     id3 = ids.rows[2]["id"]
