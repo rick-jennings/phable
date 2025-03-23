@@ -178,7 +178,7 @@ def test_datetime_range() -> None:
 
     datetime_range = DateTimeRange(start, end)
     assert str(datetime_range) == (
-        "2023-03-12T12:12:34-04:00 New_York," "2023-04-12T12:12:34-04:00 New_York"
+        "2023-03-12T12:12:34-04:00 New_York,2023-04-12T12:12:34-04:00 New_York"
     )
 
 

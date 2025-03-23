@@ -539,9 +539,15 @@ def test__parse_grid_with_nested_lists_dicts_and_grids():
         "rows": [
             {
                 "type": "list",
-                "val": [{"_kind": "ref", "val": "foo"}, {"_kind": "ref", "val": "bar"}],
+                "val": [
+                    {"_kind": "ref", "val": "foo"},
+                    {"_kind": "ref", "val": "bar"},
+                ],
             },
-            {"type": "dict", "val": {"dis": "Dict!", "foo": {"_kind": "marker"}}},
+            {
+                "type": "dict",
+                "val": {"dis": "Dict!", "foo": {"_kind": "marker"}},
+            },
             {
                 "type": "grid",
                 "val": {

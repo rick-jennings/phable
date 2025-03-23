@@ -3,11 +3,24 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
-from typing import TYPE_CHECKING, Any, Generator, Self, Type, TypeVar
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Generator,
+    Self,
+    Type,
+    TypeVar,
+)
 
 from phable.auth.scram import ScramScheme
 from phable.http import IncorrectHttpResponseStatus, post
-from phable.kinds import DateRange, DateTimeRange, Grid, Number, Ref
+from phable.kinds import (
+    DateRange,
+    DateTimeRange,
+    Grid,
+    Number,
+    Ref,
+)
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -71,7 +84,10 @@ class UnknownRecError(Exception):
 
 @contextmanager
 def open_haystack_client(
-    uri: str, username: str, password: str, ssl_context: SSLContext | None = None
+    uri: str,
+    username: str,
+    password: str,
+    ssl_context: SSLContext | None = None,
 ) -> Generator[HaystackClient, None, None]:
     """Context manager for opening and closing a session with a Project Haystack
     defined server application. May help prevent accidentially leaving a session with

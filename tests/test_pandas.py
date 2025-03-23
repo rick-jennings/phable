@@ -43,7 +43,6 @@ def one_col_grid() -> Grid:
 
 
 def test_get_df_meta_on_one_col_grid(one_col_grid: Grid) -> None:
-
     expected_meta = {
         "ver": "3.0",
         "id": Ref("1234", "foo kW"),
@@ -104,14 +103,18 @@ def multi_col_grid() -> Grid:
             "v3": "available",
             "v4": NA(),
         },
-        {"ts": TS_NOW, "v2": Number(76.3, "kW"), "v3": "occupied", "v4": False},
+        {
+            "ts": TS_NOW,
+            "v2": Number(76.3, "kW"),
+            "v3": "occupied",
+            "v4": False,
+        },
     ]
 
     return Grid(meta, cols, rows)
 
 
 def test_get_df_meta_on_multi_col_grid(multi_col_grid: Grid) -> None:
-
     expected_meta = {
         "ver": "3.0",
         "id": Ref("1234", "foo kW"),
@@ -135,7 +138,6 @@ def test_get_df_meta_on_multi_col_grid(multi_col_grid: Grid) -> None:
 
 
 def test_get_his_df_with_multi_cols(multi_col_grid: Grid) -> None:
-
     df = multi_col_grid.to_pandas()
 
     expected_df = pd.DataFrame(

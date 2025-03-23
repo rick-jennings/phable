@@ -7,7 +7,18 @@ from functools import lru_cache
 from typing import Any
 from zoneinfo import ZoneInfo, available_timezones
 
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 # -----------------------------------------------------------------------------
 # To JSON
@@ -59,7 +70,11 @@ def _kind_to_json(kind: Any) -> dict[str, Any]:
                 "lng": float(kind.lng),
             }
         case XStr():
-            return {"_kind": "xstr", "type": kind.type, "val": kind.val}
+            return {
+                "_kind": "xstr",
+                "type": kind.type,
+                "val": kind.val,
+            }
         case dict():
             return _dict_to_json(kind)
         case list():
@@ -117,7 +132,11 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
 def json_to_grid(json_data: dict[str, Any]) -> Grid:
     dict_data = _parse_dict(json_data)
 
-    return Grid(meta=dict_data["meta"], cols=dict_data["cols"], rows=dict_data["rows"])
+    return Grid(
+        meta=dict_data["meta"],
+        cols=dict_data["cols"],
+        rows=dict_data["rows"],
+    )
 
 
 def _parse_dict(value_dict: dict[str, Any]) -> dict[str, Any]:

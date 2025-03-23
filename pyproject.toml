@@ -1,56 +1,36 @@
-[tool.poetry]
+[project]
 name = "phable"
 version = "0.1.17"
 description = ""
-authors = ["Rick Jennings <rjennings055@gmail.com>"]
+authors = [{ name = "Rick Jennings", email = "rjennings055@gmail.com" }]
+requires-python = "~=3.11"
 readme = "README.md"
-packages = [{include = "phable"}]
 license = "MIT"
 
-[tool.poetry.dependencies]
-python = "^3.11"
-pandas = {version = "^2.2.3", optional = true}
-pyarrow = {version = "^17.0.0", optional = true}
-polars = {version = "^1.9.0", optional = true}
+[project.optional-dependencies]
+pandas = ["pandas>=2.2.3,<3"]
+pyarrow = ["pyarrow>=17.0.0,<18"]
+polars = ["polars>=1.9.0,<2"]
 
-[tool.poetry.extras]
-pandas = ["pandas"]
-pyarrow = ["pyarrow"]
-polars = ["polars"]
+[tool.hatch.build.targets.sdist]
+include = ["phable"]
 
-[tool.poetry.group.dev.dependencies]
-black = "^23.1.0"
-flake8 = "^6.0.0"
-mypy = "^1.1.1"
-pytest = "^7.3.0"
-isort = "^5.12.0"
-auto-changelog = "^0.6.0"
+[tool.hatch.build.targets.wheel]
+include = ["phable"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
-log_cli = true
-log_level = "DEBUG"
-log_cli_level = "DEBUG"
-log_format = "[%(levelname)s]: %(message)s"
-log_cli_format = "[%(levelname)s]: %(message)s"
-log_date_format = "%Y-%m-%d %H:%M:%S"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
+pythonpath = "src"
 
-[tool.isort]
-profile = "black"
-
-[tool.pylint.format]
-max-line-length = "79"
-
-[tool.pylint."MESSAGES CONTROL"]
-disable = [
-    "missing-class-docstring",
-    "missing-function-docstring",
-    "missing-module-docstring",
+[tool.uv]
+dev-dependencies = [
+    "auto-changelog>=0.6.0",
+    "pytest>=8.3.5",
+    "ruff>=0.11.2",
 ]
 
-[tool.black]
-line-length = 79
+[tool.ruff]
+line-length = 88

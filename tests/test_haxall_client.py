@@ -246,8 +246,16 @@ def test_commit_update_recs_with_only_id_mod_and_new_tag_sent(
     new_pt_rec2 = pt_rec2.copy()
     new_pt_rec2["newTag"] = Marker()
 
-    rec_sent1 = {"id": pt_rec1["id"], "mod": pt_rec1["mod"], "newTag": Marker()}
-    rec_sent2 = {"id": pt_rec2["id"], "mod": pt_rec2["mod"], "newTag": Marker()}
+    rec_sent1 = {
+        "id": pt_rec1["id"],
+        "mod": pt_rec1["mod"],
+        "newTag": Marker(),
+    }
+    rec_sent2 = {
+        "id": pt_rec2["id"],
+        "mod": pt_rec2["mod"],
+        "newTag": Marker(),
+    }
 
     recs_sent = [rec_sent1, rec_sent2]
     response = client.commit_update(recs_sent)

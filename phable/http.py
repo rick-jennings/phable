@@ -44,12 +44,19 @@ class HttpResponse:
 
 
 def post(
-    url: str, post_data: Grid, headers: dict[str, str], context=None
+    url: str,
+    post_data: Grid,
+    headers: dict[str, str],
+    context=None,
 ) -> dict[str, Any]:
     # if post_data is None:
     #     post_data = {}
     response = request(
-        url, data=post_data, headers=headers, method="POST", context=context
+        url,
+        data=post_data,
+        headers=headers,
+        method="POST",
+        context=context,
     )
 
     if response.status != 200:

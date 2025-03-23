@@ -252,7 +252,9 @@ class Grid:
 
         return Grid(meta=grid_meta, cols=cols, rows=rows)
 
-    def get_df_meta(self) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
+    def get_df_meta(
+        self,
+    ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
         """Gets metadata for a DataFrame describing data from a `Grid`.
 
         In the returned dictionary:

@@ -70,7 +70,11 @@ class ScramScheme:
         """
 
         headers = {"Authorization": f"HELLO username={_to_base64(self.username)}"}
-        response = request(self.uri + "/about", headers=headers, context=self._context)
+        response = request(
+            self.uri + "/about",
+            headers=headers,
+            context=self._context,
+        )
 
         try:
             self._handshake_token, self._hash = _parse_hello_call_result(
@@ -78,8 +82,7 @@ class ScramScheme:
             )
         except Exception:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's Hello"
-                " call message"
+                "Unable to parse the server's response to the client's Hello call message"
             )
 
     def _first_call(self) -> None:
@@ -89,9 +92,13 @@ class ScramScheme:
         gs2_header = "n,,"
         headers = {
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
-            f"hash={self._hash}, data={_to_base64(gs2_header+self._c1_bare)}"
+            f"hash={self._hash}, data={_to_base64(gs2_header + self._c1_bare)}"
         }
-        response = request(self.uri + "/about", headers=headers, context=self._context)
+        response = request(
+            self.uri + "/about",
+            headers=headers,
+            context=self._context,
+        )
 
         try:
             (
@@ -101,8 +108,7 @@ class ScramScheme:
             ) = _parse_first_call_result(response.headers)
         except Exception:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's First"
-                " call message"
+                "Unable to parse the server's response to the client's First call message"
             )
 
     def _final_call(self) -> None:
@@ -120,12 +126,15 @@ class ScramScheme:
 
         headers = {
             "Authorization": (
-                f"scram handshaketoken={self._handshake_token},"
-                f"data={self._client_final_message}"
+                f"scram handshaketoken={self._handshake_token},data={self._client_final_message}"
             )
         }
 
-        response = request(self.uri + "/about", headers=headers, context=self._context)
+        response = request(
+            self.uri + "/about",
+            headers=headers,
+            context=self._context,
+        )
 
         try:
             self._auth_token, server_signature = _parse_final_call_result(
@@ -133,8 +142,7 @@ class ScramScheme:
             )
         except Exception:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's Final"
-                " call message"
+                "Unable to parse the server's response to the client's Final call message"
             )
 
         if server_signature != self._server_signature:
@@ -150,7 +158,10 @@ class ScramScheme:
     @cached_property
     def _salted_password(self) -> bytes:
         return _salted_password(
-            self._salt, self._iter_count, self._hash, self._password
+            self._salt,
+            self._iter_count,
+            self._hash,
+            self._password,
         )
 
     @property
@@ -176,7 +187,11 @@ class ScramScheme:
 
     @property
     def _client_signature(self) -> bytes:
-        return _hmac(self._stored_key, self._auth_message.encode("utf-8"), self._hash)
+        return _hmac(
+            self._stored_key,
+            self._auth_message.encode("utf-8"),
+            self._hash,
+        )
 
     @property
     def _client_proof(self) -> str:
@@ -189,7 +204,9 @@ class ScramScheme:
     @property
     def _server_signature(self) -> str:
         server_signature = _hmac(
-            self._server_key, self._auth_message.encode("utf-8"), self._hash
+            self._server_key,
+            self._auth_message.encode("utf-8"),
+            self._hash,
         )
         server_signature = b64encode(server_signature).decode("utf-8")
         return server_signature
@@ -259,7 +276,7 @@ def _parse_first_call_result(
 
 
 def _parse_final_call_result(
-    final_call_result_headers: dict[str, str]
+    final_call_result_headers: dict[str, str],
 ) -> tuple[str, str]:
     """Parses the auth token from the 'WWW-Authenticate' header in the
     "server-final-message".
@@ -318,7 +335,12 @@ def _salted_password(
     salt: str, iterations: int, hash_func: str, password: str
 ) -> bytes:
     """Generates a salted password according to RFC5802."""
-    dk = pbkdf2_hmac(hash_func, password.encode(), urlsafe_b64decode(salt), iterations)
+    dk = pbkdf2_hmac(
+        hash_func,
+        password.encode(),
+        urlsafe_b64decode(salt),
+        iterations,
+    )
     return dk
 
 

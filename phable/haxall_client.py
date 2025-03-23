@@ -12,7 +12,10 @@ if TYPE_CHECKING:
 
 @contextmanager
 def open_haxall_client(
-    uri: str, username: str, password: str, ssl_context: SSLContext | None = None
+    uri: str,
+    username: str,
+    password: str,
+    ssl_context: SSLContext | None = None,
 ) -> Generator[HaxallClient, None, None]:
     """Context manager for opening and closing a session with a
     [Haxall](https://haxall.io/) application. May help prevent accidentially leaving a
