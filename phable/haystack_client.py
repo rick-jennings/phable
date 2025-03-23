@@ -176,7 +176,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         auth_token: str,
         ssl_context: SSLContext | None = None,
     ):
-        self.uri: str = uri
+        self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self._auth_token: str = auth_token
         self._context: SSLContext | None = ssl_context
 

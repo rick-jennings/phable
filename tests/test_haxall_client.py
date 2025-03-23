@@ -17,7 +17,7 @@ from phable import (
 )
 from phable.http import IncorrectHttpResponseStatus
 
-from .test_haystack_client import client, create_kw_pt_rec_fn
+from .test_haystack_client import client, create_kw_pt_rec_fn, URI, USERNAME, PASSWORD
 
 
 @pytest.fixture
@@ -44,6 +44,17 @@ def create_pt_that_is_not_removed_fn(
         return writable_kw_pt_rec
 
     yield _create_pt
+
+
+def test_about_op_with_trailing_uri_slash():
+    client = HaxallClient.open(URI + "/", USERNAME, PASSWORD)
+    assert client.about()["vendorName"] == "SkyFoundry"
+    client.close()
+
+
+def test_about_op_with_trailing_uri_slash_using_context():
+    with open_haxall_client(URI + "/", USERNAME, PASSWORD) as client:
+        assert client.about()["vendorName"] == "SkyFoundry"
 
 
 def test_open_hx_client():

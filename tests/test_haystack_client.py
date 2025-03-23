@@ -115,6 +115,17 @@ def test_about_op(client: HaystackClient):
     assert client.about()["vendorName"] == "SkyFoundry"
 
 
+def test_about_op_with_trailing_uri_slash():
+    client = HaystackClient.open(URI + "/", USERNAME, PASSWORD)
+    assert client.about()["vendorName"] == "SkyFoundry"
+    client.close()
+
+
+def test_about_op_with_trailing_uri_slash_using_context():
+    with open_haystack_client(URI + "/", USERNAME, PASSWORD) as client:
+        assert client.about()["vendorName"] == "SkyFoundry"
+
+
 def test_read_site(client: HaystackClient):
     grid = client.read('site and dis=="Carytown"')
     assert grid["geoState"] == "VA"

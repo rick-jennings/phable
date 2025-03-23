@@ -38,7 +38,7 @@ class ScramServerResponseParsingError(Exception):
 
 class ScramScheme:
     def __init__(self, uri: str, username: str, password: str, context=None):
-        self.uri: str = uri
+        self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self.username: str = username
         self._password: str = password
         self._context = context
