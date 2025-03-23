@@ -7,3 +7,4 @@ dist/
 read_me.py
 poetry.lock
 todo.md
+doc_venv/
