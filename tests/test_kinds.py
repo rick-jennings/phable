@@ -91,12 +91,17 @@ def test_to_grid_with_meta():
     }
 
 
-def test_number() -> None:
-    # valid cases
-    assert str(Number(10, "kW")) == "10kW"
-    assert str(Number(-10)) == "-10"
-    assert str(Number(-10.2, "kW")) == "-10.2kW"
-    assert str(Number(10.2)) == "10.2"
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (Number(10, "kW"), "10kW"),
+        (Number(-10), "-10"),
+        (Number(-10.2, "kW"), "-10.2kW"),
+        (Number(10.2), "10.2"),
+    ],
+)
+def test_number(test_input: Number, expected: str) -> None:
+    assert str(test_input) == expected
 
 
 def test_marker() -> None:
@@ -111,10 +116,11 @@ def test_na() -> None:
     assert str(NA()) == "NA"
 
 
-def test_ref() -> None:
-    # valid cases
-    assert str(Ref("foo")) == "@foo"
-    assert str(Ref("foo", "bar")) == "bar"
+@pytest.mark.parametrize(
+    "test_input,expected", [(Ref("foo"), "@foo"), (Ref("foo", "bar"), "bar")]
+)
+def test_ref(test_input: Ref, expected: str) -> None:
+    assert str(test_input) == expected
 
 
 def test_uri() -> None:
@@ -122,15 +128,19 @@ def test_uri() -> None:
     assert Uri("basic_test")
 
 
-def test_coord() -> None:
-    # valid case
-    lat = Decimal("37.548266")
-    lng = Decimal("-77.4491888")
-    assert str(Coord(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
-
-    lat = Decimal("98.230003023231")
-    lng = Decimal("-21.450001023312")
-    assert str(Coord(lat, lng)) == f"C({lat}, {lng})"  # type: ignore
+@pytest.mark.parametrize(
+    "test_lat,test_lng,expected",
+    [
+        (Decimal("37.548266"), Decimal("-77.4491888"), "C(37.548266, -77.4491888)"),
+        (
+            Decimal("98.230003023231"),
+            Decimal("-21.450001023312"),
+            "C(98.230003023231, -21.450001023312)",
+        ),
+    ],
+)
+def test_coord(test_lat: Decimal, test_lng: Decimal, expected: str) -> None:
+    assert str(Coord(test_lat, test_lng)) == expected
 
 
 def test_xstr() -> None:
@@ -151,25 +161,25 @@ def test_date_range() -> None:
     assert str(date_range) == start.isoformat() + "," + end.isoformat()
 
 
-def test_datetime_range_no_end() -> None:
-    dt = datetime(2023, 8, 12, 10, 12, 23, tzinfo=ZoneInfo("America/New_York"))
-    datetime_range = DateTimeRange(dt)
-    assert str(datetime_range) == dt.isoformat() + " New_York"
-
-    # America/New_York
-    dt1 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York"))
-    datetime_range = str(DateTimeRange(dt1))
-    assert datetime_range == "2023-03-12T12:12:34-04:00 New_York"
-
-    # Asia/Bangkok
-    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("Asia/Bangkok"))
-    datetime_range = str(DateTimeRange(dt2))
-    assert datetime_range == "2023-03-12T12:12:34+07:00 Bangkok"
-
-    # UTC
-    dt2 = datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("UTC"))
-    datetime_range = str(DateTimeRange(dt2))
-    assert datetime_range == "2023-03-12T12:12:34+00:00 UTC"
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (
+            datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("America/New_York")),
+            "2023-03-12T12:12:34-04:00 New_York",
+        ),
+        (
+            datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("Asia/Bangkok")),
+            "2023-03-12T12:12:34+07:00 Bangkok",
+        ),
+        (
+            datetime(2023, 3, 12, 12, 12, 34, tzinfo=ZoneInfo("UTC")),
+            "2023-03-12T12:12:34+00:00 UTC",
+        ),
+    ],
+)
+def test_datetime_range_no_end(test_input: datetime, expected: str) -> None:
+    assert str(DateTimeRange(test_input)) == expected
 
 
 def test_datetime_range() -> None:
