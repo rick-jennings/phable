@@ -268,6 +268,43 @@ class HaxallClient(HaystackClient):
         """
         return self.call("eval", Grid.to_grid({"expr": expr}))
 
+    def fetch_file(self, remote_file_path: str, local_file_path: str) -> None:
+        """Fetches file content from the remote file path and writes it to a file defined in the local file path.
+
+        Note:  This method is experimental and subject to change.
+
+        **Example:**
+
+        ```python
+        from phable import open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        with open_haxall_client(uri, username, password) as client:
+            client.fetch_file("proj/demo/io/data.txt", "data.txt")
+        ```
+        """
+        mimetype = mimetypes.guess_type(remote_file_path)[0]
+        if mimetype is None:
+            raise ValueError
+
+        headers = {
+            "Authorization": f"BEARER authToken={self._auth_token}",
+            "Accept": mimetype,
+        }
+
+        response = request(
+            f"{self.uri}/file/{remote_file_path}",
+            method="GET",
+            headers=headers,
+        )
+
+        with open(local_file_path, "w") as file:
+            file.write(response.body)
+
     def upload_file_post(self, local_file_path: str, remote_file_path: str) -> None:
         """Uploads a file to a project using the HTTP POST method.
 
