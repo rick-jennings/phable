@@ -358,7 +358,7 @@ class HaxallClient(HaystackClient):
     def _upload_file(
         self, local_file_path: str, remote_file_path: str, http_method: str
     ) -> None:
-        file = open(local_file_path)
+        file = open(local_file_path, "rb")
         data = file.read()
         file.close()
 
@@ -375,7 +375,7 @@ class HaxallClient(HaystackClient):
 
         request(
             f"{self.uri}/file/{remote_file_path}",
-            bytes(data.encode("utf-8")),
+            data,
             method=http_method,
             headers=headers,
         )
