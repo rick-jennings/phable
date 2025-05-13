@@ -2,7 +2,6 @@ import importlib.metadata
 import json
 import ssl
 import urllib.error
-import urllib.parse
 import urllib.request
 from dataclasses import dataclass
 from email.message import Message
@@ -75,7 +74,7 @@ def post(
 
 def request(
     url: str,
-    data: Grid | None = None,
+    data: Any = None,
     headers: Optional[dict[str, Any]] = None,
     method: str = "GET",
     error_count: int = 0,
@@ -90,8 +89,12 @@ def request(
     if isinstance(data, Grid):
         data = grid_to_json(data)
 
-    request_data = json.dumps(data).encode()
-    headers["Content-Type"] = "application/json; charset=UTF-8"
+    if headers.get("Content-Type") is None:
+        request_data = json.dumps(data).encode()
+        headers["Content-Type"] = "application/json; charset=UTF-8"
+    else:
+        request_data = data
+
     headers["User-Agent"] = f"phable/{importlib.metadata.version('phable')}"
 
     httprequest = urllib.request.Request(

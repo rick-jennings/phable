@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import mimetypes
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generator
 
 from phable.haystack_client import HaystackClient
+from phable.http import request
 from phable.kinds import Grid
 
 if TYPE_CHECKING:
@@ -264,5 +266,79 @@ class HaxallClient(HaystackClient):
         Returns:
             `Grid` with the server's response.
         """
-
         return self.call("eval", Grid.to_grid({"expr": expr}))
+
+    def upload_file_post(self, local_file_path: str, remote_file_path: str) -> None:
+        """Uploads a file to a project using the HTTP POST method.
+
+        If a file with the same name already exists on the server, then the uploaded file will be renamed.
+
+        Note:  This method is experimental and subject to change.
+
+        **Example:**
+
+        ```python
+        from phable import open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        with open_haxall_client(uri, username, password) as client:
+            local_file_path = "data.txt"
+            remote_file_path = "proj/demo/io/data.txt"
+            client.upload_file_post(local_file_path, remote_file_path)
+        ```
+        """
+        return self._upload_file(local_file_path, remote_file_path, "POST")
+
+    def upload_file_put(self, local_file_path: str, remote_file_path: str) -> None:
+        """Uploads a file to a project using the HTTP PUT method.
+
+        If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.
+
+        Note:  This method is experimental and subject to change.
+
+        **Example:**
+
+        ```python
+        from phable import open_haxall_client
+
+        # define these settings specific to your use case
+        uri = "http://localhost:8080/api/demo"
+        username = "<username>"
+        password = "<password>"
+
+        with open_haxall_client(uri, username, password) as client:
+            local_file_path = "data.txt"
+            remote_file_path = "proj/demo/io/data.txt"
+            client.upload_file_put(local_file_path, remote_file_path)
+        ```
+        """
+        return self._upload_file(local_file_path, remote_file_path, "PUT")
+
+    def _upload_file(
+        self, local_file_path: str, remote_file_path: str, http_method: str
+    ) -> None:
+        file = open(local_file_path)
+        data = file.read()
+        file.close()
+
+        mimetype = mimetypes.guess_type(local_file_path)[0]
+        if mimetype is None:
+            raise ValueError
+
+        headers = {
+            "Content-Type": mimetype,
+            "Content-Length": len(data),
+            "Authorization": f"BEARER authToken={self._auth_token}",
+            "Accept": "application/json",
+        }
+
+        request(
+            f"{self.uri}/file/{remote_file_path}",
+            bytes(data.encode("utf-8")),
+            method=http_method,
+            headers=headers,
+        )
