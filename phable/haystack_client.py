@@ -148,10 +148,10 @@ class NoPublicConstructor(type):
     ```
     """
 
-    def __call__(cls, *args, **kwargs):
-        raise TypeError(
-            f"{cls.__module__}.{cls.__qualname__} has no public constructor"
-        )
+    # def __call__(cls, *args, **kwargs):
+    #     raise TypeError(
+    #         f"{cls.__module__}.{cls.__qualname__} has no public constructor"
+    #     )
 
     def _create(cls: Type[T], *args: Any, **kwargs: Any) -> T:
         return super().__call__(*args, **kwargs)
