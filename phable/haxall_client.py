@@ -302,7 +302,7 @@ class HaxallClient(HaystackClient):
             headers=headers,
         )
 
-        with open(local_file_path, "w") as file:
+        with open(local_file_path, "wb") as file:
             file.write(response.body)
 
     def upload_file_post(self, local_file_path: str, remote_file_path: str) -> None:

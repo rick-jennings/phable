@@ -34,7 +34,7 @@ class HttpResponse:
     error_count: int = 0
 
     def to_grid(self) -> dict[str, Any]:
-        return json_to_grid(json.loads(self.body))
+        return json_to_grid(json.loads(self.body.decode("utf-8")))
 
 
 # -----------------------------------------------------------------------------
@@ -109,9 +109,7 @@ def request(
             response = HttpResponse(
                 headers=httpresponse.headers,
                 status=httpresponse.status,
-                body=httpresponse.read().decode(
-                    httpresponse.headers.get_content_charset("utf-8")
-                ),
+                body=httpresponse.read(),
             )
     except urllib.error.HTTPError as e:
         response = HttpResponse(
