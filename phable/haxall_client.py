@@ -268,7 +268,7 @@ class HaxallClient(HaystackClient):
         """
         return self.call("eval", Grid.to_grid({"expr": expr}))
 
-    def fetch_file(self, remote_file_path: str, local_file_path: str) -> None:
+    def file_get(self, remote_file_path: str, local_file_path: str) -> None:
         """Fetches file content from the remote file path and writes it to a file defined in the local file path.
 
         Note:  This method is experimental and subject to change.
@@ -284,7 +284,7 @@ class HaxallClient(HaystackClient):
         password = "<password>"
 
         with open_haxall_client(uri, username, password) as client:
-            client.fetch_file("proj/demo/io/data.txt", "data.txt")
+            client.file_get("proj/demo/io/data.txt", "data.txt")
         ```
         """
         mimetype = mimetypes.guess_type(remote_file_path)[0]
@@ -305,7 +305,7 @@ class HaxallClient(HaystackClient):
         with open(local_file_path, "wb") as file:
             file.write(response.body)
 
-    def upload_file_post(self, local_file_path: str, remote_file_path: str) -> None:
+    def file_post(self, local_file_path: str, remote_file_path: str) -> None:
         """Uploads a file to a project using the HTTP POST method.
 
         If a file with the same name already exists on the server, then the uploaded file will be renamed.
@@ -325,12 +325,12 @@ class HaxallClient(HaystackClient):
         with open_haxall_client(uri, username, password) as client:
             local_file_path = "data.txt"
             remote_file_path = "proj/demo/io/data.txt"
-            client.upload_file_post(local_file_path, remote_file_path)
+            client.file_post(local_file_path, remote_file_path)
         ```
         """
         return self._upload_file(local_file_path, remote_file_path, "POST")
 
-    def upload_file_put(self, local_file_path: str, remote_file_path: str) -> None:
+    def file_put(self, local_file_path: str, remote_file_path: str) -> None:
         """Uploads a file to a project using the HTTP PUT method.
 
         If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.
@@ -350,7 +350,7 @@ class HaxallClient(HaystackClient):
         with open_haxall_client(uri, username, password) as client:
             local_file_path = "data.txt"
             remote_file_path = "proj/demo/io/data.txt"
-            client.upload_file_put(local_file_path, remote_file_path)
+            client.file_put(local_file_path, remote_file_path)
         ```
         """
         return self._upload_file(local_file_path, remote_file_path, "PUT")
