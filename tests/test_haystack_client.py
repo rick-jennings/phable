@@ -72,10 +72,11 @@ def test_open():
         HaystackClient.open(URI, "wrong_username", PASSWORD)
 
     with pytest.raises(URLError):
-        HaystackClient.open("wrong-url", USERNAME, PASSWORD)
+        HaystackClient.open("wrong-url1", USERNAME, PASSWORD)
 
-    # with pytest.raises(TypeError):
-    #     HaystackClient(URI, USERNAME, "wrong_password")
+    with pytest.raises(URLError):
+        x = HaystackClient.open("http://wrong-url2", USERNAME, PASSWORD)
+        x.about()
 
 
 def test_auth_token(client: HaystackClient):

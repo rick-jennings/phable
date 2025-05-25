@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generator
 
 from phable.haystack_client import HaystackClient
-from phable.http import request
+from phable.http import ph_get, ph_post
 from phable.kinds import Grid
 
 if TYPE_CHECKING:
@@ -296,9 +296,8 @@ class HaxallClient(HaystackClient):
             "Accept": mimetype,
         }
 
-        response = request(
+        response = ph_get(
             f"{self.uri}/file/{remote_file_path}",
-            method="GET",
             headers=headers,
         )
 
@@ -358,13 +357,13 @@ class HaxallClient(HaystackClient):
     def _upload_file(
         self, local_file_path: str, remote_file_path: str, http_method: str
     ) -> None:
-        file = open(local_file_path, "rb")
-        data = file.read()
-        file.close()
-
         mimetype = mimetypes.guess_type(local_file_path)[0]
         if mimetype is None:
             raise ValueError
+
+        file = open(local_file_path, "rb")
+        data = file.read()
+        file.close()
 
         headers = {
             "Content-Type": mimetype,
@@ -373,7 +372,7 @@ class HaxallClient(HaystackClient):
             "Accept": "application/json",
         }
 
-        request(
+        ph_post(
             f"{self.uri}/file/{remote_file_path}",
             data,
             method=http_method,

@@ -5,14 +5,10 @@ import urllib.error
 import urllib.request
 from dataclasses import dataclass
 from email.message import Message
-from typing import Any, Optional
+from typing import Any
 
 from phable.kinds import Grid
 from phable.parsers.json import grid_to_json, json_to_grid
-
-# -----------------------------------------------------------------------------
-# Module exceptions
-# -----------------------------------------------------------------------------
 
 
 @dataclass
@@ -21,68 +17,68 @@ class IncorrectHttpResponseStatus(Exception):
     actual_status: int
 
 
-# -----------------------------------------------------------------------------
-# Data model for HTTP response
-# -----------------------------------------------------------------------------
-
-
 @dataclass
-class HttpResponse:
+class PhHttpResponse:
     body: str
     headers: Message
     status: int
-    error_count: int = 0
 
     def to_grid(self) -> dict[str, Any]:
         return json_to_grid(json.loads(self.body.decode("utf-8")))
 
 
-# -----------------------------------------------------------------------------
-# Post and get header funcs tailored for Project Haystack
-# -----------------------------------------------------------------------------
-
-
-def post(
+def ph_post(
     url: str,
-    post_data: Grid,
-    headers: dict[str, str],
+    data: dict[str, Any] | bytes | Grid | None = None,
+    headers: dict[str, str] | None = None,
     context=None,
-) -> dict[str, Any]:
-    # if post_data is None:
-    #     post_data = {}
-    response = request(
+) -> PhHttpResponse:
+    response = _ph_request(
         url,
-        data=post_data,
+        data=data,
         headers=headers,
         method="POST",
         context=context,
     )
 
+    # all POST requests must return a 200 HTTP code to be successful.
+    # if this ever changes then might want to move this logic to
+    # HaxallClient.call()
     if response.status != 200:
         raise IncorrectHttpResponseStatus(
             f"Expected status 200 and received status {response.status}.",
             response.status,
         )
 
-    return response.to_grid()
+    return response
 
 
-# -----------------------------------------------------------------------------
-# Foundation for all requests
-# -----------------------------------------------------------------------------
-
-
-def request(
+def ph_get(
     url: str,
-    data: Any = None,
-    headers: Optional[dict[str, Any]] = None,
+    data: dict[str, Any] | bytes | Grid | None = None,
+    headers: dict[str, str] | None = None,
+    context=None,
+) -> PhHttpResponse:
+    return _ph_request(
+        url,
+        data=data,
+        headers=headers,
+        method="GET",
+        context=context,
+    )
+
+
+def _ph_request(
+    url: str,
+    data: dict[str, Any] | bytes | Grid | None = None,
+    headers: dict[str, Any] | None = None,
     method: str = "GET",
     error_count: int = 0,
     context=None,
-) -> HttpResponse:
-    """Performs an HTTP request."""
+) -> PhHttpResponse:
     if not url.startswith("http"):
-        raise urllib.error.URLError("Incorrect and possibly insecure protocol in url")
+        raise urllib.error.URLError('URL must begin with the prefix "http"')
+
     headers = headers or {}
     data = data or {}
 
@@ -106,20 +102,16 @@ def request(
 
     try:
         with urllib.request.urlopen(httprequest, context=context) as httpresponse:
-            response = HttpResponse(
+            response = PhHttpResponse(
                 headers=httpresponse.headers,
                 status=httpresponse.status,
                 body=httpresponse.read(),
             )
     except urllib.error.HTTPError as e:
-        response = HttpResponse(
+        response = PhHttpResponse(
             body=str(e.reason),
             headers=e.headers,
             status=e.code,
-            error_count=error_count + 1,
         )
-
-    if response.status == 403:
-        raise IncorrectHttpResponseStatus("", response.status)
 
     return response

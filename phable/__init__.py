@@ -2,7 +2,6 @@
 
 from phable.haxall_client import HaxallClient, open_haxall_client
 from phable.haystack_client import (
-    AuthError,
     CallError,
     HaystackClient,
     UnknownRecError,
@@ -22,3 +21,4 @@ from phable.kinds import (
     Uri,
     XStr,
 )
+from phable.auth.scram import AuthError

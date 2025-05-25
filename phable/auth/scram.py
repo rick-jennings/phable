@@ -14,11 +14,25 @@ from functools import cached_property
 from hashlib import pbkdf2_hmac
 from uuid import uuid4
 
-from phable.http import request
+from phable.http import PhHttpResponse, ph_get
 
-# -----------------------------------------------------------------------------
-# Module exceptions
-# -----------------------------------------------------------------------------
+
+@dataclass
+class AuthError(Exception):
+    """Error raised when the client is unable to authenticate with the server using the
+    credentials provided.
+
+    `AuthError` can be directly imported as follows:
+
+    ```python
+    from phable import AuthError
+    ```
+
+    Parameters:
+        help_msg: A display to help with troubleshooting.
+    """
+
+    help_msg: str
 
 
 @dataclass
@@ -29,11 +43,6 @@ class ScramServerSignatureNotEqualError(Exception):
 @dataclass
 class ScramServerResponseParsingError(Exception):
     help_msg: str
-
-
-# -----------------------------------------------------------------------------
-# Scram scheme core interface
-# -----------------------------------------------------------------------------
 
 
 class ScramScheme:
@@ -70,9 +79,9 @@ class ScramScheme:
         """
 
         headers = {"Authorization": f"HELLO username={_to_base64(self.username)}"}
-        response = request(
+        response = _ph_scram_get(
             self.uri + "/about",
-            headers=headers,
+            headers,
             context=self._context,
         )
 
@@ -94,9 +103,9 @@ class ScramScheme:
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
             f"hash={self._hash}, data={_to_base64(gs2_header + self._c1_bare)}"
         }
-        response = request(
+        response = _ph_scram_get(
             self.uri + "/about",
-            headers=headers,
+            headers,
             context=self._context,
         )
 
@@ -130,9 +139,9 @@ class ScramScheme:
             )
         }
 
-        response = request(
+        response = _ph_scram_get(
             self.uri + "/about",
-            headers=headers,
+            headers,
             context=self._context,
         )
 
@@ -217,9 +226,20 @@ class ScramScheme:
         return _to_base64(client_final)
 
 
-# -----------------------------------------------------------------------------
-# Util functions for parsing HTTP responses
-# -----------------------------------------------------------------------------
+def _ph_scram_get(
+    url: str,
+    headers: dict[str, str],
+    context=None,
+) -> PhHttpResponse:
+    response = ph_get(url, headers=headers, context=context)
+
+    if response.status == 403:
+        raise AuthError(
+            "Unable to authenticate with the server using the credentials "
+            + "provided."
+        )
+
+    return response
 
 
 def _parse_hello_call_result(

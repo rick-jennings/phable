@@ -13,7 +13,7 @@ from typing import (
 )
 
 from phable.auth.scram import ScramScheme
-from phable.http import IncorrectHttpResponseStatus, post
+from phable.http import ph_post
 from phable.kinds import (
     DateRange,
     DateTimeRange,
@@ -24,24 +24,6 @@ from phable.kinds import (
 
 if TYPE_CHECKING:
     from ssl import SSLContext
-
-
-@dataclass
-class AuthError(Exception):
-    """Error raised when the client is unable to authenticate with the server using the
-    credentials provided.
-
-    `AuthError` can be directly imported as follows:
-
-    ```python
-    from phable import AuthError
-    ```
-
-    Parameters:
-        help_msg: A display to help with troubleshooting.
-    """
-
-    help_msg: str
 
 
 @dataclass
@@ -194,6 +176,8 @@ class HaystackClient(metaclass=NoPublicConstructor):
         Raises:
             AuthError:
                 Unable to authenticate with the server using the credentials provided.
+            urllib.error.URLError:
+                URL is not known or lacks the required http prefix.
 
         Parameters:
             uri: URI of endpoint such as "http://host/api/myProj/".
@@ -207,15 +191,8 @@ class HaystackClient(metaclass=NoPublicConstructor):
             An instance of the class this method is used on (i.e., Client or HxClient).
         """
 
-        try:
-            scram = ScramScheme(uri, username, password, ssl_context)
-            auth_token = scram.get_auth_token()
-        except IncorrectHttpResponseStatus as err:
-            if err.actual_status == 403:
-                raise AuthError(
-                    "Unable to authenticate with the server using the credentials "
-                    + "provided."
-                )
+        scram = ScramScheme(uri, username, password, ssl_context)
+        auth_token = scram.get_auth_token()
 
         return cls._create(uri, auth_token, ssl_context)
 
@@ -693,12 +670,12 @@ class HaystackClient(metaclass=NoPublicConstructor):
             "Accept": "application/json",
         }
 
-        response = post(
+        response = ph_post(
             url=f"{self.uri}/{path}",
-            post_data=data,
+            data=data,
             headers=headers,
             context=self._context,
-        )
+        ).to_grid()
         _validate_response_meta(response)
 
         return response
