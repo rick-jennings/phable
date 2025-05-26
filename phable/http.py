@@ -88,7 +88,7 @@ def _ph_request(
 
     if headers.get("Content-Type") is None:
         request_data = json.dumps(data).encode()
-        headers["Content-Type"] = "application/json; charset=UTF-8"
+        headers["Content-Type"] = "application/json"
     else:
         request_data = data
 
