@@ -1,11 +1,11 @@
 # `HaystackClient`
 
-::: phable.haystack_client.open_haystack_client
+::: phable.open_haystack_client
 
-::: phable.haystack_client.HaystackClient
+::: phable.HaystackClient
 
-::: phable.haystack_client.AuthError
+::: phable.AuthError
 
-::: phable.haystack_client.CallError
+::: phable.CallError
 
-::: phable.haystack_client.UnknownRecError
+::: phable.UnknownRecError
