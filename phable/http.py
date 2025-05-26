@@ -8,6 +8,7 @@ from email.message import Message
 from typing import Any
 
 from phable.kinds import Grid
+from phable.logger import logger
 from phable.parsers.json import grid_to_json, json_to_grid
 
 
@@ -107,6 +108,7 @@ def _ph_request(
                 status=httpresponse.status,
                 body=httpresponse.read(),
             )
+
     except urllib.error.HTTPError as e:
         response = PhHttpResponse(
             body=str(e.reason),
@@ -114,4 +116,47 @@ def _ph_request(
             status=e.code,
         )
 
+    if "application/json" in headers["Content-Type"]:
+        logger.debug(
+            "req >\n\n"
+            + httprequest.get_method()
+            + " "
+            + httprequest.full_url
+            + "\n\n"
+            + _get_http_log(httprequest.headers, httprequest.data)
+        )
+        logger.debug(
+            "res <\n\n"
+            + _get_status_text(response.status)
+            + "\n\n"
+            + _get_http_log(dict(response.headers), response.body)
+        )
+
     return response
+
+
+def _get_status_text(status: int) -> str:
+    if status == 200:
+        return "200 OK"
+    else:
+        return str(status)
+
+
+def _get_http_log(headers: dict[str, str], json_data: bytes | str) -> str:
+    return (
+        "Headers:\n"
+        + json.dumps(headers, indent=2)
+        + "\n\nData:\n"
+        + _pretty_print(json_data)
+        + "\n"
+    )
+
+
+def _pretty_print(data: bytes | str) -> str:
+    if len(data) == 0:
+        return "Empty"
+    if isinstance(data, str):
+        return data
+
+    data = json.loads(data)
+    return json.dumps(data, indent=2)
