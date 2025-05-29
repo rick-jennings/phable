@@ -5,11 +5,13 @@ from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generator
 
 from phable.haystack_client import HaystackClient
-from phable.http import ph_get, ph_post
-from phable.kinds import Grid
+from phable.http import ph_request, request
+from phable.kinds import Grid, Uri
 
 if TYPE_CHECKING:
     from ssl import SSLContext
+
+from io import BufferedReader
 
 
 @contextmanager
@@ -268,8 +270,12 @@ class HaxallClient(HaystackClient):
         """
         return self.call("eval", Grid.to_grid({"expr": expr}))
 
-    def file_get(self, remote_file_path: str, local_file_path: str) -> None:
-        """Fetches file content from the remote file path and writes it to a file defined in the local file path.
+    def file_get(self, remote_file_uri: str) -> BufferedReader:
+        """Fetches content from a file on the server and returns a buffered binary stream.
+
+        The data in the HTTP response is not logged since a buffered reader can only be read once.
+
+        Phable users should manually close the returned stream as shown in the example below.
 
         **Note:**  This method is experimental and subject to change.
 
@@ -284,16 +290,26 @@ class HaxallClient(HaystackClient):
         password = "<password>"
 
         with open_haxall_client(uri, username, password) as client:
-            client.file_get("proj/demo/io/data.txt", "data.txt")
+            stream = client.file_get("/proj/demo/io/data.txt")
+
+            # write data from the stream to a local file called data.txt
+            with open("data.txt", "wb") as file:
+                file.write(stream.read())
+
+            # don't forget to close the stream when finished!
+            stream.close()
         ```
 
         Parameters:
-            remote_file_path:
-                Remote path to the file that is being fetched.
-            local_file_path:
-                Local path that the fetched file is to be written to.
+            remote_file_uri:
+                URI of the remote file that has content being fetched.
+
+        Returns:
+            A buffered binary stream that is readable.
         """
-        mimetype = mimetypes.guess_type(remote_file_path)[0]
+        remote_file_url = self.uri + "/file" + remote_file_uri
+
+        mimetype = mimetypes.guess_type(remote_file_url)[0]
         if mimetype is None:
             raise ValueError
 
@@ -302,15 +318,15 @@ class HaxallClient(HaystackClient):
             "Accept": mimetype,
         }
 
-        response = ph_get(
-            f"{self.uri}/file/{remote_file_path}",
+        res = request(
+            url=remote_file_url,
             headers=headers,
+            context=self._context,
         )
 
-        with open(local_file_path, "wb") as file:
-            file.write(response.body)
+        return BufferedReader(res)
 
-    def file_post(self, local_file_path: str, remote_file_path: str) -> None:
+    def file_post(self, stream: BufferedReader, remote_file_uri: str) -> Uri:
         """Uploads a file to a project using the HTTP POST method.
 
         If a file with the same name already exists on the server, then the uploaded file will be renamed.
@@ -328,20 +344,27 @@ class HaxallClient(HaystackClient):
         password = "<password>"
 
         with open_haxall_client(uri, username, password) as client:
-            local_file_path = "data.txt"
-            remote_file_path = "proj/demo/io/data.txt"
-            client.file_post(local_file_path, remote_file_path)
+            # use stream from local file data.txt to upload file on server
+            with open("data.txt", "rb") as file:
+                remote_file_uri = client.file_post(file, "/proj/demo/io/data.txt")
         ```
 
-        Parameters:
-            local_file_path:
-                Local path of the file that is being uploaded to the remote server.
-            remote_file_path:
-                Remote path that the local file is being uploaded to.
-        """
-        return self._upload_file(local_file_path, remote_file_path, "POST")
+        Raises:
+            ValueError:
+                Server did not return a Grid with the URI that file content was written to.
 
-    def file_put(self, local_file_path: str, remote_file_path: str) -> None:
+        Parameters:
+            stream:
+                A buffered binary stream used for writing content to the remote file.
+            remote_file_uri:
+                URI that file content is intended to be written to.
+
+        Returns:
+            URI the file content was written to.
+        """
+        return self._upload_file(stream, remote_file_uri, "POST")
+
+    def file_put(self, stream: BufferedReader, remote_file_uri: str) -> Uri:
         """Uploads a file to a project using the HTTP PUT method.
 
         If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.
@@ -359,40 +382,56 @@ class HaxallClient(HaystackClient):
         password = "<password>"
 
         with open_haxall_client(uri, username, password) as client:
-            local_file_path = "data.txt"
-            remote_file_path = "proj/demo/io/data.txt"
-            client.file_put(local_file_path, remote_file_path)
+            # use stream from local file data.txt to upload file on server
+            with open("data.txt", "rb") as file:
+                remote_file_uri = client.file_put(file, "/proj/demo/io/data.txt")
         ```
 
+        Raises:
+            ValueError:
+                Server did not return a Grid with the URI that file content was written to.
+
         Parameters:
-            local_file_path:
-                Local path of the file that is being uploaded to the remote server.
-            remote_file_path:
-                Remote path that the local file is intended to be uploaded to.
+            stream:
+                A buffered binary stream used for writing content to the remote file.
+            remote_file_uri:
+                URI of the remote file that content will be written to.
+
+        Returns:
+            URI the file content was written to.
         """
-        return self._upload_file(local_file_path, remote_file_path, "PUT")
+        return self._upload_file(stream, remote_file_uri, "PUT")
 
     def _upload_file(
-        self, local_file_path: str, remote_file_path: str, http_method: str
-    ) -> None:
-        mimetype = mimetypes.guess_type(local_file_path)[0]
+        self, stream: BufferedReader, remote_file_uri: str, http_method: str
+    ) -> Uri:
+        mimetype = mimetypes.guess_type(remote_file_uri)[0]
         if mimetype is None:
             raise ValueError
 
-        file = open(local_file_path, "rb")
-        data = file.read()
-        file.close()
+        data = stream.read()
+        stream.close()
 
         headers = {
             "Content-Type": mimetype,
-            "Content-Length": len(data),
             "Authorization": f"BEARER authToken={self._auth_token}",
             "Accept": "application/json",
         }
 
-        ph_post(
-            f"{self.uri}/file/{remote_file_path}",
+        res = ph_request(
+            self.uri + "/file" + remote_file_uri,
+            headers,
             data,
             method=http_method,
-            headers=headers,
-        )
+            context=self._context,
+        ).to_grid()
+
+        if len(res.rows) != 1:
+            raise ValueError
+
+        posted_file_uri = res.rows[0].get("uri")
+
+        if isinstance(posted_file_uri, Uri) is False:
+            raise ValueError
+
+        return posted_file_uri

@@ -13,7 +13,7 @@ from typing import (
 )
 
 from phable.auth.scram import ScramScheme
-from phable.http import ph_post
+from phable.http import ph_request
 from phable.kinds import (
     DateRange,
     DateTimeRange,
@@ -670,12 +670,14 @@ class HaystackClient(metaclass=NoPublicConstructor):
             "Accept": "application/json",
         }
 
-        response = ph_post(
+        response = ph_request(
             url=f"{self.uri}/{path}",
-            data=data,
             headers=headers,
+            data=data,
+            method="POST",
             context=self._context,
         ).to_grid()
+
         _validate_response_meta(response)
 
         return response

@@ -2,7 +2,7 @@
 
 from datetime import datetime
 from typing import Any, Callable, Generator
-
+from urllib.error import HTTPError
 import pytest
 
 from phable import (
@@ -15,7 +15,6 @@ from phable import (
     UnknownRecError,
     open_haxall_client,
 )
-from phable.http import IncorrectHttpResponseStatus
 
 from .test_haystack_client import client, create_kw_pt_rec_fn, URI, USERNAME, PASSWORD
 
@@ -75,10 +74,10 @@ def test_open_hx_client():
 
         assert len(pt_grid.rows) == 1
 
-    with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
+    with pytest.raises(HTTPError) as e:
         HaxallClient._create(uri, auth_token).about()
 
-    assert incorrectHttpResponseStatus.value.actual_status == 403
+    assert e.value.status == 403
 
 
 def test_commit_add_one_rec(client: HaxallClient, sample_recs: list[dict, Any]):

@@ -5,6 +5,8 @@ This module implements client-side logic and support for the following:
     2. SCRAM authentication according to RFC5802
 """
 
+from __future__ import annotations
+
 import hashlib
 import hmac
 import re
@@ -12,9 +14,15 @@ from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
 from functools import cached_property
 from hashlib import pbkdf2_hmac
+from typing import TYPE_CHECKING, Any
+from urllib.error import HTTPError
 from uuid import uuid4
 
-from phable.http import PhHttpResponse, ph_get
+from phable.http import ph_request
+from phable.logger import log_http_req, log_http_res
+
+if TYPE_CHECKING:
+    from ssl import SSLContext
 
 
 @dataclass
@@ -79,16 +87,14 @@ class ScramScheme:
         """
 
         headers = {"Authorization": f"HELLO username={_to_base64(self.username)}"}
-        response = _ph_scram_get(
+        res_headers = _ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
         )
 
         try:
-            self._handshake_token, self._hash = _parse_hello_call_result(
-                response.headers
-            )
+            self._handshake_token, self._hash = _parse_hello_call_result(res_headers)
         except Exception:
             raise ScramServerResponseParsingError(
                 "Unable to parse the server's response to the client's Hello call message"
@@ -103,7 +109,7 @@ class ScramScheme:
             "Authorization": f"scram handshakeToken={self._handshake_token}, "
             f"hash={self._hash}, data={_to_base64(gs2_header + self._c1_bare)}"
         }
-        response = _ph_scram_get(
+        res_headers = _ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
@@ -114,7 +120,7 @@ class ScramScheme:
                 self._s_nonce,
                 self._salt,
                 self._iter_count,
-            ) = _parse_first_call_result(response.headers)
+            ) = _parse_first_call_result(res_headers)
         except Exception:
             raise ScramServerResponseParsingError(
                 "Unable to parse the server's response to the client's First call message"
@@ -139,16 +145,14 @@ class ScramScheme:
             )
         }
 
-        response = _ph_scram_get(
+        res_headers = _ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
         )
 
         try:
-            self._auth_token, server_signature = _parse_final_call_result(
-                response.headers
-            )
+            self._auth_token, server_signature = _parse_final_call_result(res_headers)
         except Exception:
             raise ScramServerResponseParsingError(
                 "Unable to parse the server's response to the client's Final call message"
@@ -229,17 +233,24 @@ class ScramScheme:
 def _ph_scram_get(
     url: str,
     headers: dict[str, str],
-    context=None,
-) -> PhHttpResponse:
-    response = ph_get(url, headers=headers, context=context)
+    context: SSLContext | None = None,
+) -> dict[str, Any]:
+    try:
+        response = ph_request(url, headers, context=context)
+        res_headers = dict(response.headers)
+    except HTTPError as e:
+        res_headers = dict(e.headers)
 
-    if response.status == 403:
-        raise AuthError(
-            "Unable to authenticate with the server using the credentials "
-            + "provided."
-        )
+        log_http_req("GET", url, headers)
+        log_http_res(e.status, res_headers)
 
-    return response
+        if e.status == 403:
+            raise AuthError(
+                "Unable to authenticate with the server using the credentials "
+                + "provided."
+            )
+
+    return res_headers
 
 
 def _parse_hello_call_result(
@@ -301,8 +312,7 @@ def _parse_final_call_result(
     """Parses the auth token from the 'WWW-Authenticate' header in the
     "server-final-message".
     """
-
-    auth_header = final_call_result_headers.as_string()
+    auth_header = str(final_call_result_headers)
 
     exclude_msg1 = "authToken="
     s1 = re.search(f"({exclude_msg1})[^,]+", auth_header)

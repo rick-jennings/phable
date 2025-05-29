@@ -1,6 +1,6 @@
 from datetime import date, datetime, timedelta
 from typing import Any, Callable, Generator
-from urllib.error import URLError
+from urllib.error import HTTPError, URLError
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -18,7 +18,6 @@ from phable import (
     UnknownRecError,
     open_haystack_client,
 )
-from phable.http import IncorrectHttpResponseStatus
 
 # Note:  These tests are made using SkySpark as the Haystack server
 URI = "http://localhost:8080/api/demo"
@@ -99,10 +98,10 @@ def test_open_client():
 
         auth_token = hc._auth_token
 
-    with pytest.raises(IncorrectHttpResponseStatus) as incorrectHttpResponseStatus:
+    with pytest.raises(HTTPError) as e:
         HaystackClient._create(URI, auth_token).about()
 
-    assert incorrectHttpResponseStatus.value.actual_status == 403
+    assert e.value.status == 403
 
 
 def test_close_op():
