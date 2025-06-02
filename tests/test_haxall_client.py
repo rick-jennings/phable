@@ -14,6 +14,7 @@ from phable import (
     Ref,
     UnknownRecError,
     open_haxall_client,
+    Uri,
 )
 
 from .test_haystack_client import client, create_kw_pt_rec_fn, URI, USERNAME, PASSWORD
@@ -402,3 +403,30 @@ def test_eval(client: HaxallClient):
     response = client.eval(axon_expr)
     assert "id" in response.rows[0].keys()
     assert "mod" in response.rows[0].keys()
+
+
+def test_file_post_using_txt_file(client: HaxallClient):
+    remote_file_uri = "/proj/demo/io/phable-file-test.txt"
+
+    with open("tests/phable-file-test.txt", "rb") as file:
+        res_data = client.file_post(file, remote_file_uri)
+
+    assert ".txt" in str(res_data["uri"])
+    assert remote_file_uri.replace(".txt", "") in str(res_data["uri"])
+
+
+def test_file_put_using_txt_file(client: HaxallClient):
+    remote_file_uri = "/proj/demo/io/phable-file-test.txt"
+
+    with open("tests/phable-file-test.txt", "rb") as file:
+        res_data = client.file_put(file, remote_file_uri)
+
+    assert remote_file_uri == str(res_data["uri"])
+
+
+def test_file_get_using_txt_file(client: HaxallClient):
+    stream = client.file_get("/proj/demo/io/phable-file-test.txt")
+    data = stream.read()
+    stream.close()
+
+    assert data == b"Hello World!\n"
