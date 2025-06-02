@@ -326,7 +326,7 @@ class HaxallClient(HaystackClient):
 
         return BufferedReader(res)
 
-    def file_post(self, stream: BufferedReader, remote_file_uri: str) -> Uri:
+    def file_post(self, stream: BufferedReader, remote_file_uri: str) -> dict[str, Any]:
         """Uploads a file to a project using the HTTP POST method.
 
         If a file with the same name already exists on the server, then the uploaded file will be renamed.
@@ -346,7 +346,7 @@ class HaxallClient(HaystackClient):
         with open_haxall_client(uri, username, password) as client:
             # use stream from local file data.txt to upload file on server
             with open("data.txt", "rb") as file:
-                remote_file_uri = client.file_post(file, "/proj/demo/io/data.txt")
+                res_data = client.file_post(file, "/proj/demo/io/data.txt")
         ```
 
         Raises:
@@ -360,11 +360,11 @@ class HaxallClient(HaystackClient):
                 URI that file content is intended to be written to.
 
         Returns:
-            URI the file content was written to.
+            A dictionary of data containing the URI the file content was written to.
         """
         return self._upload_file(stream, remote_file_uri, "POST")
 
-    def file_put(self, stream: BufferedReader, remote_file_uri: str) -> Uri:
+    def file_put(self, stream: BufferedReader, remote_file_uri: str) -> dict[str, Any]:
         """Uploads a file to a project using the HTTP PUT method.
 
         If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.
@@ -384,7 +384,7 @@ class HaxallClient(HaystackClient):
         with open_haxall_client(uri, username, password) as client:
             # use stream from local file data.txt to upload file on server
             with open("data.txt", "rb") as file:
-                remote_file_uri = client.file_put(file, "/proj/demo/io/data.txt")
+                res_data = client.file_put(file, "/proj/demo/io/data.txt")
         ```
 
         Raises:
@@ -398,13 +398,13 @@ class HaxallClient(HaystackClient):
                 URI of the remote file that content will be written to.
 
         Returns:
-            URI the file content was written to.
+            A dictionary of data containing the URI the file content was written to.
         """
         return self._upload_file(stream, remote_file_uri, "PUT")
 
     def _upload_file(
         self, stream: BufferedReader, remote_file_uri: str, http_method: str
-    ) -> Uri:
+    ) -> dict[str, Any]:
         mimetype = mimetypes.guess_type(remote_file_uri)[0]
         if mimetype is None:
             raise ValueError
@@ -426,12 +426,12 @@ class HaxallClient(HaystackClient):
             context=self._context,
         ).to_grid()
 
-        if len(res.rows) != 1:
+        try:
+            res_data = res.rows[0]
+        except IndexError:
             raise ValueError
 
-        posted_file_uri = res.rows[0].get("uri")
-
-        if isinstance(posted_file_uri, Uri) is False:
+        if isinstance(res_data.get("uri"), Uri) is False:
             raise ValueError
 
-        return posted_file_uri
+        return res_data
