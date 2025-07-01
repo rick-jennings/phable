@@ -12,9 +12,10 @@ import hmac
 import re
 from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
 from dataclasses import dataclass
+from email.message import Message
 from functools import cached_property
 from hashlib import pbkdf2_hmac
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from urllib.error import HTTPError
 from uuid import uuid4
 
@@ -106,8 +107,7 @@ class ScramScheme:
 
         gs2_header = "n,,"
         headers = {
-            "Authorization": f"scram handshakeToken={self._handshake_token}, "
-            f"hash={self._hash}, data={_to_base64(gs2_header + self._c1_bare)}"
+            "Authorization": f"SCRAM data={_to_base64(gs2_header + self._c1_bare)}, handshakeToken={self._handshake_token}"
         }
         res_headers = _ph_scram_get(
             self.uri + "/about",
@@ -141,7 +141,7 @@ class ScramScheme:
 
         headers = {
             "Authorization": (
-                f"scram handshaketoken={self._handshake_token},data={self._client_final_message}"
+                f"SCRAM data={self._client_final_message}, handshakeToken={self._handshake_token}"
             )
         }
 
@@ -173,17 +173,24 @@ class ScramScheme:
         return _salted_password(
             self._salt,
             self._iter_count,
-            self._hash,
+            self._parsed_hash,
             self._password,
         )
 
     @property
+    def _parsed_hash(self) -> str:
+        if self._hash == "SHA-256":
+            return "sha256"
+        else:
+            raise ValueError
+
+    @property
     def _client_key(self) -> bytes:
-        return _hmac(self._salted_password, b"Client Key", self._hash)
+        return _hmac(self._salted_password, b"Client Key", self._parsed_hash)
 
     @property
     def _stored_key(self) -> bytes:
-        hashFunc = hashlib.new(self._hash)
+        hashFunc = hashlib.new(self._parsed_hash)
         hashFunc.update(self._client_key)
         return hashFunc.digest()
 
@@ -203,7 +210,7 @@ class ScramScheme:
         return _hmac(
             self._stored_key,
             self._auth_message.encode("utf-8"),
-            self._hash,
+            self._parsed_hash,
         )
 
     @property
@@ -212,14 +219,14 @@ class ScramScheme:
 
     @property
     def _server_key(self) -> bytes:
-        return _hmac(self._salted_password, b"Server Key", self._hash)
+        return _hmac(self._salted_password, b"Server Key", self._parsed_hash)
 
     @property
     def _server_signature(self) -> str:
         server_signature = _hmac(
             self._server_key,
             self._auth_message.encode("utf-8"),
-            self._hash,
+            self._parsed_hash,
         )
         server_signature = b64encode(server_signature).decode("utf-8")
         return server_signature
@@ -234,15 +241,15 @@ def _ph_scram_get(
     url: str,
     headers: dict[str, str],
     context: SSLContext | None = None,
-) -> dict[str, Any]:
+) -> Message:
     try:
         response = ph_request(url, headers, context=context)
-        res_headers = dict(response.headers)
+        res_headers = response.headers
     except HTTPError as e:
-        res_headers = dict(e.headers)
+        res_headers = e.headers
 
         log_http_req("GET", url, headers)
-        log_http_res(e.status, res_headers)
+        log_http_res(e.status, dict(res_headers))
 
         if e.status == 403:
             raise AuthError(
@@ -254,7 +261,7 @@ def _ph_scram_get(
 
 
 def _parse_hello_call_result(
-    hello_call_result_headers: dict[str, str],
+    hello_call_result_headers: Message,
 ) -> tuple[str, str]:
     """Parses the handshake token and hash from the 'WWW-Authenticate' header
     in the server generated HELLO message.
@@ -274,24 +281,20 @@ def _parse_hello_call_result(
     s = re.search(f"({exclude_msg})(SHA-256)", auth_header)
 
     start_index = len(exclude_msg)
-    s_new = s.group(0)[start_index:]
-
-    if s_new == "SHA-256":
-        s_new = "sha256"
-
-    hash = s_new
+    hash = s.group(0)[start_index:]
 
     return handshake_token, hash
 
 
 def _parse_first_call_result(
-    first_call_result_headers: dict[str, str],
+    first_call_result_headers: Message,
 ) -> tuple[str, str, int]:
     """Parses the server nonce, salt, and iteration count from the
     'WWW-Authenticate' header in the "server-first-message".
     """
 
     auth_header = first_call_result_headers["WWW-Authenticate"]
+
     exclude_msg = "data="
     scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
 
@@ -307,7 +310,7 @@ def _parse_first_call_result(
 
 
 def _parse_final_call_result(
-    final_call_result_headers: dict[str, str],
+    final_call_result_headers: Message,
 ) -> tuple[str, str]:
     """Parses the auth token from the 'WWW-Authenticate' header in the
     "server-final-message".
@@ -374,7 +377,7 @@ def _salted_password(
     return dk
 
 
-def _from_base64(msg: str) -> str:  # str
+def _from_base64(msg: str) -> str:
     return urlsafe_b64decode(_to_bytes(msg)).decode("utf-8")
 
 

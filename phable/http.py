@@ -40,6 +40,8 @@ def ph_request(
     method: str = "GET",
     context: SSLContext | None = None,
 ) -> PhHttpResponse:
+    headers = headers.copy()
+
     # call reqs use Grid for data & scram reqs use None
     if isinstance(data, Grid):
         data = grid_to_json(data)
@@ -80,6 +82,7 @@ def request(
     if isinstance(data, Grid):
         data = grid_to_json(data)
 
+    headers = headers.copy()
     headers["User-Agent"] = f"phable/{importlib.metadata.version('phable')}"
 
     httprequest = urllib.request.Request(url, data=data, headers=headers, method=method)
