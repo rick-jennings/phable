@@ -115,6 +115,7 @@ class HaxallClient(HaystackClient):
         """
         meta = {"commit": "add"}
         if isinstance(recs, Grid):
+            meta = recs.meta | meta
             recs = recs.rows
         return self.call("commit", Grid.to_grid(recs, meta))
 
@@ -170,6 +171,7 @@ class HaxallClient(HaystackClient):
         """
         meta = {"commit": "update"}
         if isinstance(recs, Grid):
+            meta = recs.meta | meta
             recs = recs.rows
         return self.call("commit", Grid.to_grid(recs, meta))
 
@@ -223,6 +225,7 @@ class HaxallClient(HaystackClient):
         """
         meta = {"commit": "remove"}
         if isinstance(recs, Grid):
+            meta = recs.meta | meta
             recs = recs.rows
         return self.call("commit", Grid.to_grid(recs, meta))
 
