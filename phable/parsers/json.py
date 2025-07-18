@@ -140,7 +140,13 @@ def json_to_grid(json_data: dict[str, Any]) -> Grid:
 
 
 def _parse_dict(value_dict: dict[str, Any]) -> dict[str, Any]:
-    return {key: _parse_value(value) for key, value in value_dict.items()}
+    parsed_dict = {}
+    for key, value in value_dict.items():
+        if key == "_kind" and value == "dict":
+            continue
+        parsed_dict[key] = _parse_value(value)
+
+    return parsed_dict
 
 
 def _parse_list(value_list: list[Any]) -> list[Any]:
@@ -171,6 +177,7 @@ def _to_kind(d: dict[str, str]):
         "remove": _parse_remove,
         "na": _parse_na,
         "ref": _parse_ref,
+        "dict": _parse_dict,
         "date": _parse_date,
         "time": _parse_time,
         "dateTime": _parse_date_time,

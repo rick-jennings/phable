@@ -1,5 +1,6 @@
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
+from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -201,6 +202,24 @@ def test__parse_nested_dict_with_kinds_to_json2():
             },
         },
     }
+
+
+@pytest.mark.parametrize(
+    "test_input,expected",
+    [
+        (
+            [
+                {"site": {"_kind": "marker"}},
+                {"_kind": "dict", "site": {"_kind": "marker"}},
+            ],
+            [{"site": kinds.Marker()}, {"site": kinds.Marker()}],
+        ),
+    ],
+)
+def test_parse_list_of_dicts_to_json(
+    test_input: list[dict[str, Any]], expected: list[dict[str, Any]]
+) -> None:
+    assert _parse_list(test_input) == expected
 
 
 def test_grid_to_json_meta1():
