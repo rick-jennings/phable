@@ -13,14 +13,14 @@ class HaystackTokenizer:
     def __init__(self, input: TextIOWrapper):
         self._input = input
         self.tok = HaystackToken.EOF
-        self._factory = HaystackFactory()
+        self.factory = HaystackFactory()
         self._consume()
         self._consume()
 
     _input: TextIOWrapper
     _cur: str
     _peek: str = None
-    _factory: HaystackFactory
+    factory: HaystackFactory
 
     # Current token type
     tok: HaystackToken
@@ -103,6 +103,9 @@ class HaystackTokenizer:
         self.tok = self._operator()
         return self.tok
 
+    def close(self) -> None:
+        self._input.close()
+
     # Parse single line comment when keeping comments
     def parse_comment(self) -> HaystackToken:
         s = ""
@@ -161,7 +164,7 @@ class HaystackTokenizer:
             s += self._cur
             self._consume()
 
-        id = self._factory.make_id(s)
+        id = self.factory.make_id(s)
 
         # check for keyword
         if self.keywords is not None and self.keywords.get(id) is not None:
@@ -199,7 +202,7 @@ class HaystackTokenizer:
             self._consume()
             s += ch
 
-        self.val = self._factory.make_str(s)
+        self.val = self.factory.make_str(s)
         return HaystackToken.STR
 
     def _num(self) -> HaystackToken:
@@ -272,7 +275,7 @@ class HaystackTokenizer:
         # Date
         if dashes == 2 and colons == 0:
             try:
-                self.val = self._factory.make_date(s)
+                self.val = self.factory.make_date(s)
             except Exception:
                 raise ValueError(f"Invalid Date literal '{s}'")
             return HaystackToken.DATE
@@ -285,7 +288,7 @@ class HaystackTokenizer:
             if colons == 1:
                 s = s + ":00"
             try:
-                self.val = self._factory.make_time(s)
+                self.val = self.factory.make_time(s)
             except Exception:
                 raise ValueError(f"Invalid Time literal '{s}'")
 
@@ -312,7 +315,7 @@ class HaystackTokenizer:
                     self._consume()
 
             try:
-                self.val = self._factory.make_datetime(s)
+                self.val = self.factory.make_datetime(s)
             except Exception:
                 raise f"Invalid DateTime literal '{s}'"
 
@@ -324,7 +327,7 @@ class HaystackTokenizer:
                 x = float(s)
             except Exception:
                 raise ValueError(f"Invalid Number literal '{s}'")
-            self.val = self._factory.make_number(x, None)
+            self.val = self.factory.make_number(x, None)
         else:
             float_str = s[0:unit_index]
             unit_str = s[unit_index::]
@@ -334,7 +337,7 @@ class HaystackTokenizer:
             except Exception:
                 raise ValueError(f"Invalid Number literal '{s}'")
 
-            self.val = self._factory.make_number(x, unit_str)
+            self.val = self.factory.make_number(x, unit_str)
 
         return HaystackToken.NUM
 
@@ -352,7 +355,7 @@ class HaystackTokenizer:
         if len(s) == 0:
             raise ValueError("Invalid empty Ref")
 
-        self.val = self._factory.make_ref(s)
+        self.val = self.factory.make_ref(s)
         return HaystackToken.REF
 
     def _symbol(self) -> HaystackToken:
@@ -369,7 +372,7 @@ class HaystackTokenizer:
         if len(s) == 0:
             raise ValueError("Invalid empty Symbol")
 
-        self.val = self._factory.make_symbol(s)
+        self.val = self.factory.make_symbol(s)
         return HaystackToken.SYMBOL
 
     def _uri(self) -> HaystackToken:
@@ -396,7 +399,7 @@ class HaystackTokenizer:
             else:
                 self._consume()
                 s += ch
-        self.val = self._factory.make_uri(s)
+        self.val = self.factory.make_uri(s)
         return HaystackToken.URI
 
     def _escape(self) -> str:
@@ -618,6 +621,23 @@ class HaystackToken(StrEnum):
     # misc
     COMMENT = "comment"
     EOF = "eof"
+
+
+def is_literal(token: HaystackToken) -> bool:
+    match token:
+        case (
+            HaystackToken.NUM
+            | HaystackToken.STR
+            | HaystackToken.REF
+            | HaystackToken.SYMBOL
+            | HaystackToken.URI
+            | HaystackToken.DATE
+            | HaystackToken.TIME
+            | HaystackToken.DATETIME
+        ):
+            return True
+        case _:
+            return False
 
 
 def _is_ref_id_char(c: str) -> bool:
