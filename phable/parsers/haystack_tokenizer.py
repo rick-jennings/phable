@@ -444,22 +444,29 @@ class HaystackTokenizer:
             self._consume()
 
             try:
-                n3 = int(self._cur, 16)
+                x = self._cur
+
+                self._consume()
+                if self._cur == '"':
+                    raise Exception
+
+                x += self._cur
+                self._consume()
+                if self._cur == '"':
+                    raise Exception
+
+                x += self._cur
+                self._consume()
+                if self._cur == '"':
+                    raise Exception
+
+                x += self._cur
                 self._consume()
 
-                n2 = int(self._cur, 16)
-                self._consume()
-
-                n1 = int(self._cur, 16)
-                self._consume()
-
-                n0 = int(self._cur, 16)
-                self._consume()
+                return chr(int(x, 16))
 
             except Exception:
-                raise ValueError("Invalid hex value for \\uxxxx")
-
-            return str((n3 << 12) | (n2 << 8) | (n1 << 4) | n0)
+                raise ValueError(f"Invalid hex value for \\u{x}")
 
         raise ValueError("Invalid escape sequence")
 

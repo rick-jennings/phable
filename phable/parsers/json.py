@@ -233,13 +233,19 @@ def _haystack_to_iana_tz(haystack_tz: str) -> ZoneInfo:
     for iana_tz in available_timezones():
         if "UTC" in haystack_tz:
             return ZoneInfo("UTC")
-        elif haystack_tz == iana_tz.split("/")[-1]:
+        elif haystack_tz == _tz_iana_to_haystack(iana_tz):
             return ZoneInfo(iana_tz)
 
     raise IanaCityNotFoundError(
         f"Unable to locate the city {haystack_tz} in the IANA database.  "
         + "Consider installing the tzdata package."
     )
+
+
+def _tz_iana_to_haystack(iana_tz: str) -> str:
+    if "UTC" in iana_tz:
+        return "UTC"
+    return iana_tz.split("/")[-1]
 
 
 def _parse_date_time(d: dict[str, str]) -> datetime:

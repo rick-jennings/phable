@@ -395,9 +395,9 @@ def test_haystack_tokenizer_with_keep_comments(
     [
         ('"fo..', "Unexpected end of str", 1),
         ("`fo..", "Unexpected end of uri", 1),
-        ('"\\u345x"', "Invalid hex value for \\uxxxx", 1),
-        ('"\\ua"', "Invalid hex value for \\uxxxx", 1),
-        ('"\\u234"', "Invalid hex value for \\uxxxx", 1),
+        ('"\\u345x"', "Invalid hex value for \\u345x", 1),
+        ('"\\ua"', "Invalid hex value for \\ua", 1),
+        ('"\\u234"', "Invalid hex value for \\u234", 1),
         ("#", "Unexpected symbol: '#'", 1),
         ("\n\n#", "Unexpected symbol: '#'", 3),
     ],
