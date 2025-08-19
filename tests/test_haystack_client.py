@@ -25,10 +25,10 @@ USERNAME = "su"
 PASSWORD = "su"
 
 
-@pytest.fixture(scope="module")
-def client() -> Generator[HaystackClient, None, None]:
+@pytest.fixture(params=["json", "zinc"], scope="module")
+def client(request) -> Generator[HaystackClient, None, None]:
     # use HxClient's features to test Client
-    hc = HaxallClient.open(URI, USERNAME, PASSWORD)
+    hc = HaxallClient.open(URI, USERNAME, PASSWORD, content_type=request.param)
 
     yield hc
 

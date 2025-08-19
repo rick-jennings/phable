@@ -21,6 +21,7 @@ from uuid import uuid4
 
 from phable.http import ph_request
 from phable.logger import log_http_req, log_http_res
+from phable.parsers.parser import HaystackParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -55,10 +56,18 @@ class ScramServerResponseParsingError(Exception):
 
 
 class ScramScheme:
-    def __init__(self, uri: str, username: str, password: str, context=None):
+    def __init__(
+        self,
+        uri: str,
+        username: str,
+        password: str,
+        content_type: str,
+        context: SSLContext | None = None,
+    ):
         self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self.username: str = username
         self._password: str = password
+        self._content_type = content_type
         self._context = context
 
         # others to be defined later
@@ -87,8 +96,10 @@ class ScramScheme:
         instructions.
         """
 
-        headers = {"Authorization": f"HELLO username={_to_base64(self.username)}"}
-        res_headers = _ph_scram_get(
+        headers = {
+            "Authorization": f"HELLO username={_to_base64(self.username)}",
+        }
+        res_headers = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
@@ -109,7 +120,7 @@ class ScramScheme:
         headers = {
             "Authorization": f"SCRAM data={_to_base64(gs2_header + self._c1_bare)}, handshakeToken={self._handshake_token}"
         }
-        res_headers = _ph_scram_get(
+        res_headers = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
@@ -145,7 +156,7 @@ class ScramScheme:
             )
         }
 
-        res_headers = _ph_scram_get(
+        res_headers = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
@@ -236,28 +247,28 @@ class ScramScheme:
         client_final = self._client_final_no_proof + ",p=" + self._client_proof
         return _to_base64(client_final)
 
+    def _ph_scram_get(
+        self,
+        url: str,
+        headers: dict[str, str],
+        context: SSLContext | None = None,
+    ) -> Message:
+        try:
+            response = ph_request(url, headers, self._content_type, context=context)
+            res_headers = response.headers
+        except HTTPError as e:
+            res_headers = e.headers
 
-def _ph_scram_get(
-    url: str,
-    headers: dict[str, str],
-    context: SSLContext | None = None,
-) -> Message:
-    try:
-        response = ph_request(url, headers, context=context)
-        res_headers = response.headers
-    except HTTPError as e:
-        res_headers = e.headers
+            log_http_req("GET", url, headers)
+            log_http_res(e.status, dict(res_headers))
 
-        log_http_req("GET", url, headers)
-        log_http_res(e.status, dict(res_headers))
+            if e.status == 403:
+                raise AuthError(
+                    "Unable to authenticate with the server using the credentials "
+                    + "provided."
+                )
 
-        if e.status == 403:
-            raise AuthError(
-                "Unable to authenticate with the server using the credentials "
-                + "provided."
-            )
-
-    return res_headers
+        return res_headers
 
 
 def _parse_hello_call_result(

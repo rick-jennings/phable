@@ -21,6 +21,7 @@ from phable.kinds import (
     Number,
     Ref,
 )
+from phable.parsers.parser import HaystackParser, JsonParser, ZincParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -69,6 +70,8 @@ def open_haystack_client(
     uri: str,
     username: str,
     password: str,
+    *,
+    content_type: str = "json",
     ssl_context: SSLContext | None = None,
 ) -> Generator[HaystackClient, None, None]:
     """Context manager for opening and closing a session with a Project Haystack
@@ -104,7 +107,9 @@ def open_haystack_client(
             settings is created and used.
     """
 
-    client = HaystackClient.open(uri, username, password, ssl_context=ssl_context)
+    client = HaystackClient.open(
+        uri, username, password, content_type=content_type, ssl_context=ssl_context
+    )
     yield client
     client.close()
 
@@ -156,10 +161,13 @@ class HaystackClient(metaclass=NoPublicConstructor):
         self,
         uri: str,
         auth_token: str,
+        *,
+        content_type: str = "json",
         ssl_context: SSLContext | None = None,
     ):
         self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self._auth_token: str = auth_token
+        self._parser: HaystackParser = self._get_parser(content_type)
         self._context: SSLContext | None = ssl_context
 
     @classmethod
@@ -169,6 +177,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         username: str,
         password: str,
         *,
+        content_type: str = "json",
         ssl_context: SSLContext | None = None,
     ) -> Self:
         """Opens a session with the server for the URI of the project.
@@ -191,10 +200,12 @@ class HaystackClient(metaclass=NoPublicConstructor):
             An instance of the class this method is used on (i.e., Client or HxClient).
         """
 
-        scram = ScramScheme(uri, username, password, ssl_context)
+        scram = ScramScheme(uri, username, password, content_type, ssl_context)
         auth_token = scram.get_auth_token()
 
-        return cls._create(uri, auth_token, ssl_context)
+        return cls._create(
+            uri, auth_token, content_type=content_type, ssl_context=ssl_context
+        )
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server.
@@ -236,7 +247,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         Returns:
             An empty `dict` or a `dict` that describes the entity read.
         """
-        response = self.read_all(filter, 1)
+        response = self.read_all(filter, Number(1))
 
         if len(response.rows) == 0:
             if checked is True:
@@ -290,7 +301,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
             An empty `dict` or a `dict` that describes the entity read.
         """
 
-        data_rows = [{"id": {"_kind": "ref", "val": id.val}}]
+        data_rows = [{"id": id}]
         post_data = Grid.to_grid(data_rows)
         response = self.call("read", post_data)
 
@@ -321,12 +332,12 @@ class HaystackClient(metaclass=NoPublicConstructor):
             `Grid` with a row for each entity read.
         """
         ids = ids.copy()
-        data_rows = [{"id": {"_kind": "ref", "val": id.val}} for id in ids]
+        data_rows = [{"id": id} for id in ids]
         post_data = Grid.to_grid(data_rows)
         response = self.call("read", post_data)
 
-        if len(response.rows) == 0:
-            raise UnknownRecError("Unable to locate any of the ids on the server.")
+        if len(response.rows) != len(ids):
+            raise UnknownRecError("Unable to locate one or more ids on the server.")
         for row in response.rows:
             if len(row) == 0:
                 raise UnknownRecError("Unable to locate one or more ids on the server.")
@@ -614,7 +625,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         Returns:
             `Grid` with the server's response.
         """
-        row = {"id": id, "level": level}
+        row = {"id": id, "level": Number(level)}
 
         if val is not None:
             row["val"] = val
@@ -667,26 +678,39 @@ class HaystackClient(metaclass=NoPublicConstructor):
         """
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
-            "Accept": "application/json",
+            "Accept": self._parser.content_type,
         }
 
-        response = ph_request(
-            url=f"{self.uri}/{path}",
-            headers=headers,
-            data=data,
-            method="POST",
-            context=self._context,
-        ).to_grid()
+        data = self._parser.from_grid(data)
+
+        response = self._parser.to_grid(
+            ph_request(
+                url=f"{self.uri}/{path}",
+                headers=headers,
+                content_type=self._parser.content_type,
+                data=data,
+                method="POST",
+                context=self._context,
+            ).body
+        )
 
         _validate_response_meta(response)
 
         return response
 
+    def _get_parser(self, content_type: str) -> HaystackParser:
+        if content_type == "json":
+            return JsonParser()
+        elif content_type == "zinc":
+            return ZincParser()
+        else:
+            raise ValueError()
+
 
 def _validate_response_meta(response: Grid):
     meta = response.meta
     if "err" in meta.keys():
-        raise CallError(response)
+        raise CallError(meta)
 
 
 def _create_his_read_req_data(

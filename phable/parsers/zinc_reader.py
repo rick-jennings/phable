@@ -174,6 +174,10 @@ class ZincReader:
         if braces:
             self._consume(HaystackToken.RBRACE)
 
+        for key in list(acc.keys()):
+            if acc[key] is None:
+                acc.pop(key)
+
         return acc
 
     def _parse_grid(self) -> Any:
@@ -238,7 +242,12 @@ class ZincReader:
                 if i + 1 < num_cols:
                     self._consume(HaystackToken.COMMA)
 
-            gb.add_row(row)
+            for key in list(row.keys()):
+                if row[key] is None:
+                    row.pop(key)
+
+            if len(row) > 0:
+                gb.add_row(row)
 
             # newline or end
             if nested and self._cur == HaystackToken.GT2:

@@ -19,6 +19,8 @@ def open_haxall_client(
     uri: str,
     username: str,
     password: str,
+    *,
+    content_type: str = "json",
     ssl_context: SSLContext | None = None,
 ) -> Generator[HaxallClient, None, None]:
     """Context manager for opening and closing a session with a
@@ -55,7 +57,9 @@ def open_haxall_client(
             settings is created and used.
     """
 
-    client = HaxallClient.open(uri, username, password, ssl_context=ssl_context)
+    client = HaxallClient.open(
+        uri, username, password, content_type=content_type, ssl_context=ssl_context
+    )
     yield client
     client.close()
 
@@ -418,16 +422,19 @@ class HaxallClient(HaystackClient):
         headers = {
             "Content-Type": mimetype,
             "Authorization": f"BEARER authToken={self._auth_token}",
-            "Accept": "application/json",
+            "Accept": self._parser.content_type,
         }
 
-        res = ph_request(
-            self.uri + "/file" + remote_file_uri,
-            headers,
-            data,
-            method=http_method,
-            context=self._context,
-        ).to_grid()
+        res = self._parser.to_grid(
+            ph_request(
+                self.uri + "/file" + remote_file_uri,
+                headers,
+                self._parser.content_type,
+                data,
+                method=http_method,
+                context=self._context,
+            ).body
+        )
 
         try:
             res_data = res.rows[0]

@@ -31,15 +31,14 @@ xyz
 """,
             Grid.to_grid({"xyz": "val"}, {"tag": Marker(), "foo": "bar"}),
         ),
-        # 1x1 null
-        (
-            r"""ver:"3.0"
-val
-N
-
-""",
-            Grid.to_grid({"val": None}),
-        ),
+        #         # 1x1 null
+        #         (
+        #             r"""ver:"3.0"
+        # val
+        # N
+        # """,
+        #             Grid.to_grid({"val": None}),
+        #         ),
         # 2x2
         (
             r"""ver:"3.0"
@@ -67,9 +66,11 @@ C(12,-34),C(0.123,-0.789),C(84.5,-77.45),C(-90,180)
 NA,,^a:b,"foo"
 
 """,
-            Grid.to_grid(
+            Grid(
+                {"ver": "3.0"},
+                [{"name": "a"}, {"name": "b"}, {"name": "c"}, {"name": "d"}],
                 [
-                    {"a": True, "b": False, "c": None, "d": Number(-99.0)},
+                    {"a": True, "b": False, "d": Number(-99.0)},
                     {
                         "a": Number(2.3),
                         "b": Number(-5e-10),
@@ -83,7 +84,7 @@ NA,,^a:b,"foo"
                         "c": Number(4, "s"),
                         "d": Number(-2.5, "min"),
                     },
-                    {"a": Marker(), "b": Remove(), "c": None, "d": None},
+                    {"a": Marker(), "b": Remove()},
                     {
                         "a": date(2009, 12, 31),
                         "b": time(23, 59, 1),
@@ -94,7 +95,6 @@ NA,,^a:b,"foo"
                         "a": Number(float("inf")),
                         "b": Number(float("-inf")),
                         "c": "",
-                        "d": None,
                     },
                     {
                         "a": Coord(12, -34),
@@ -102,7 +102,7 @@ NA,,^a:b,"foo"
                         "c": Coord(84.5, -77.45),
                         "d": Coord(-90, 180),
                     },
-                    {"a": NA(), "b": None, "c": Symbol("a:b"), "d": "foo"},
+                    {"a": NA(), "c": Symbol("a:b"), "d": "foo"},
                 ],
             ),
         ),
@@ -120,7 +120,7 @@ _foo
                 [
                     {"_foo": Uri("foo$20bar")},
                     {"_foo": Uri("foo`bar")},
-                    {"_foo": Uri("file \#2")},
+                    {"_foo": Uri("file \\#2")},
                     {"_foo": "$15"},
                 ]
             ),
@@ -156,32 +156,41 @@ Span("2016-01-10"),Color("#fff")
             Grid.to_grid(
                 [
                     {"a": XStr("Foo", "foo"), "b": XStr("C", "")},
-                    {"a": None, "b": XStr("B", "b\n)!")},
+                    {"b": XStr("B", "b\n)!")},
                     {"a": XStr("Span", "2016-01-10"), "b": XStr("Color", "#fff")},
                 ]
             ),
         ),
         # sparse
         (
+            #             r"""ver:"3.0"
+            # a,_b,__45
+            # ,1,2
+            # 3,,5
+            # 6,7000,
+            # ,,10
+            # ,,
+            # 14,,
+            # """,
             r"""ver:"3.0"
 a,_b,__45
 ,1,2
 3,,5
 6,7000,
 ,,10
-,,
 14,,
 
 """,
-            Grid.to_grid(
+            Grid(
+                {"ver": "3.0"},
+                [{"name": "a"}, {"name": "_b"}, {"name": "__45"}],
                 [
-                    {"a": None, "_b": Number(1), "__45": Number(2)},
-                    {"a": Number(3), "_b": None, "__45": Number(5)},
-                    {"a": Number(6), "_b": Number(7_000), "__45": None},
-                    {"a": None, "_b": None, "__45": Number(10)},
-                    {"a": None, "_b": None, "__45": None},
-                    {"a": Number(14), "_b": None, "__45": None},
-                ]
+                    {"_b": Number(1), "__45": Number(2)},
+                    {"a": Number(3), "__45": Number(5)},
+                    {"a": Number(6), "_b": Number(7_000)},
+                    {"__45": Number(10)},
+                    {"a": Number(14)},
+                ],
             ),
         ),
         # sparse

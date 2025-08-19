@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import importlib.metadata
-import json
 import ssl
 import urllib.request
 from dataclasses import dataclass
@@ -12,7 +11,7 @@ from urllib.error import URLError
 
 from phable.kinds import Grid
 from phable.logger import log_http_req, log_http_res
-from phable.parsers.json import grid_to_json, json_to_grid
+from phable.parsers.parser import HaystackParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -29,24 +28,17 @@ class PhHttpResponse:
     headers: Message
     status: int
 
-    def to_grid(self) -> dict[str, Any]:
-        return json_to_grid(json.loads(self.body.decode("utf-8")))
-
 
 def ph_request(
     url: str,
     headers: dict[str, Any],
-    data: Grid | None = None,
+    content_type: str,
+    data: bytes | None = None,
     method: str = "GET",
     context: SSLContext | None = None,
 ) -> PhHttpResponse:
     headers = headers.copy()
-
-    # call reqs use Grid for data & scram reqs use None
-    if isinstance(data, Grid):
-        data = grid_to_json(data)
-        data = json.dumps(data).encode()
-        headers["Content-Type"] = "application/json"
+    headers["Content-Type"] = content_type
 
     http_response = request(
         url,
@@ -78,9 +70,6 @@ def request(
 ) -> HTTPResponse:
     if not url.startswith("http"):
         raise URLError('URL must begin with the prefix "http"')
-
-    if isinstance(data, Grid):
-        data = grid_to_json(data)
 
     headers = headers.copy()
     headers["User-Agent"] = f"phable/{importlib.metadata.version('phable')}"

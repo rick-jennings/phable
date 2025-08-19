@@ -55,15 +55,17 @@ class ZincWriter:
             # for robustness handle it here
             self._out.write("noCols\n")
         else:
+            col_names = []
             for i, col in enumerate(grid.cols):
                 if i > 0:
                     self._out.write(",")
                 self._write_col(col)
+                col_names.append(col["name"])
             self._out.write("\n")
 
         # rows
         for row in grid.rows:
-            self._write_row(row)
+            self._write_row(row, col_names)
 
         self._out.write("\n")
         return self
@@ -74,19 +76,24 @@ class ZincWriter:
         if col.get("meta") is not None:
             self._write_meta(True, col["meta"])
 
-    def _write_row(self, row: dict[str, Any]) -> None:
-        for index, (key, val) in enumerate(row.items()):
+    def _write_row(self, row: dict[str, Any], col_names: list[str]) -> None:
+        # def _write_row(self, row: dict[str, Any]) -> None:
+        # for index, (key, val) in enumerate(row.items()):
+        for index, col_name in enumerate(col_names):
             if index > 0:
                 self._out.write(",")
             try:
-                if val is None:
+                val = row.get(col_name)
+                if val is None and len(col_names) == 1:
                     # if this is only column, then use explicit N for null
-                    if index == 0 and len(row) == 1:
-                        self._out.write("N")
+                    # if index == 0 and len(row) == 1:
+                    self._out.write("N")
+                elif val is None and len(col_names) > 1:
+                    continue
                 else:
                     self.write_val(val)
             except Exception:
-                raise IOError(f"Cannot write col '{key}' = '{val}'")
+                raise IOError(f"Cannot write col '{col_name}' = '{val}'")
         self._out.write("\n")
 
     def _write_meta(self, leading_space: bool, m: dict) -> None:
