@@ -52,6 +52,8 @@ def open_haxall_client(
         uri: URI of endpoint such as "http://host/api/myProj/".
         username: Username for the API user.
         password: Password for the API user.
+        content_type:
+            Format of data exchanged via HTTP. "json" and "zinc" options are supported.
         ssl_context:
             Optional SSL context. If not provided, a SSL context with default
             settings is created and used.
