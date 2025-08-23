@@ -10,18 +10,17 @@ from __future__ import annotations
 import hashlib
 import hmac
 import re
-from base64 import b64encode, urlsafe_b64decode, urlsafe_b64encode
+from base64 import b64encode, urlsafe_b64decode
 from dataclasses import dataclass
 from email.message import Message
 from functools import cached_property
 from hashlib import pbkdf2_hmac
+from random import randbytes
 from typing import TYPE_CHECKING
 from urllib.error import HTTPError
-from uuid import uuid4
 
 from phable.http import ph_request
 from phable.logger import log_http_req, log_http_res
-from phable.parsers.parser import HaystackParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -73,12 +72,13 @@ class ScramScheme:
         # others to be defined later
         self._handshake_token: str
         self._hash: str
-        self._c1_bare: str
         self._s_nonce: str
         self._salt: str
         self._iter_count: int
         self._auth_token: str
-        self._c1_bare = _c1_bare(username)
+
+    _client_nonce_bytes: int = 12
+    _gs2_header: str = "n,,"
 
     # -------------------------------------------------------------------------
     # Send HTTP messages following scram to get auth token
@@ -116,10 +116,14 @@ class ScramScheme:
         """Defines and sends the "client-first-message" to the server and
         processes the server's response according to RFC5802."""
 
-        gs2_header = "n,,"
+        c_nonce = randbytes(self._client_nonce_bytes).hex()
+        self._c1_bare = f"n={self.username},r={c_nonce}"
+        c1_msg = self._gs2_header + self._c1_bare
+
         headers = {
-            "Authorization": f"SCRAM data={_to_base64(gs2_header + self._c1_bare)}, handshakeToken={self._handshake_token}"
+            "Authorization": f"SCRAM data={_to_base64(c1_msg)}, handshakeToken={self._handshake_token}"
         }
+
         res_headers = self._ph_scram_get(
             self.uri + "/about",
             headers,
@@ -152,7 +156,7 @@ class ScramScheme:
 
         headers = {
             "Authorization": (
-                f"SCRAM data={self._client_final_message}, handshakeToken={self._handshake_token}"
+                f"SCRAM data={self._client_final_message()}, handshakeToken={self._handshake_token}"
             )
         }
 
@@ -206,29 +210,6 @@ class ScramScheme:
         return hashFunc.digest()
 
     @property
-    def _client_final_no_proof(self) -> str:
-        return f"c={_to_base64('n,,')},r={self._s_nonce}"
-
-    @property
-    def _auth_message(self) -> str:
-        return (
-            f"{self._c1_bare},r={self._s_nonce},s={self._salt},"
-            + f"i={self._iter_count},{self._client_final_no_proof}"
-        )
-
-    @property
-    def _client_signature(self) -> bytes:
-        return _hmac(
-            self._stored_key,
-            self._auth_message.encode("utf-8"),
-            self._parsed_hash,
-        )
-
-    @property
-    def _client_proof(self) -> str:
-        return _to_base64(_xor(self._client_key, self._client_signature))
-
-    @property
     def _server_key(self) -> bytes:
         return _hmac(self._salted_password, b"Server Key", self._parsed_hash)
 
@@ -242,9 +223,24 @@ class ScramScheme:
         server_signature = b64encode(server_signature).decode("utf-8")
         return server_signature
 
-    @property
     def _client_final_message(self) -> str:
-        client_final = self._client_final_no_proof + ",p=" + self._client_proof
+        s1_msg = f"r={self._s_nonce},s={self._salt},i={self._iter_count}"
+
+        client_final_no_proof = f"c={_to_base64('n,,')},r={self._s_nonce}"
+
+        c_nonce = self._s_nonce[
+            0 : (self._client_nonce_bytes * 2)
+        ]  # 2 chars per bytes for hex
+        c1_bare = f"n={self.username},r={c_nonce}"
+        self._auth_message = f"{c1_bare},{s1_msg},{client_final_no_proof}"
+
+        client_signature = _hmac(
+            self._stored_key, self._auth_message.encode("utf-8"), self._parsed_hash
+        )
+
+        client_proof = _to_base64(_xor(self._client_key, client_signature))
+        client_final = client_final_no_proof + ",p=" + client_proof
+
         return _to_base64(client_final)
 
     def _ph_scram_get(
@@ -282,7 +278,7 @@ def _parse_hello_call_result(
 
     # find the handshake token
     exclude_msg = "handshakeToken="
-    s = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
+    s = re.search(f"({exclude_msg})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg)
     handshake_token = s.group(0)[start_index:]
@@ -307,7 +303,7 @@ def _parse_first_call_result(
     auth_header = first_call_result_headers["WWW-Authenticate"]
 
     exclude_msg = "data="
-    scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9]+", auth_header)
+    scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg)
     decoded_scram_data = _from_base64(scram_data.group(0)[start_index:])
@@ -335,7 +331,7 @@ def _parse_final_call_result(
     auth_token = s1.group(0)[start_index:]
 
     exclude_msg2 = "data="
-    s2 = re.search(f"({exclude_msg2})[^,]+", auth_header)
+    s2 = re.search(f"({exclude_msg2})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg2)
     data = s2.group(0)[start_index:]
@@ -350,11 +346,6 @@ def _parse_final_call_result(
 # -----------------------------------------------------------------------------
 
 
-def _c1_bare(username: str) -> str:
-    nonce = str(uuid4()).replace("-", "")
-    return f"n={username},r={nonce}"
-
-
 def _to_base64(msg: str | bytes) -> str:
     """Perform base64uri encoding of a message as defined by RFC 4648."""
 
@@ -362,9 +353,7 @@ def _to_base64(msg: str | bytes) -> str:
     if isinstance(msg, str):
         msg = msg.encode("utf-8")
 
-    # Encode using URL and filesystem-safe alphabet.
-    # This means + is encoded as -, and / is encoded as _.
-    output = urlsafe_b64encode(msg)
+    output = b64encode(msg)
 
     # Decode the output as a str
     output = output.decode("utf-8")
@@ -379,13 +368,20 @@ def _salted_password(
     salt: str, iterations: int, hash_func: str, password: str
 ) -> bytes:
     """Generates a salted password according to RFC5802."""
+    key_bytes = int(_key_bits(hash_func) / 8)
     dk = pbkdf2_hmac(
-        hash_func,
-        password.encode(),
-        urlsafe_b64decode(salt),
-        iterations,
+        hash_func, password.encode(), urlsafe_b64decode(salt), iterations, key_bytes
     )
+
     return dk
+
+
+def _key_bits(hash_func: str) -> int:
+    match hash_func:
+        case "sha256":
+            return 256
+        case _:
+            raise ValueError(f"Unsupported hash function: {hash_func}")
 
 
 def _from_base64(msg: str) -> str:
