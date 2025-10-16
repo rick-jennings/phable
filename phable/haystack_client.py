@@ -8,8 +8,6 @@ from typing import (
     Any,
     Generator,
     Self,
-    Type,
-    TypeVar,
 )
 
 from phable.auth.scram import ScramScheme
@@ -116,37 +114,7 @@ def open_haystack_client(
     client.close()
 
 
-T = TypeVar("T")
-
-
-class NoPublicConstructor(type):
-    """Metaclass that ensures a private constructor.
-
-    For example, if a class uses this metaclass like this:
-
-    ```python
-    class SomeClass(metaclass=NoPublicConstructor):
-        pass
-    ```
-
-    A `TypeError` would be thrown if there was an attempt to instantiate this class as
-    follows:
-
-    ```python
-    SomeClass()
-    ```
-    """
-
-    def __call__(cls, *args, **kwargs):
-        raise TypeError(
-            f"{cls.__module__}.{cls.__qualname__} has no public constructor"
-        )
-
-    def _create(cls: Type[T], *args: Any, **kwargs: Any) -> T:
-        return super().__call__(*args, **kwargs)
-
-
-class HaystackClient(metaclass=NoPublicConstructor):
+class HaystackClient:
     """A client interface to a Project Haystack defined server application used for
     authentication and operations.
 
@@ -207,9 +175,7 @@ class HaystackClient(metaclass=NoPublicConstructor):
         scram = ScramScheme(uri, username, password, content_type, ssl_context)
         auth_token = scram.get_auth_token()
 
-        return cls._create(
-            uri, auth_token, content_type=content_type, ssl_context=ssl_context
-        )
+        return cls(uri, auth_token, content_type=content_type, ssl_context=ssl_context)
 
     def about(self) -> dict[str, Any]:
         """Query basic information about the server.

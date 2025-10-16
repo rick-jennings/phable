@@ -99,7 +99,7 @@ def test_open_client():
         auth_token = hc._auth_token
 
     with pytest.raises(HTTPError) as e:
-        HaystackClient._create(URI, auth_token).about()
+        HaystackClient(URI, auth_token).about()
 
     assert e.value.status == 403
 
