@@ -5,8 +5,8 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
+from phable.io.ph_tokenizer import PhToken, PhTokenizer
 from phable.kinds import Number, Ref, Uri
-from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
 
 
 @pytest.mark.parametrize(
@@ -15,80 +15,80 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
         # empty
         ("", []),
         # symbols
-        ("!", [(HaystackToken.BANG, None)]),
-        ("?", [(HaystackToken.QUESTION, None)]),
+        ("!", [(PhToken.BANG, None)]),
+        ("?", [(PhToken.QUESTION, None)]),
         (
             "= => ==",
             [
-                (HaystackToken.ASSIGN, None),
-                (HaystackToken.FNARROW, None),
-                (HaystackToken.EQ, None),
+                (PhToken.ASSIGN, None),
+                (PhToken.FNARROW, None),
+                (PhToken.EQ, None),
             ],
         ),
         (
             "- ->",
             [
-                (HaystackToken.MINUS, None),
-                (HaystackToken.ARROW, None),
+                (PhToken.MINUS, None),
+                (PhToken.ARROW, None),
             ],
         ),
         # identifiers
-        ("x", [(HaystackToken.ID, "x")]),
-        ("fooBar", [(HaystackToken.ID, "fooBar")]),
-        ("fooBar1999x", [(HaystackToken.ID, "fooBar1999x")]),
-        ("foo_23", [(HaystackToken.ID, "foo_23")]),
-        ("Foo", [(HaystackToken.ID, "Foo")]),
-        ("_3", [(HaystackToken.ID, "_3")]),
-        ("__90", [(HaystackToken.ID, "__90")]),
+        ("x", [(PhToken.ID, "x")]),
+        ("fooBar", [(PhToken.ID, "fooBar")]),
+        ("fooBar1999x", [(PhToken.ID, "fooBar1999x")]),
+        ("foo_23", [(PhToken.ID, "foo_23")]),
+        ("Foo", [(PhToken.ID, "Foo")]),
+        ("_3", [(PhToken.ID, "_3")]),
+        ("__90", [(PhToken.ID, "__90")]),
         # ints
-        ("5", [(HaystackToken.NUM, Number(5))]),
-        ("0x1234_abcd", [(HaystackToken.NUM, Number(0x1234_ABCD))]),
+        ("5", [(PhToken.NUM, Number(5))]),
+        ("0x1234_abcd", [(PhToken.NUM, Number(0x1234_ABCD))]),
         # floats
-        ("5.0", [(HaystackToken.NUM, Number(5.0))]),
-        ("5.42", [(HaystackToken.NUM, Number(5.42))]),
-        ("123.2e32", [(HaystackToken.NUM, Number(123.2e32))]),
-        ("123.2e+32", [(HaystackToken.NUM, Number(123.2e32))]),
-        ("2_123.2e+32", [(HaystackToken.NUM, Number(2_123.2e32))]),
-        ("4.2e-7", [(HaystackToken.NUM, Number(4.2e-7))]),
+        ("5.0", [(PhToken.NUM, Number(5.0))]),
+        ("5.42", [(PhToken.NUM, Number(5.42))]),
+        ("123.2e32", [(PhToken.NUM, Number(123.2e32))]),
+        ("123.2e+32", [(PhToken.NUM, Number(123.2e32))]),
+        ("2_123.2e+32", [(PhToken.NUM, Number(2_123.2e32))]),
+        ("4.2e-7", [(PhToken.NUM, Number(4.2e-7))]),
         # numbers with units
-        ("-40ms", [(HaystackToken.NUM, Number(-40, "ms"))]),
-        ("1sec", [(HaystackToken.NUM, Number(1, "sec"))]),
-        ("5hr", [(HaystackToken.NUM, Number(5, "hr"))]),
-        ("2.5day", [(HaystackToken.NUM, Number(2.5, "day"))]),
-        ("12%", [(HaystackToken.NUM, Number(12, "%"))]),
-        ("987_foo", [(HaystackToken.NUM, Number(987, "_foo"))]),
-        ("-1.2m/s", [(HaystackToken.NUM, Number(-1.2, "m/s"))]),
+        ("-40ms", [(PhToken.NUM, Number(-40, "ms"))]),
+        ("1sec", [(PhToken.NUM, Number(1, "sec"))]),
+        ("5hr", [(PhToken.NUM, Number(5, "hr"))]),
+        ("2.5day", [(PhToken.NUM, Number(2.5, "day"))]),
+        ("12%", [(PhToken.NUM, Number(12, "%"))]),
+        ("987_foo", [(PhToken.NUM, Number(987, "_foo"))]),
+        ("-1.2m/s", [(PhToken.NUM, Number(-1.2, "m/s"))]),
         (
             "12kWh/ft\u00b2",
-            [(HaystackToken.NUM, Number(12, "kWh/ft\u00b2"))],
+            [(PhToken.NUM, Number(12, "kWh/ft\u00b2"))],
         ),
         (
             "3_000.5J/kg_dry",
-            [(HaystackToken.NUM, Number(3_000.5, "J/kg_dry"))],
+            [(PhToken.NUM, Number(3_000.5, "J/kg_dry"))],
         ),
         # strings
-        ('""', [(HaystackToken.STR, "")]),
-        ('"x y"', [(HaystackToken.STR, "x y")]),
-        ('"x\\"y"', [(HaystackToken.STR, 'x"y')]),
+        ('""', [(PhToken.STR, "")]),
+        ('"x y"', [(PhToken.STR, "x y")]),
+        ('"x\\"y"', [(PhToken.STR, 'x"y')]),
         (
             '"_\u012f \n \t \\\\_ \u1f973"',
-            [(HaystackToken.STR, "_\u012f \n \t \\_ \u1f973")],
+            [(PhToken.STR, "_\u012f \n \t \\_ \u1f973")],
         ),
         # date
-        ("2009-10-04", [(HaystackToken.DATE, date(2009, 10, 4))]),
+        ("2009-10-04", [(PhToken.DATE, date(2009, 10, 4))]),
         # time
-        ("8:30", [(HaystackToken.TIME, time(8, 30))]),
-        ("20:15", [(HaystackToken.TIME, time(20, 15))]),
-        ("00:00", [(HaystackToken.TIME, time(0, 0))]),
-        ("01:02:03", [(HaystackToken.TIME, time(1, 2, 3))]),
-        ("23:59:59", [(HaystackToken.TIME, time(23, 59, 59))]),
-        ("12:00:12.345", [(HaystackToken.TIME, time(12, 0, 12, 345_000))]),
+        ("8:30", [(PhToken.TIME, time(8, 30))]),
+        ("20:15", [(PhToken.TIME, time(20, 15))]),
+        ("00:00", [(PhToken.TIME, time(0, 0))]),
+        ("01:02:03", [(PhToken.TIME, time(1, 2, 3))]),
+        ("23:59:59", [(PhToken.TIME, time(23, 59, 59))]),
+        ("12:00:12.345", [(PhToken.TIME, time(12, 0, 12, 345_000))]),
         # date time
         (
             "2016-01-13T09:51:33-05:00 New_York",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2016, 1, 13, 9, 51, 33, tzinfo=ZoneInfo("America/New_York")
                     ),
@@ -99,7 +99,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2016-01-13T09:51:33.353-05:00 New_York",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2016,
                         1,
@@ -117,7 +117,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-12-18T14:11:30.924Z",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         12,
@@ -135,7 +135,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-12-18T14:11:30.925Z UTC",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         12,
@@ -153,7 +153,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-12-18T14:11:30.925Z London",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         12,
@@ -171,7 +171,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2015-01-02T06:13:38.701-08:00 PST8PDT",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2015,
                         1,
@@ -189,7 +189,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-03-01T23:55:00.013-05:00 GMT+5",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         3,
@@ -207,7 +207,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-03-01T23:55:00.013+10:00 GMT-10",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         3,
@@ -225,7 +225,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2010-03-01T23:55:00.013+10:00 Port-au-Prince",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         3,
@@ -244,7 +244,7 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
             "2016-01-13T09:51:33.353-05:00 New_York.",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2016,
                         1,
@@ -256,14 +256,14 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
                         tzinfo=ZoneInfo("America/New_York"),
                     ),
                 ),
-                (HaystackToken.DOT, None),
+                (PhToken.DOT, None),
             ],
         ),
         (
             "2010-03-01T23:55:00.013-05:00 GMT+5.",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         3,
@@ -275,14 +275,14 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
                         tzinfo=ZoneInfo("Etc/GMT+5"),
                     ),
                 ),
-                (HaystackToken.DOT, None),
+                (PhToken.DOT, None),
             ],
         ),
         (
             "2010-03-01T23:55:00.013+10:00 Port-au-Prince.",
             [
                 (
-                    HaystackToken.DATETIME,
+                    PhToken.DATETIME,
                     datetime(
                         2010,
                         3,
@@ -294,29 +294,29 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
                         tzinfo=ZoneInfo("Etc/GMT+5"),
                     ),
                 ),
-                (HaystackToken.DOT, None),
+                (PhToken.DOT, None),
             ],
         ),
         # uri
-        ("`http://foo/`", [(HaystackToken.URI, Uri("http://foo/"))]),
-        ("`_ \\n \\\\ \\`_`", [(HaystackToken.URI, Uri("_ \n \\\\ `_"))]),
+        ("`http://foo/`", [(PhToken.URI, Uri("http://foo/"))]),
+        ("`_ \\n \\\\ \\`_`", [(PhToken.URI, Uri("_ \n \\\\ `_"))]),
         # Ref
-        ("@125b780e-0684e169", [(HaystackToken.REF, Ref("125b780e-0684e169"))]),
-        ("@demo:_:-.~", [(HaystackToken.REF, Ref("demo:_:-.~"))]),
+        ("@125b780e-0684e169", [(PhToken.REF, Ref("125b780e-0684e169"))]),
+        ("@demo:_:-.~", [(PhToken.REF, Ref("demo:_:-.~"))]),
         # newlines and whitespace
         (
             "a\n  b  \rc \r\nd\n\ne",
             [
-                (HaystackToken.ID, "a"),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "b"),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "c"),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "d"),
-                (HaystackToken.NL, None),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "e"),
+                (PhToken.ID, "a"),
+                (PhToken.NL, None),
+                (PhToken.ID, "b"),
+                (PhToken.NL, None),
+                (PhToken.ID, "c"),
+                (PhToken.NL, None),
+                (PhToken.ID, "d"),
+                (PhToken.NL, None),
+                (PhToken.NL, None),
+                (PhToken.ID, "e"),
             ],
         ),
         # comments
@@ -326,19 +326,19 @@ from phable.parsers.haystack_tokenizer import HaystackToken, HaystackTokenizer
 x  // baz
 """,
             [
-                (HaystackToken.NL, None),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "x"),
-                (HaystackToken.NL, None),
+                (PhToken.NL, None),
+                (PhToken.NL, None),
+                (PhToken.ID, "x"),
+                (PhToken.NL, None),
             ],
         ),
     ],
 )
 def test_haystack_tokenizer(
     x: str,
-    expected: list[tuple[HaystackToken, str]],
+    expected: list[tuple[PhToken, str]],
 ):
-    t = HaystackTokenizer(StringIO(x))
+    t = PhTokenizer(StringIO(x))
     verify_toks(t, expected)
 
 
@@ -346,16 +346,16 @@ def test_haystack_tokenizer(
     "x,keywords,expected",
     [
         # keywords
-        ("x", {"x": "x"}, [(HaystackToken.KEYWORD, "x")]),
-        ("x", {"x": "_x_"}, [(HaystackToken.KEYWORD, "_x_")]),
+        ("x", {"x": "x"}, [(PhToken.KEYWORD, "x")]),
+        ("x", {"x": "_x_"}, [(PhToken.KEYWORD, "_x_")]),
     ],
 )
 def test_haystack_tokenizer_with_keywords(
     x: str,
     keywords: dict[str, Any] | None,
-    expected: list[tuple[HaystackToken, str]],
+    expected: list[tuple[PhToken, str]],
 ):
-    t = HaystackTokenizer(StringIO(x))
+    t = PhTokenizer(StringIO(x))
     t.keywords = keywords.copy()
     verify_toks(t, expected)
 
@@ -370,22 +370,22 @@ def test_haystack_tokenizer_with_keywords(
 x  // baz
 """,
             [
-                (HaystackToken.COMMENT, "foo"),
-                (HaystackToken.NL, None),
-                (HaystackToken.COMMENT, "  bar"),
-                (HaystackToken.NL, None),
-                (HaystackToken.ID, "x"),
-                (HaystackToken.COMMENT, "baz"),
-                (HaystackToken.NL, None),
+                (PhToken.COMMENT, "foo"),
+                (PhToken.NL, None),
+                (PhToken.COMMENT, "  bar"),
+                (PhToken.NL, None),
+                (PhToken.ID, "x"),
+                (PhToken.COMMENT, "baz"),
+                (PhToken.NL, None),
             ],
         ),
     ],
 )
 def test_haystack_tokenizer_with_keep_comments(
     x: str,
-    expected: list[tuple[HaystackToken, str]],
+    expected: list[tuple[PhToken, str]],
 ):
-    t = HaystackTokenizer(StringIO(x))
+    t = PhTokenizer(StringIO(x))
     t.keep_comments = True
     verify_toks(t, expected)
 
@@ -403,9 +403,9 @@ def test_haystack_tokenizer_with_keep_comments(
     ],
 )
 def test_haystack_tokenizer_raises_error(
-    x: str, expected: list[tuple[HaystackToken, str]], line: int
+    x: str, expected: list[tuple[PhToken, str]], line: int
 ):
-    t = HaystackTokenizer(StringIO(x))
+    t = PhTokenizer(StringIO(x))
     with pytest.raises(ValueError) as e:
         verify_toks(t, expected)
 
@@ -413,13 +413,13 @@ def test_haystack_tokenizer_raises_error(
     assert t.line == line
 
 
-def verify_toks(t: HaystackTokenizer, expected: Any) -> None:
+def verify_toks(t: PhTokenizer, expected: Any) -> None:
     acc = []
 
     while True:
         x = t.next()
 
-        if x == HaystackToken.EOF:
+        if x == PhToken.EOF:
             break
 
         acc.append((t.tok, t.val))

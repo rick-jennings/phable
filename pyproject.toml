@@ -3,7 +3,7 @@ name = "phable"
 version = "0.1.21"
 description = ""
 authors = [{ name = "Rick Jennings", email = "rjennings055@gmail.com" }]
-requires-python = "~=3.11"
+requires-python = ">=3.11, <4"
 readme = "README.md"
 license = "MIT"
 
@@ -25,11 +25,11 @@ build-backend = "hatchling.build"
 [tool.pytest.ini_options]
 pythonpath = "src"
 
-[tool.uv]
-dev-dependencies = [
+[dependency-groups]
+dev = [
     "auto-changelog>=0.6.0",
     "pandas>=2.2.3",
-    "pyarrow>=17.0.0",
+    "pyarrow>=17.0.0,<18",
     "pytest>=8.3.5",
     "ruff>=0.11.2",
 ]

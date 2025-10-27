@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, time, timedelta
 from decimal import Decimal, getcontext
-from typing import Any
+from typing import Any, TypeAlias
 from zoneinfo import ZoneInfo
 
 
@@ -531,3 +531,25 @@ def _structure_his_data_for_df(grid: Grid) -> dict[str, list[Any]]:
                 raise ValueError
 
     return data
+
+
+# TODO: use Python 3.12 type instead of TypeAlias when Python 3.11 is no longer supported
+PhKind: TypeAlias = (
+    Marker
+    | NA
+    | Remove
+    | bool
+    | Number
+    | str
+    | Uri
+    | Ref
+    | Symbol
+    | date
+    | time
+    | datetime
+    | Coord
+    | XStr
+    | list
+    | dict
+    | Grid
+)

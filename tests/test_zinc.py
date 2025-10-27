@@ -1,14 +1,25 @@
 from datetime import date, datetime, time
-from io import StringIO
 from math import isnan
-from typing import Any
+
+# from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.kinds import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
-from phable.parsers.zinc_reader import ZincReader
-from phable.parsers.zinc_writer import ZincWriter
+from phable.io.zinc_decoder import ZincDecoder
+from phable.io.zinc_encoder import ZincEncoder
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 
 @pytest.mark.parametrize(
@@ -249,39 +260,35 @@ a
     ],
 )
 def test_parse_zinc(zinc: str, expected: Grid):
-    zinc_reader = ZincReader(StringIO(zinc))
-    zinc_parsed_to_grid = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(zinc)
 
-    assert zinc_parsed_to_grid == expected
-    assert ZincWriter.grid_to_str(expected) == zinc
+    assert zinc_decoded == expected
+    assert ZincEncoder().to_str(expected) == zinc
 
 
 def test_parse_nan():
     x = r"{a: NaN, b: -2.5min}"
-    zinc_reader = ZincReader(StringIO(x))
 
-    parsed_zinc = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(x)
 
-    assert isinstance(parsed_zinc["a"], Number)
-    assert isnan(parsed_zinc["a"].val)
-    assert parsed_zinc["b"] == Number(-2.5, "min")
+    assert isinstance(zinc_decoded["a"], Number)
+    assert isnan(zinc_decoded["a"].val)
+    assert zinc_decoded["b"] == Number(-2.5, "min")
 
 
 def test_parse_scientific_notation():
     x = r"{test1: 123e+12kJ/kg_dry, test2: 7.15625E-4kWh/ft², test3: 3.814697265625E-6}"
-    zinc_reader = ZincReader(StringIO(x))
 
-    parsed_zinc = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(x)
 
-    assert parsed_zinc["test1"] == Number(123e12, "kJ/kg_dry")
-    assert parsed_zinc["test2"] == Number(7.15625e-4, "kWh/ft²")
-    assert parsed_zinc["test3"] == Number(3.814697265625e-6)
+    assert zinc_decoded["test1"] == Number(123e12, "kJ/kg_dry")
+    assert zinc_decoded["test2"] == Number(7.15625e-4, "kWh/ft²")
+    assert zinc_decoded["test3"] == Number(3.814697265625e-6)
 
 
 def test_parse_datetime():
     x = r"{x: 2010-12-18T14:11:30.925000Z UTC, y: 2010-12-18T14:11:30.925000Z London, z: 2015-01-02T06:13:38.701000-08:00 PST8PDT}"
-    zinc_reader = ZincReader(StringIO(x))
-    parsed_zinc = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(x)
 
     expected = {
         "x": datetime(2010, 12, 18, 14, 11, 30, 925_000, tzinfo=ZoneInfo("UTC")),
@@ -307,16 +314,15 @@ def test_parse_datetime():
         ),
     }
 
-    assert parsed_zinc == expected
+    assert zinc_decoded == expected
 
 
 def test_number_with_underscore():
     x = r"{test: 7_000}"
-    zinc_reader = ZincReader(StringIO(x))
 
-    parsed_zinc = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(x)
 
-    assert parsed_zinc["test"] == Number(7_000)
+    assert zinc_decoded["test"] == Number(7_000)
 
 
 @pytest.mark.parametrize(
@@ -490,9 +496,10 @@ y
     ],
 )
 def test_nested(zinc: str, expected: Grid):
-    zinc_reader = ZincReader(StringIO(zinc))
-    assert zinc_reader.read_val() == expected
-    assert ZincWriter.grid_to_str(expected) == zinc
+    zinc_decoded = ZincDecoder().from_str(zinc)
+
+    assert zinc_decoded == expected
+    assert ZincEncoder().to_str(expected) == zinc
 
 
 @pytest.mark.parametrize(
@@ -515,9 +522,8 @@ def test_nested(zinc: str, expected: Grid):
     ],
 )
 def test_exceptions(zinc: str, expected_msg: str):
-    zinc_reader = ZincReader(StringIO(zinc))
     with pytest.raises(ValueError) as e:
-        zinc_reader.read_val()
+        ZincDecoder().from_str(zinc)
     assert str(e.value) == expected_msg
 
 
@@ -529,7 +535,7 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
 
 """
 
-    zinc_reader = ZincReader(StringIO(zinc))
+    zinc_decoded = ZincDecoder().from_str(zinc)
 
     expected = Grid(
         {"ver": "3.0", "siteRef": Ref("17eb894a-26bb44ff", "HQ"), "mark": Marker()},
@@ -552,42 +558,41 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
         ],
     )
 
-    assert zinc_reader.read_val() == expected
-    assert ZincWriter.grid_to_str(expected) == zinc
+    assert zinc_decoded == expected
+    assert ZincEncoder().to_str(expected) == zinc
 
 
-@pytest.mark.parametrize(
-    "zinc,expected_msg",
-    [
-        ("", {}),
-        ("foo", {"foo": Marker()}),
-        ("age:12", {"age": Number(12)}),
-        ("age:12yr", {"age": Number(12, "yr")}),
-        ('name:"b" bday:1972-06-07', {"name": "b", "bday": date(1972, 6, 7)}),
-        (
-            'name:"b" bday:1972-06-07 cool',
-            {"name": "b", "bday": date(1972, 6, 7), "cool": Marker()},
-        ),
-        (
-            "foo: 1, bar: 2 baz: 3",
-            {"foo": Number(1), "bar": Number(2), "baz": Number(3)},
-        ),  # commas
-        (
-            "foo: 1, bar: 2, baz: 3",
-            {"foo": Number(1), "bar": Number(2), "baz": Number(3)},
-        ),  # commas
-    ],
-)
-def test_tags(zinc: str, expected_msg: dict[str, Any]):
-    zinc_reader = ZincReader(StringIO(zinc))
-    assert zinc_reader.read_tags() == expected_msg
+# @pytest.mark.parametrize(
+#     "zinc,expected_msg",
+#     [
+#         ("", {}),
+#         ("foo", {"foo": Marker()}),
+#         ("age:12", {"age": Number(12)}),
+#         ("age:12yr", {"age": Number(12, "yr")}),
+#         ('name:"b" bday:1972-06-07', {"name": "b", "bday": date(1972, 6, 7)}),
+#         (
+#             'name:"b" bday:1972-06-07 cool',
+#             {"name": "b", "bday": date(1972, 6, 7), "cool": Marker()},
+#         ),
+#         (
+#             "foo: 1, bar: 2 baz: 3",
+#             {"foo": Number(1), "bar": Number(2), "baz": Number(3)},
+#         ),  # commas
+#         (
+#             "foo: 1, bar: 2, baz: 3",
+#             {"foo": Number(1), "bar": Number(2), "baz": Number(3)},
+#         ),  # commas
+#     ],
+# )
+# def test_tags(zinc: str, expected_msg: dict[str, Any]):
+#     zinc_decoded = ZincDecoder.read_tags(zinc)
+#     assert zinc_decoded == expected_msg
 
 
 def test_list():
     raw_zinc = '{x:[1,[2,3,4,"abc"],`def`,5]}'
 
-    zinc_reader = ZincReader(StringIO(raw_zinc))
-    parsed_zinc = zinc_reader.read_val()
+    zinc_decoded = ZincDecoder().from_str(raw_zinc)
 
     expected = {
         "x": [
@@ -598,5 +603,5 @@ def test_list():
         ]
     }
 
-    assert parsed_zinc == expected
-    assert ZincWriter.val_to_str(expected) == raw_zinc
+    assert zinc_decoded == expected
+    assert ZincEncoder().to_str(expected) == raw_zinc

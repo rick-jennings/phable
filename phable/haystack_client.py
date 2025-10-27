@@ -12,6 +12,7 @@ from typing import (
 
 from phable.auth.scram import ScramScheme
 from phable.http import ph_request
+from phable.io.ph_io_factory import PH_IO_FACTORY
 from phable.kinds import (
     DateRange,
     DateTimeRange,
@@ -19,7 +20,6 @@ from phable.kinds import (
     Number,
     Ref,
 )
-from phable.parsers.parser import HaystackParser, JsonParser, ZincParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext
@@ -125,8 +125,6 @@ class HaystackClient:
     ```
     """
 
-    # Note: this is intended to be an undocumented private initializer enforced by the
-    #       NoPublicConstructor metaclass
     def __init__(
         self,
         uri: str,
@@ -137,8 +135,12 @@ class HaystackClient:
     ):
         self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self._auth_token: str = auth_token
-        self._parser: HaystackParser = self._get_parser(content_type)
         self._context: SSLContext | None = ssl_context
+
+        io_factory = PH_IO_FACTORY[content_type]
+        self._ph_encoder = io_factory["encoder"]
+        self._ph_decoder = io_factory["decoder"]
+        self._content_type = io_factory["content_type"]
 
     @classmethod
     def open(
@@ -648,16 +650,16 @@ class HaystackClient:
         """
         headers = {
             "Authorization": f"BEARER authToken={self._auth_token}",
-            "Accept": self._parser.content_type,
+            "Accept": self._content_type,
         }
 
-        data = self._parser.from_grid(data)
+        data = self._ph_encoder.encode(data)
 
-        response = self._parser.to_grid(
+        response = self._ph_decoder.decode(
             ph_request(
                 url=f"{self.uri}/{path}",
                 headers=headers,
-                content_type=self._parser.content_type,
+                content_type=self._content_type,
                 data=data,
                 method="POST",
                 context=self._context,
@@ -667,14 +669,6 @@ class HaystackClient:
         _validate_response_meta(response)
 
         return response
-
-    def _get_parser(self, content_type: str) -> HaystackParser:
-        if content_type == "json":
-            return JsonParser()
-        elif content_type == "zinc":
-            return ZincParser()
-        else:
-            raise ValueError()
 
 
 def _validate_response_meta(response: Grid):

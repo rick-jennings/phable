@@ -1,7 +1,7 @@
 from datetime import date, datetime, time
 
+from phable.grid_builder import GridBuilder
 from phable.kinds import Grid
-from phable.parsers.grid_builder import GridBuilder
 
 
 def test_gb_his_items_zero_val_cols():

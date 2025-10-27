@@ -2,33 +2,46 @@ from datetime import date, datetime, time
 from io import StringIO
 from typing import Any, Self
 
-from phable import NA, Coord, Grid, Marker, Number, Ref, Remove, Symbol, Uri, XStr
-from phable.parsers.json import _tz_iana_to_haystack
+from phable.io.json_decoder import _tz_iana_to_haystack
+from phable.io.ph_encoder import PhEncoder
+from phable.kinds import (
+    NA,
+    Coord,
+    Grid,
+    Marker,
+    Number,
+    PhKind,
+    Ref,
+    Remove,
+    Symbol,
+    Uri,
+    XStr,
+)
 
 
-class ZincWriter:
+class ZincEncoder(PhEncoder):
     """Write Haystack data in Zinc format."""
-
-    def __init__(self, out: StringIO):
-        self._out = out
 
     _out: StringIO
 
-    @staticmethod
-    def grid_to_str(grid: Grid) -> str:
-        """Format a grid to a zinc string in memory."""
-        buf = StringIO()
-        ZincWriter(buf).write_grid(grid)
-        return buf.getvalue()
+    def to_str(self, data: PhKind) -> str:
+        self._out = StringIO()
+        return self._val_to_str(data)
 
-    @staticmethod
-    def val_to_str(val: Any) -> str:
+    def encode(self, data: PhKind) -> bytes:
+        return self.to_str(data).encode()
+
+    def _val_to_str(self, val: PhKind) -> str:
         """Get a value as a zinc string."""
-        buf = StringIO()
-        ZincWriter(buf).write_val(val)
-        return buf.getvalue()
 
-    def write_val(self, val: Any) -> None:
+        if isinstance(val, Grid):
+            self._write_grid(val)
+        else:
+            self._write_val(val)
+
+        return self._out.getvalue()
+
+    def _write_val(self, val: Any) -> None:
         """Write a zinc value."""
 
         if val is None:
@@ -42,7 +55,7 @@ class ZincWriter:
         else:
             self._write_scalar(val)
 
-    def write_grid(self, grid: Grid) -> Self:
+    def _write_grid(self, grid: Grid) -> Self:
         """Write a grid to a stream."""
 
         # set meta-data line
@@ -91,7 +104,7 @@ class ZincWriter:
                 elif val is None and len(col_names) > 1:
                     continue
                 else:
-                    self.write_val(val)
+                    self._write_val(val)
             except Exception:
                 raise IOError(f"Cannot write col '{col_name}' = '{val}'")
         self._out.write("\n")
@@ -106,7 +119,7 @@ class ZincWriter:
             try:
                 if val != Marker():
                     self._out.write(":")
-                    self.write_val(val)
+                    self._write_val(val)
             except Exception:
                 raise IOError(f"Cannot write meta {key}: {val}")
 
@@ -114,7 +127,7 @@ class ZincWriter:
         self._out.write("<")
         self._out.write("<")
         self._out.write("\n")
-        self.write_grid(grid)
+        self._write_grid(grid)
         self._out.write(">")
         self._out.write(">")
 
@@ -123,7 +136,7 @@ class ZincWriter:
         for i, val in enumerate(list):
             if i > 0:
                 self._out.write(",")
-            self.write_val(val)
+            self._write_val(val)
         self._out.write("]")
 
     def _write_dict(self, dict: dict) -> None:

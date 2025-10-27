@@ -424,14 +424,14 @@ class HaxallClient(HaystackClient):
         headers = {
             "Content-Type": mimetype,
             "Authorization": f"BEARER authToken={self._auth_token}",
-            "Accept": self._parser.content_type,
+            "Accept": self._content_type,
         }
 
-        res = self._parser.to_grid(
+        res = self._ph_decoder.decode(
             ph_request(
                 self.uri + "/file" + remote_file_uri,
                 headers,
-                self._parser.content_type,
+                self._content_type,
                 data,
                 method=http_method,
                 context=self._context,

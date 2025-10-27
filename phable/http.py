@@ -11,7 +11,6 @@ from urllib.error import URLError
 
 from phable.kinds import Grid
 from phable.logger import log_http_req, log_http_res
-from phable.parsers.parser import HaystackParser
 
 if TYPE_CHECKING:
     from ssl import SSLContext

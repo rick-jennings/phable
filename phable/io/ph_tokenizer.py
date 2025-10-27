@@ -5,14 +5,14 @@ from enum import StrEnum
 from io import TextIOWrapper
 from typing import Any
 
+from phable.io.json_decoder import _haystack_to_iana_tz
 from phable.kinds import Number, Ref, Symbol, Uri
-from phable.parsers.json import _haystack_to_iana_tz
 
 
-class HaystackTokenizer:
+class PhTokenizer:
     def __init__(self, input: TextIOWrapper):
         self._input = input
-        self.tok = HaystackToken.EOF
+        self.tok = PhToken.EOF
         self.factory = HaystackFactory()
         self._consume()
         self._consume()
@@ -23,7 +23,7 @@ class HaystackTokenizer:
     factory: HaystackFactory
 
     # Current token type
-    tok: HaystackToken
+    tok: PhToken
 
     # Current token value based on type:
     #  - id: identifier string
@@ -41,7 +41,7 @@ class HaystackTokenizer:
     # Tokenize the map's keys as keyword tokens instead of identifiers
     keywords: dict[str, Any] | None = None
 
-    def next(self) -> HaystackToken:
+    def next(self) -> PhToken:
         """Read the next token, store result in self.tok and self.val"""
 
         # reset
@@ -74,7 +74,7 @@ class HaystackTokenizer:
                 self._consume()
             self._consume()
             self.line += 1
-            self.tok = HaystackToken.NL
+            self.tok = PhToken.NL
             return self.tok
 
         # handle various starting chars
@@ -107,7 +107,7 @@ class HaystackTokenizer:
         self._input.close()
 
     # Parse single line comment when keeping comments
-    def parse_comment(self) -> HaystackToken:
+    def parse_comment(self) -> PhToken:
         s = ""
         self._consume()  # first slash
         self._consume()  # next slash
@@ -119,7 +119,7 @@ class HaystackTokenizer:
             s += self._cur
             self._consume()
         self.val = s
-        return HaystackToken.COMMENT
+        return PhToken.COMMENT
 
     # Skip a single line // comment
     def _skip_comment_SL(self) -> None:
@@ -158,7 +158,7 @@ class HaystackTokenizer:
         self._cur = self._peek
         self._peek = self._input.read(1)
 
-    def _id(self) -> HaystackToken:
+    def _id(self) -> PhToken:
         s = ""
         while self._cur.isalnum() or self._cur == "_":
             s += self._cur
@@ -169,13 +169,13 @@ class HaystackTokenizer:
         # check for keyword
         if self.keywords is not None and self.keywords.get(id) is not None:
             self.val = self.keywords[id]
-            return HaystackToken.KEYWORD
+            return PhToken.KEYWORD
 
         # normal id
         self.val = id
-        return HaystackToken.ID
+        return PhToken.ID
 
-    def _str(self) -> HaystackToken:
+    def _str(self) -> PhToken:
         self._consume()  # opening quote
         is_triple = self._cur == '"' and self._peek == '"'
         if is_triple:
@@ -203,9 +203,9 @@ class HaystackTokenizer:
             s += ch
 
         self.val = self.factory.make_str(s)
-        return HaystackToken.STR
+        return PhToken.STR
 
-    def _num(self) -> HaystackToken:
+    def _num(self) -> PhToken:
         # hex number (no unit allowed)
         is_hex = self._cur == "0" and self._peek == "x"
         if is_hex:
@@ -226,7 +226,7 @@ class HaystackTokenizer:
                     continue
                 break
             self.val = Number(float.fromhex(s))
-            return HaystackToken.NUM
+            return PhToken.NUM
 
         # consume all the things that might be part of this number token
         s = self._cur
@@ -278,7 +278,7 @@ class HaystackTokenizer:
                 self.val = self.factory.make_date(s)
             except Exception:
                 raise ValueError(f"Invalid Date literal '{s}'")
-            return HaystackToken.DATE
+            return PhToken.DATE
 
         # Time: we don't require hour to be two digits and
         # we don't require seconds
@@ -292,7 +292,7 @@ class HaystackTokenizer:
             except Exception:
                 raise ValueError(f"Invalid Time literal '{s}'")
 
-            return HaystackToken.TIME
+            return PhToken.TIME
 
         # DateTime
         if dashes >= 2:
@@ -319,7 +319,7 @@ class HaystackTokenizer:
             except Exception:
                 raise f"Invalid DateTime literal '{s}'"
 
-            return HaystackToken.DATETIME
+            return PhToken.DATETIME
 
         # parse as number
         if unit_index == 0:
@@ -339,9 +339,9 @@ class HaystackTokenizer:
 
             self.val = self.factory.make_number(x, unit_str)
 
-        return HaystackToken.NUM
+        return PhToken.NUM
 
-    def _ref(self) -> HaystackToken:
+    def _ref(self) -> PhToken:
         self._consume()  # @
         s = ""
         while True:
@@ -356,9 +356,9 @@ class HaystackTokenizer:
             raise ValueError("Invalid empty Ref")
 
         self.val = self.factory.make_ref(s)
-        return HaystackToken.REF
+        return PhToken.REF
 
-    def _symbol(self) -> HaystackToken:
+    def _symbol(self) -> PhToken:
         self._consume()  # ^
         s = ""
         while True:
@@ -373,9 +373,9 @@ class HaystackTokenizer:
             raise ValueError("Invalid empty Symbol")
 
         self.val = self.factory.make_symbol(s)
-        return HaystackToken.SYMBOL
+        return PhToken.SYMBOL
 
-    def _uri(self) -> HaystackToken:
+    def _uri(self) -> PhToken:
         self._consume()  # opening backtick
         s = ""
         while True:
@@ -400,7 +400,7 @@ class HaystackTokenizer:
                 self._consume()
                 s += ch
         self.val = self.factory.make_uri(s)
-        return HaystackToken.URI
+        return PhToken.URI
 
     def _escape(self) -> str:
         # consume slash
@@ -470,78 +470,78 @@ class HaystackTokenizer:
 
         raise ValueError("Invalid escape sequence")
 
-    def _operator(self) -> HaystackToken:
+    def _operator(self) -> PhToken:
         c = self._cur
         self._consume()
 
         match c:
             case ",":
-                return HaystackToken.COMMA
+                return PhToken.COMMA
             case ":":
                 if self._cur == ":":
                     self._consume()
-                    return HaystackToken.COLON2
-                return HaystackToken.COLON
+                    return PhToken.COLON2
+                return PhToken.COLON
             case ";":
-                return HaystackToken.SEMICOLON
+                return PhToken.SEMICOLON
             case "[":
-                return HaystackToken.LBRACKET
+                return PhToken.LBRACKET
             case "]":
-                return HaystackToken.RBRACKET
+                return PhToken.RBRACKET
             case "{":
-                return HaystackToken.LBRACE
+                return PhToken.LBRACE
             case "}":
-                return HaystackToken.RBRACE
+                return PhToken.RBRACE
             case "(":
-                return HaystackToken.LPAREN
+                return PhToken.LPAREN
             case ")":
-                return HaystackToken.RPAREN
+                return PhToken.RPAREN
             case "<":
                 if self._cur == "<":
                     self._consume()
-                    return HaystackToken.LT2
+                    return PhToken.LT2
                 if self._cur == "=":
                     self._consume()
-                    return HaystackToken.LTEQ
-                return HaystackToken.LT
+                    return PhToken.LTEQ
+                return PhToken.LT
             case ">":
                 if self._cur == ">":
                     self._consume()
-                    return HaystackToken.GT2
+                    return PhToken.GT2
                 if self._cur == "=":
                     self._consume()
-                    return HaystackToken.GTEQ
-                return HaystackToken.GT
+                    return PhToken.GTEQ
+                return PhToken.GT
             case "-":
                 if self._cur == ">":
                     self._consume()
-                    return HaystackToken.ARROW
-                return HaystackToken.MINUS
+                    return PhToken.ARROW
+                return PhToken.MINUS
             case "=":
                 if self._cur == "=":
                     self._consume()
-                    return HaystackToken.EQ
+                    return PhToken.EQ
                 if self._cur == ">":
                     self._consume()
-                    return HaystackToken.FNARROW
-                return HaystackToken.ASSIGN
+                    return PhToken.FNARROW
+                return PhToken.ASSIGN
             case "!":
                 if self._cur == "=":
                     self._consume()
-                    return HaystackToken.NOTEQ
-                return HaystackToken.BANG
+                    return PhToken.NOTEQ
+                return PhToken.BANG
             case "/":
-                return HaystackToken.SLASH
+                return PhToken.SLASH
             case ".":
-                return HaystackToken.DOT
+                return PhToken.DOT
             case "?":
-                return HaystackToken.QUESTION
+                return PhToken.QUESTION
             case "&":
-                return HaystackToken.AMP
+                return PhToken.AMP
             case "|":
-                return HaystackToken.PIPE
+                return PhToken.PIPE
             case "":
-                return HaystackToken.EOF
+                return PhToken.EOF
 
         raise ValueError(f"Unexpected symbol: '{c}'")
 
@@ -581,7 +581,7 @@ class HaystackFactory:
         return Number(val, unit)
 
 
-class HaystackToken(StrEnum):
+class PhToken(StrEnum):
     # identifier/literals
     ID = "identifier"
     KEYWORD = "keyword"
@@ -630,17 +630,17 @@ class HaystackToken(StrEnum):
     EOF = "eof"
 
 
-def is_literal(token: HaystackToken) -> bool:
+def is_literal(token: PhToken) -> bool:
     match token:
         case (
-            HaystackToken.NUM
-            | HaystackToken.STR
-            | HaystackToken.REF
-            | HaystackToken.SYMBOL
-            | HaystackToken.URI
-            | HaystackToken.DATE
-            | HaystackToken.TIME
-            | HaystackToken.DATETIME
+            PhToken.NUM
+            | PhToken.STR
+            | PhToken.REF
+            | PhToken.SYMBOL
+            | PhToken.URI
+            | PhToken.DATE
+            | PhToken.TIME
+            | PhToken.DATETIME
         ):
             return True
         case _:
