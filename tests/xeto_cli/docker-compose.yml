@@ -1,0 +1,12 @@
+services:
+  haxall:
+    stdin_open: true
+    tty: true
+    image: phable_haxall_cli
+    container_name: phable_haxall_cli_run
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    volumes:
+      - ./xeto:/app/phable-test/src/xeto
+      - ./temp_data:/app/phable-test/src/temp_data

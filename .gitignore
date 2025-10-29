@@ -5,3 +5,5 @@ __pycache__/
 dist/
 todo.md
 doc_venv/
+.env
+temp_data/

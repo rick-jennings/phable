@@ -1,0 +1,11 @@
+pragma: Lib <
+  doc: "TODO"
+  version: "0.0.1"
+  depends: {
+    { lib: "sys" }
+  }
+  org: {
+    dis: "TODO"
+    uri: "TODO"
+  }
+>

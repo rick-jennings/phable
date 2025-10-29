@@ -1,0 +1,4 @@
+TestDict : Dict {
+  x: Number
+  y: Number
+}

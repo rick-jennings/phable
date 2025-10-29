@@ -24,6 +24,9 @@ class JsonEncoder(PhEncoder):
     def encode(self, data: PhKind) -> bytes:
         return json.dumps(_kind_to_json(data)).encode()
 
+    def to_str(self, data: PhKind) -> bytes:
+        return json.dumps(_kind_to_json(data))
+
     @staticmethod
     def to_dict(data: PhKind) -> dict[str, Any]:
         return _kind_to_json(data)
