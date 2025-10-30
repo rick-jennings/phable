@@ -27,6 +27,9 @@ class JsonDecoder(PhDecoder):
     def decode(self, data: bytes) -> PhKind:
         return _parse_val(json.loads(data.decode("utf-8")))
 
+    def from_str(self, data: str) -> PhKind:
+        return _parse_val(json.loads(data))
+
     @staticmethod
     def from_dict(data: dict[str, Any]) -> PhKind:
         return _parse_val(data)
