@@ -2,3 +2,8 @@ TestDict : Dict {
   x: Number
   y: Number
 }
+
+TestNestedDict : Dict {
+  a: Number
+  b: TestDict
+}

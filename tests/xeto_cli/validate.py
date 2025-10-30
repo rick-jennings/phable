@@ -17,10 +17,8 @@ def validate_data(data: PhKind, io_format: str) -> Grid:
         f"fan xeto fits /app/phable-test/src/temp_data/temp_data.{io_format} -outFile /app/phable-test/src/temp_data/stdout.{io_format}"
     )
 
-    # x = _get_std_out_as_kind(io_format, decoder)
+    y = y[0 : y.rfind("/n")]
     x = _get_std_out_as_kind1(y, decoder)
-
-    # _delete_files_in_temp_data_dir()
 
     return x
 

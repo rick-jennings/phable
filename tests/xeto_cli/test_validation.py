@@ -8,8 +8,7 @@ from phable.kinds import PhKind
 from .validate import validate_data
 
 
-# @pytest.fixture(params=["json", "zinc"], scope="module")
-@pytest.fixture(params=["json"], scope="module")
+@pytest.fixture(params=["json", "zinc"], scope="module")
 def io_format(request) -> Generator[str, None, None]:
     yield request.param
 
@@ -17,7 +16,7 @@ def io_format(request) -> Generator[str, None, None]:
 @pytest.mark.parametrize(
     "test_input,expected",
     [
-        # test #1 w/o id passes
+        # phable::TestDict
         (
             {
                 "x": Number(2, "kW"),
@@ -26,35 +25,6 @@ def io_format(request) -> Generator[str, None, None]:
             },
             Grid({"ver": "3.0"}, [{"name": "id"}, {"name": "msg"}], []),
         ),
-        # test #1 w/ id passes
-        (
-            {
-                "id": Ref("hi"),
-                "x": Number(2, "kW"),
-                "y": Number(3, "kW"),
-                "spec": Ref("phable::TestDict"),
-            },
-            Grid({"ver": "3.0"}, [{"name": "id"}, {"name": "msg"}], []),
-        ),
-        # test #2 w/ id fails
-        (
-            {
-                "id": Ref("hi"),
-                "y": Number(3, "kW"),
-                "spec": Ref("phable::TestDict"),
-            },
-            Grid(
-                {"ver": "3.0"},
-                [{"name": "id"}, {"name": "msg"}],
-                [
-                    {
-                        "id": Ref("hi"),
-                        "msg": "Slot 'x': Missing required slot",
-                    }
-                ],
-            ),
-        ),
-        # test #3 w/o id fails
         (
             {
                 "y": Number(3, "kW"),
@@ -66,6 +36,32 @@ def io_format(request) -> Generator[str, None, None]:
                 [
                     {
                         "id": Ref("0"),
+                        "msg": "Slot 'x': Missing required slot",
+                    }
+                ],
+            ),
+        ),
+        # phable::TestNestedDict
+        (
+            {
+                "a": Number(2, "kW"),
+                "b": {"x": Number(2, "kW"), "y": Number(3, "kW")},
+                "spec": Ref("phable::TestNestedDict"),
+            },
+            Grid({"ver": "3.0"}, [{"name": "id"}, {"name": "msg"}], []),
+        ),
+        (
+            {
+                "a": Number(2, "kW"),
+                "b": {"y": Number(3, "kW")},
+                "spec": Ref("phable::TestNestedDict"),
+            },
+            Grid(
+                {"ver": "3.0"},
+                [{"name": "id"}, {"name": "msg"}],
+                [
+                    {
+                        # "id": Ref("0"),
                         "msg": "Slot 'x': Missing required slot",
                     }
                 ],
