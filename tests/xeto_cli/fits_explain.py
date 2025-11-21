@@ -1,5 +1,6 @@
 import os
 import subprocess
+from typing import Any, Literal
 
 from phable import Grid
 from phable.io.ph_decoder import PhDecoder
@@ -8,29 +9,35 @@ from phable.io.ph_io_factory import PH_IO_FACTORY
 from phable.kinds import PhKind
 
 
-def validate_data(data: PhKind, io_format: str) -> Grid:
+def fits_explain(
+    recs: list[dict[str, Any]],
+    *,
+    io_format: Literal["json", "zinc"] = "zinc",
+    graph: bool = True,
+) -> Grid:
     encoder = PH_IO_FACTORY[io_format]["encoder"]
     decoder = PH_IO_FACTORY[io_format]["decoder"]
 
-    _write_data(io_format, encoder, data)
-    y = _exec_cli_cmd(
-        f"fan xeto fits /app/phable-test/src/temp_data/temp_data.{io_format} -outFile /app/phable-test/src/temp_data/stdout.{io_format}"
-    )
+    _write_data(io_format, encoder, recs)
 
-    y = y[0 : y.rfind("/n")]
-    x = _get_std_out_as_kind1(y, decoder)
+    cmd = f"fan xeto fits /app/phable-test/src/temp_data/temp_data.{io_format} -outFile /app/phable-test/src/temp_data/stdout.{io_format}"
+
+    if graph:
+        cmd += " -graph"
+
+    y = _exec_cli_cmd(cmd)
+
+    if io_format == "zinc":
+        y = y[0 : y.rfind("\n")]
+
+    x = _get_std_out_as_kind(y, decoder)
+
+    _delete_files_in_temp_data_dir()
 
     return x
 
 
-def _get_std_out_as_kind(data_format: str, decoder: PhDecoder) -> Grid:
-    with open(f"tests/xeto_cli/temp_data/stdout.{data_format}", "rb") as f:
-        data = f.read()
-
-    return decoder.decode(data)
-
-
-def _get_std_out_as_kind1(data: PhKind, decoder: PhDecoder) -> Grid:
+def _get_std_out_as_kind(data: PhKind, decoder: PhDecoder) -> Grid:
     return decoder.from_str(data)
 
 

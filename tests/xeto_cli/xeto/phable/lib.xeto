@@ -3,6 +3,9 @@ pragma: Lib <
   version: "0.0.1"
   depends: {
     { lib: "sys" }
+    { lib: "ph" }
+    { lib: "ph.points" }
+    { lib: "ph.equips" }
   }
   org: {
     dis: "TODO"

@@ -1,9 +1,14 @@
-TestDict : Dict {
-  x: Number
-  y: Number
+
+ElecSiteMeter : ElecMeter {
+  siteMeter
+  subMeters: Query<of:ElecSubMeter, inverse:"phable::ElecSubMeter.mySiteMeter">
+  points: {
+    ElecAcTotalImportActiveDemandSensor
+  }
 }
 
-TestNestedDict : Dict {
-  a: Number
-  b: TestDict
+ElecSubMeter : ElecMeter {
+  subMeter
+  subMeterOf: Ref
+  mySiteMeter: Query<of:ElecSiteMeter, via:"subMeterOf+">
 }
