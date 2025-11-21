@@ -27,9 +27,6 @@ def fits_explain(
 
     y = _exec_cli_cmd(cmd)
 
-    if io_format == "zinc":
-        y = y[0 : y.rfind("\n")]
-
     x = _get_std_out_as_kind(y, decoder)
 
     _delete_files_in_temp_data_dir()
