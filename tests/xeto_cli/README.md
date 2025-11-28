@@ -1,25 +1,25 @@
-## About Xeto CLI tests
+## About Xeto CLI
 
 Haxall's Xeto CLI enables data based on Xeto specs to be validated in more than one programming language.  Over time we expect there will be more than one Xeto CLI available for use.
 
-The purpose of these tests are to verify Phable's compatability and ease of use with certain Xeto CLIs.
+Below are instructions on how to create a Docker container running the Haxall Xeto CLI which may be used for testing or experimenting with Xeto.
 
 ## Setup instructions
 
-From the root of the `xeto_cli` directory perform the following:
- 1. Create a directory called `temp_data` used for storing temporary input and stdout data used by the Xeto CLI
- 2. With Docker Desktop running in the background, create a Docker image and container for the Xeto CLI and run the newly created container called `phable_haxall_cli_run` by executing the command:
+Navigate to the root of the `xeto_cli` directory.
+
+With Docker Desktop running in the background, create a Docker image and container for the Xeto CLI and run the newly created container called `phable_haxall_cli_run` by executing the command:
  ```bash
  docker compose up
  ```
 
-After these steps have been taken the enclosed tests should be able to pass.
+After these steps have been taken all tests in Phable involving the Xeto CLI should be able to pass.
 
 Note: The Docker image created is based on the latest commit on [haxall](https://github.com/haxall/haxall).  Haxall continues to be developed and you might need to recreate a Docker container based on recent progress by following these steps again.
 
 ## Xeto specs
 
-This test suite uses specs in `xeto_cli/xeto/phable`.  New specs can be added to this library.
+Phable's test suite applies specs in `xeto_cli/xeto/phable`.  New specs can be added to this library.  Also, other Xeto libraries may be added to the `xeto_cli/xeto` directory.
 
 ## Getting involved
 

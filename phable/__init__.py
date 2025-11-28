@@ -21,4 +21,5 @@ from phable.kinds import (
     Uri,
     XStr,
 )
+from phable.xeto_cli import XetoCLI
 from phable.auth.scram import AuthError
