@@ -10,6 +10,29 @@ def io_format(request) -> Generator[str, None, None]:
     yield request.param
 
 
+@pytest.fixture(
+    params=[
+        XetoCLI(
+            xeto_dir="../phable-test",
+            io_format="json",
+        ),
+        XetoCLI(
+            xeto_dir="../phable-test",
+            io_format="zinc",
+        ),
+        XetoCLI(
+            io_format="json",
+        ),
+        XetoCLI(
+            io_format="zinc",
+        ),
+    ],
+    scope="module",
+)
+def xeto_cli(request) -> Generator[XetoCLI, None, None]:
+    yield request.param
+
+
 SITE = {"id": Ref("site"), "site": Marker(), "spec": Ref("ph::Site")}
 SITEMETER = {
     "id": Ref("site-meter"),
@@ -159,9 +182,6 @@ SUBMETER2_PT = {
     ],
 )
 def test_fits_explain(
-    recs: list[dict[str, Any]], expected: Grid, io_format: str
+    recs: list[dict[str, Any]], expected: Grid, xeto_cli: XetoCLI
 ) -> None:
-    cli = XetoCLI(io_format=io_format)
-    x = cli.fits_explain(recs)
-
-    assert x == expected
+    assert xeto_cli.fits_explain(recs) == expected
