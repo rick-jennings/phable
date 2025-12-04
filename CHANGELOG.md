@@ -1,7 +1,10 @@
 # Changelog
 
-## 0.1.21 (2025-10-17)
+## 0.1.22 (2025-12-04)
 
 #### New Features
 
-* add public constructor to HaystackClient
+* add Xeto CLI support
+
+#### Others
+* refactor to make json & zinc io reusable

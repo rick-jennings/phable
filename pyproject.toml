@@ -1,6 +1,6 @@
 [project]
 name = "phable"
-version = "0.1.21"
+version = "0.1.22"
 description = ""
 authors = [{ name = "Rick Jennings", email = "rjennings055@gmail.com" }]
 requires-python = ">=3.11, <4"
