@@ -58,3 +58,188 @@ async def main() -> None:
 if __name__ == "__main__":
     asyncio.run(main())
 ```
+
+## Haystack 5 and Xeto for Python Developers (Webinar)
+
+If applicable, install [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
+In the terminal, navigate to the directory the new webinar directory will be added to.
+
+Execute the below terminal commands to create a Python project called `webinar` using uv, add the `phable` package dependency and sync dependencies.
+
+```shell
+uv init webinar && cd webinar
+uv add phable
+uv sync
+```
+
+Link the project to the Haxall runtime (adjust the path to match your Haxall installation):
+
+```shell
+~/haxall-4.0.4/bin/xeto env
+```
+
+Create a Xeto library called `webinar`.
+
+```shell
+mkdir xeto && cd xeto
+xeto init -dir . -noconfirm webinar
+cd ../
+```
+
+Open VS Code Editor.
+
+```shell
+code .
+```
+
+If applicable, install and enable the [Xeto IDE Extension](https://marketplace.visualstudio.com/items?itemName=xeto.xeto-vscode-extension) for VS Code Editor by XetoBase.
+
+Replace the contents of `specs.xeto` with the below text to define Xeto specs for an electric sitemeter and submeter.
+
+```plaintext
+ElecSiteMeter : ElecMeter {
+  siteMeter
+  subMeters: Query<of:ElecSubMeter, inverse:"phable::ElecSubMeter.mySiteMeter">
+  points: {
+    ElecAcTotalImportActiveDemandSensor
+  }
+}
+
+ElecSubMeter : ElecMeter {
+  subMeter
+  subMeterOf: Ref
+  mySiteMeter: Query<of:ElecSiteMeter, via:"subMeterOf+">
+}
+```
+
+Specify the Xeto library dependencies by replacing the contents of `lib.xeto` with the below text.
+
+```plaintext
+pragma: Lib <
+  doc: "Xeto Example for Haystack 5 and Xeto for Python Developers Webinar"
+  version: "0.0.1"
+  depends: {
+    { lib: "sys" }
+    { lib: "ph" }
+    { lib: "ph.points" }
+    { lib: "ph.equips" }
+  }
+  org: {
+    dis: "Project Haystack"
+    uri: "https://project-haystack.org/"
+  }
+>
+```
+
+Replace the contents of `hello.py` with the below Python code that creates Haystack instance data and validates it against the Xeto specs just created.
+
+```python
+from phable import Grid, Marker, Ref, XetoCLI
+
+
+def main():
+    recs = [
+        {"id": Ref("site"), "site": Marker(), "spec": Ref("ph::Site")},
+        {
+            "id": Ref("site-meter"),
+            "elec": Marker(),
+            "meter": Marker(),
+            "siteMeter": Marker(),
+            "equip": Marker(),
+            "spec": Ref("phable::ElecSiteMeter"),
+            "siteRef": Ref("site"),
+        },
+        {
+            "id": Ref("site-meter-point"),
+            "point": Marker(),
+            "spec": Ref("ph.points::ElecAcTotalImportActiveDemandSensor"),
+            "kind": "Number",
+            "unit": "kW",
+            "elec": Marker(),
+            "ac": Marker(),
+            "total": Marker(),
+            "import": Marker(),
+            "active": Marker(),
+            "demand": Marker(),
+            "sensor": Marker(),
+            "equipRef": Ref("site-meter"),
+        },
+        {
+            "id": Ref("submeter1"),
+            "elec": Marker(),
+            "meter": Marker(),
+            "subMeter": Marker(),
+            "subMeterOf": Ref("site-meter"),
+            "equip": Marker(),
+            "spec": Ref("phable::ElecSubMeter"),
+            "siteRef": Ref("site"),
+        },
+        {
+            "id": Ref("submeter1-point"),
+            "point": Marker(),
+            "spec": Ref("ph.points::ElecAcTotalImportActiveDemandSensor"),
+            "kind": "Number",
+            "unit": "kW",
+            "elec": Marker(),
+            "ac": Marker(),
+            "total": Marker(),
+            "import": Marker(),
+            "active": Marker(),
+            "demand": Marker(),
+            "sensor": Marker(),
+            "equipRef": Ref("submeter1"),
+        },
+        {
+            "id": Ref("submeter2"),
+            "elec": Marker(),
+            "meter": Marker(),
+            "subMeter": Marker(),
+            "subMeterOf": Ref("site-meter"),
+            "equip": Marker(),
+            "spec": Ref("phable::ElecSubMeter"),
+            "siteRef": Ref("site"),
+        },
+        {
+            "id": Ref("submeter2-point"),
+            "point": Marker(),
+            "spec": Ref("ph.points::ElecAcTotalImportActiveDemandSensor"),
+            "kind": "Number",
+            "unit": "kW",
+            "elec": Marker(),
+            "ac": Marker(),
+            "total": Marker(),
+            "import": Marker(),
+            "active": Marker(),
+            "demand": Marker(),
+            "sensor": Marker(),
+            "equipRef": Ref("submeter2"),
+        },
+    ]
+
+    xeto_cli = XetoCLI()
+
+    try:
+        # validate recs adhere to their Xeto specs
+        # Note: An empty grid means no errors!
+        assert xeto_cli.fits_explain(recs) == Grid(
+            {"ver": "3.0"},
+            [{"name": "id"}, {"name": "msg"}],
+            [],
+        )
+        print("Test passed!!!")
+    except Exception:
+        print("Test failed!!!")
+
+
+if __name__ == "__main__":
+    main()
+```
+
+Now run the Python script and verify "Test passed!!!" is shown in the terminal.
+
+```shell
+uv run hello.py
+```
+
+Modify the recs to fail validation, run the script again, and verify "Test failed!!!" is shown in the terminal.
