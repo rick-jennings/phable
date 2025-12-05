@@ -82,9 +82,10 @@ Link the project to the Haxall runtime (adjust the path to match your Haxall ins
 Create a Xeto library called `webinar`.
 
 ```shell
+mkdir src && cd src
 mkdir xeto && cd xeto
 xeto init -dir . -noconfirm webinar
-cd ../
+cd ../../
 ```
 
 Open VS Code Editor.
