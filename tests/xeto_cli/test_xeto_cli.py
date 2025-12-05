@@ -40,7 +40,7 @@ SITEMETER = {
     "meter": Marker(),
     "siteMeter": Marker(),
     "equip": Marker(),
-    "spec": Ref("phable::ElecSiteMeter"),
+    "spec": Ref("phable.test::ElecSiteMeter"),
     "siteRef": Ref("site"),
 }
 
@@ -67,7 +67,7 @@ SUBMETER1 = {
     "subMeter": Marker(),
     "subMeterOf": Ref("site-meter"),
     "equip": Marker(),
-    "spec": Ref("phable::ElecSubMeter"),
+    "spec": Ref("phable.test::ElecSubMeter"),
     "siteRef": Ref("site"),
 }
 SUBMETER1_PT = {
@@ -93,7 +93,7 @@ SUBMETER2 = {
     "subMeter": Marker(),
     "subMeterOf": Ref("site-meter"),
     "equip": Marker(),
-    "spec": Ref("phable::ElecSubMeter"),
+    "spec": Ref("phable.test::ElecSubMeter"),
     "siteRef": Ref("site"),
 }
 
