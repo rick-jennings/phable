@@ -1,6 +1,6 @@
 [project]
 name = "phable"
-version = "0.1.24"
+version = "0.1.25"
 description = ""
 authors = [{ name = "Rick Jennings", email = "rjennings055@gmail.com" }]
 requires-python = ">=3.11, <4"
@@ -12,11 +12,8 @@ pandas = ["pandas>=2.2.3,<3"]
 pyarrow = ["pyarrow>=17.0.0,<18"]
 polars = ["polars>=1.9.0,<2"]
 
-[tool.hatch.build.targets.sdist]
-packages = ["src/phable"]
-
-[tool.hatch.build.targets.wheel]
-packages = ["src/phable"]
+[tool.hatch.build]
+directory = "src"
 
 [build-system]
 requires = ["hatchling"]
