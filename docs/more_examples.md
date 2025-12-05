@@ -148,7 +148,7 @@ def main():
             "meter": Marker(),
             "siteMeter": Marker(),
             "equip": Marker(),
-            "spec": Ref("phable::ElecSiteMeter"),
+            "spec": Ref("webinar::ElecSiteMeter"),
             "siteRef": Ref("site"),
         },
         {
@@ -173,7 +173,7 @@ def main():
             "subMeter": Marker(),
             "subMeterOf": Ref("site-meter"),
             "equip": Marker(),
-            "spec": Ref("phable::ElecSubMeter"),
+            "spec": Ref("webinar::ElecSubMeter"),
             "siteRef": Ref("site"),
         },
         {
@@ -198,7 +198,7 @@ def main():
             "subMeter": Marker(),
             "subMeterOf": Ref("site-meter"),
             "equip": Marker(),
-            "spec": Ref("phable::ElecSubMeter"),
+            "spec": Ref("webinar::ElecSubMeter"),
             "siteRef": Ref("site"),
         },
         {
