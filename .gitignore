@@ -6,3 +6,4 @@ dist/
 todo.md
 doc_venv/
 .env
+lib/
