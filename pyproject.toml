@@ -13,10 +13,10 @@ pyarrow = ["pyarrow>=17.0.0,<18"]
 polars = ["polars>=1.9.0,<2"]
 
 [tool.hatch.build.targets.sdist]
-include = ["phable"]
+packages = ["src/phable"]
 
 [tool.hatch.build.targets.wheel]
-include = ["phable"]
+packages = ["src/phable"]
 
 [build-system]
 requires = ["hatchling"]
