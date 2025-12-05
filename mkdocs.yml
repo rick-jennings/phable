@@ -33,6 +33,7 @@ plugins:
 - mkdocstrings:
     handlers:
       python:
+        paths: [src]
         options:
           # merge_init_into_class: true
           # docstring_options:
@@ -47,3 +48,15 @@ plugins:
           show_docstring_raises: true
           # show_docstring_description: true
           # show_signature_annotations: true
+
+nav:
+  - Home: index.md
+  - API Reference:
+    - HaystackClient: haystack_client.md
+    - HaxallClient: haxall_client.md
+    - XetoCLI: xeto_cli.md
+    - Data Types: data_types.md
+  - Examples:
+    - Logging: logging_example.md
+    - Async Usage: async_example.md
+    - Xeto Intro: xeto_intro.md
