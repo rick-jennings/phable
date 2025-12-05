@@ -13,17 +13,17 @@ def io_format(request) -> Generator[str, None, None]:
 @pytest.fixture(
     params=[
         XetoCLI(
-            xeto_dir="../phable-test",
             io_format="json",
         ),
         XetoCLI(
-            xeto_dir="../phable-test",
             io_format="zinc",
         ),
         XetoCLI(
+            docker_cli=True,
             io_format="json",
         ),
         XetoCLI(
+            docker_cli=True,
             io_format="zinc",
         ),
     ],

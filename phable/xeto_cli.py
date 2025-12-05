@@ -1,7 +1,6 @@
 import os
 import subprocess
 import tempfile
-from pathlib import Path
 from typing import Any, Literal
 
 from phable import Grid
@@ -24,7 +23,7 @@ class XetoCLI:
     def __init__(
         self,
         *,
-        xeto_dir: str | Path | None = None,
+        docker_cli: bool = False,
         io_format: Literal["json", "zinc"] = "zinc",
     ):
         """Initialize a `XetoCLI` instance.
@@ -41,10 +40,7 @@ class XetoCLI:
                 Data serialization format for communication with Haxall. Either `json`
                 or `zinc`. Defaults to `zinc`.
         """
-        if xeto_dir is not None:
-            self._xeto_dir = Path(xeto_dir)
-        else:
-            self._xeto_dir = None
+        self._docker_cli = docker_cli
         self._io_format = io_format
         self._encoder = PH_IO_FACTORY[io_format]["encoder"]
         self._decoder = PH_IO_FACTORY[io_format]["decoder"]
@@ -95,12 +91,10 @@ class XetoCLI:
             temp_file_path = temp_file.name
 
         try:
-            if self._xeto_dir is None:
+            if self._docker_cli:
                 cli_stdout = _exec_docker_cmd(self._io_format, graph, temp_file_path)
             else:
-                cli_stdout = _exec_localhost_cmd(
-                    self._io_format, graph, temp_file_path, self._xeto_dir
-                )
+                cli_stdout = _exec_localhost_cmd(self._io_format, graph, temp_file_path)
             return self._decoder.from_str(cli_stdout)
         finally:
             try:
@@ -157,39 +151,24 @@ def _exec_localhost_cmd(
     io_format: str,
     graph: bool,
     temp_file_path: str,
-    xeto_dir: Path,
 ) -> str:
     """Execute xeto fits command on localhost."""
-    xeto_dir = xeto_dir.expanduser().resolve()
+    cmd = [
+        "xeto",
+        "fits",
+        temp_file_path,
+        "-outFile",
+        f"stdout.{io_format}",
+    ]
 
-    if not xeto_dir.exists():
-        raise FileNotFoundError(f"Xeto directory not found: {xeto_dir}")
+    if graph:
+        cmd.append("-graph")
 
-    if not xeto_dir.is_dir():
-        raise NotADirectoryError(f"Xeto path is not a directory: {xeto_dir}")
+    result = subprocess.run(
+        cmd,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
 
-    original_dir = os.getcwd()
-
-    try:
-        os.chdir(xeto_dir)
-        cmd = [
-            "xeto",
-            "fits",
-            temp_file_path,
-            "-outFile",
-            f"stdout.{io_format}",
-        ]
-
-        if graph:
-            cmd.append("-graph")
-
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-
-        return result.stdout
-    finally:
-        os.chdir(original_dir)
+    return result.stdout

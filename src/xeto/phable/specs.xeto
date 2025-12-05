@@ -1,0 +1,14 @@
+
+ElecSiteMeter : ElecMeter {
+  siteMeter
+  subMeters: Query<of:ElecSubMeter, inverse:"phable::ElecSubMeter.mySiteMeter">
+  points: {
+    ElecAcTotalImportActiveDemandSensor
+  }
+}
+
+ElecSubMeter : ElecMeter {
+  subMeter
+  subMeterOf: Ref
+  mySiteMeter: Query<of:ElecSiteMeter, via:"subMeterOf+">
+}
