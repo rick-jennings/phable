@@ -8,5 +8,4 @@ services:
       context: .
       dockerfile: ./Dockerfile
     volumes:
-      - ./xeto:/app/phable-test/src/xeto
-      - ./temp_data:/app/phable-test/src/temp_data
+      - ../../src/xeto:/app/phable-test/src/xeto
