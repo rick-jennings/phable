@@ -19,7 +19,7 @@ Note: The Docker image created is based on the latest commit on [haxall](https:/
 
 ## Xeto specs
 
-Phable's test suite applies specs in `xeto_cli/xeto/phable`.  New specs can be added to this library.  Also, other Xeto libraries may be added to the `xeto_cli/xeto` directory.
+Phable's test suite uses specs defined in `src/xeto/phable.test`.  New specs can be added to this library.  Also, other Xeto libraries may be added to the `src/xeto` directory.
 
 ## Getting involved
 
