@@ -1,6 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 80" width="240" height="80">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 72" width="230" height="72">
   <!-- Text: "phable" -->
-  <text x="0" y="65" font-family="Arial, sans-serif" font-size="72" font-weight="bold">
-    <tspan fill="#60a5fa">p</tspan><tspan fill="#34d399">h</tspan><tspan fill="#ffffff">able</tspan>
+  <text x="0" y="58" font-family="Arial, sans-serif" font-size="72" font-weight="bold">
+    <tspan fill="#34d399">p</tspan><tspan fill="#34d399">h</tspan><tspan fill="#ffffff">able</tspan>
   </text>
 </svg>
