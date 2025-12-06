@@ -4,7 +4,7 @@ This tutorial demonstrates how to create a Xeto library and use it with Python t
 
 ## Prerequisites
 
-- Install the latest [haxall build](https://haxall.io/doc/docHaxall/Setup).
+- Install the latest [haxall build](https://github.com/Project-Haystack/xeto/blob/master/src/xeto/doc.xeto.tools/Setup.md) for Java.
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Project Setup

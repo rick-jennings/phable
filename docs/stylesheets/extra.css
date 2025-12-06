@@ -1,0 +1,4 @@
+/* Hide site name from header */
+.md-header__title {
+  visibility: hidden;
+}

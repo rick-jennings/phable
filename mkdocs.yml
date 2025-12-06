@@ -1,6 +1,8 @@
-site_name: Phable
+site_name: phable
 theme:
   name: material
+  logo: assets/logo.svg
+  favicon: assets/favicon.svg
   features:
     - navigation.tabs
     - navigation.sections
@@ -18,16 +20,18 @@ theme:
       toggle:
         icon: material/toggle-switch-off-outline
         name: Switch to dark mode
-      primary: teal
-      accent: purple
+      primary: indigo
+      accent: teal
     - scheme: slate
       toggle:
         icon: material/toggle-switch
         name: Switch to light mode
-      primary: teal
-      accent: lime
+      primary: indigo
+      accent: teal
 repo_name: phable
 repo_url: https://github.com/rick-jennings/phable
+extra_css:
+  - stylesheets/extra.css
 plugins:
 - search
 - mkdocstrings:
