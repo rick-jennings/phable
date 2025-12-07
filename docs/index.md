@@ -35,22 +35,21 @@ Learn more about phable by exploring the documentation!
 
 ## Installation
 
-Phable requires Python version 3.11 or higher and generally has no required software dependencies.  Download Phable from PyPI using:
+Phable requires Python 3.11 or higher. Install from PyPI:
 
 ```console
 $ pip install phable
 ```
 
-Phable uses the `zoneinfo` module for IANA time zone support, which by default uses the system's time zone data if available.  If no system time zone data is available, then Phable requires the `tzdata` package available on PyPI to be installed.
-
-Phable has optional `pandas` and `pyarrow` package dependencies that are required for `phable.Grid.to_pandas()` and `phable.Grid.to_pandas_all()`.  Download Phable with `pandas` and `pyarrow` from PyPI using:
+**Time zone support:** Phable uses the `zoneinfo` module for IANA time zone support. On systems without time zone data, you'll need to install `tzdata`:
 
 ```console
-$ pip install "phable[pandas,pyarrow]"
+$ pip install tzdata
 ```
 
-Similarly, Phable has an optional `polars` package dependency that is required for `phable.Grid.to_polars()` and `phable.Grid.to_polars_all()`.  Download Phable with `polars` from PyPI using:
+**Optional dependencies:** For DataFrame support, install with your preferred library:
 
 ```console
-$ pip install "phable[polars]"
+$ pip install "phable[pandas,pyarrow]"  # For pandas support
+$ pip install "phable[polars]"          # For polars support
 ```
