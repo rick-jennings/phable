@@ -52,9 +52,11 @@ If applicable, install and enable the [Xeto IDE Extension](https://marketplace.v
 
 ## Define Xeto Specs
 
+In this example, we'll model a common electrical metering scenario: a site with one main electric meter and two submeters. The site meter measures total electrical demand for the facility, while the submeters track demand for specific areas or systems within the site. By establishing the relationships between these meters and their points, applications can perform useful calculations—such as computing total site demand from submeter readings or identifying discrepancies between site and submeter totals.
+
 ### Create Electric Meter Specs
 
-Replace the contents of `specs.xeto` with the below text to define Xeto specs for an electric sitemeter and submeter:
+Replace the contents of `specs.xeto` with the below text to define Xeto specs for an electric site meter and submeters:
 
 ```xeto
 ElecSiteMeter : ElecMeter {
@@ -69,12 +71,15 @@ ElecSubMeter : ElecMeter {
   subMeter
   subMeterOf: Ref
   mySiteMeter: Query<of:ElecSiteMeter, via:"subMeterOf+">
+  points: {
+    ElecAcTotalImportActiveDemandSensor
+  }
 }
 ```
 
-### Configure Library Dependencies
+### Configure Library Metadata
 
-Specify the Xeto library dependencies by replacing the contents of `lib.xeto` with the below text:
+Create the Xeto library configuration by replacing the contents of `lib.xeto` with the below text. This defines the library metadata (name, description, version) and declares dependencies on other Xeto libraries that our specs will reference:
 
 ```xeto
 pragma: Lib <
@@ -105,7 +110,7 @@ xeto build -allIn .
 
 ## Create Python Validation Script
 
-Replace the contents of `hello.py` with the below Python code that creates Haystack instance data and validates it against the Xeto specs just created:
+Replace the contents of `hello.py` with the below Python code. This script creates Haystack instance data representing a site, one site meter with its demand point, and two submeters (each with its own demand point). The `subMeterOf` references establish the meter hierarchy, enabling applications to navigate these relationships. For example, applications can sum submeter demands or compare them against the site meter reading. The script validates this data structure against the Xeto specs we defined:
 
 ```python
 from phable import Grid, Marker, Ref, XetoCLI
@@ -191,18 +196,17 @@ def main():
     ]
 
     xeto_cli = XetoCLI()
+    recs_fit = xeto_cli.fits_explain(recs)
 
     try:
-        # validate recs adhere to their Xeto specs
-        # Note: An empty grid means no errors!
-        assert xeto_cli.fits_explain(recs) == Grid(
+        assert recs_fit == Grid(
             {"ver": "3.0"},
             [{"name": "id"}, {"name": "msg"}],
             [],
         )
-        print("Test passed!!!")
+        print("Validation passed!!!")
     except Exception:
-        print("Test failed!!!")
+        print(f"Validation failed for the following reasons:\n{recs_fit.rows}")
 
 
 if __name__ == "__main__":
@@ -213,7 +217,7 @@ if __name__ == "__main__":
 
 ### Run the Validation Test
 
-Run the Python script and verify "Test passed!!!" is shown in the terminal:
+Run the Python script and verify "Validation passed!!!" is shown in the terminal:
 
 ```shell
 uv run hello.py
@@ -221,4 +225,4 @@ uv run hello.py
 
 ### Test Failure Cases
 
-To verify the validation is working correctly, modify the `recs` to fail validation, run the script again, and verify "Test failed!!!" is shown in the terminal.
+To verify the validation is working correctly, modify the `recs` to fail validation, run the script again, and verify "Validation failed" is shown in the terminal.
