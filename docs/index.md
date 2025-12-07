@@ -2,25 +2,36 @@
 
 ## About
 
-Phable is an open source, simple, modern Python toolkit for basic client connectivity to [Project Haystack](https://project-haystack.org/) and [Haxall](https://haxall.io/) defined server applications.
+Phable is a modern Python toolkit for working with [Project Haystack](https://project-haystack.org/) tagged data, [Xeto](https://github.com/Project-Haystack/xeto?tab=readme-ov-file#overview) specs, and [Haxall](https://haxall.io/). It provides a simple, Pythonic interface for building automation systems, charging station management systems, and other energy management applications that use Project Haystack semantic data models.
 
-Phable is free to use and permissively licensed under the MIT license.
+**Open source and free** - Phable is permissively licensed under the MIT license.
 
-Project Haystack features include:
+### Core Capabilities
 
- - Reading `site`, `equip`, and `point` entities
- - Reading current values of real-time data points
- - Supervisory control of real-time data points
- - Reading history data for data points
- - Writing history data to already established data points
+**Data Types & Serialization**
 
-Haxall features include:
+- Full support for Project Haystack [kinds](https://project-haystack.org/doc/docHaystack/Kinds) (data types)
+- Serialize between Python objects and [Zinc](https://project-haystack.org/doc/docHaystack/Zinc) or [JSON](https://project-haystack.org/doc/docHaystack/Json) formats
+- Native Python representations for working with semantic data
 
- - All Project Haystack features listed above
- - Add, update, and remove commit operations
- - Evaluation of an Axon string expression
+**Project Haystack Client**
 
-Learn more about `Phable` by exploring the documentation!
+- Read `site`, `equip`, and `point` entities
+- Read current values of real-time data points
+- Supervisory control of real-time data points
+- Read and write history data for data points
+
+**Haxall Client**
+
+- All Project Haystack client features
+- Add, update, and remove operations (commit API)
+- Evaluate Axon expressions directly from Python
+
+**Xeto**
+
+- Type checking and validation of Haystack records against Xeto specifications via Haxall's CLI
+
+Learn more about phable by exploring the documentation!
 
 ## Installation
 
