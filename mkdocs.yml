@@ -56,11 +56,11 @@ plugins:
 nav:
   - Home: index.md
   - API Reference:
-    - HaystackClient: haystack_client.md
-    - HaxallClient: haxall_client.md
-    - XetoCLI: xeto_cli.md
-    - Data Types: data_types.md
+    - HaystackClient: haystack-client.md
+    - HaxallClient: haxall-client.md
+    - XetoCLI: xeto-cli.md
+    - Data Types: data-types.md
   - Examples:
-    - Logging: logging_example.md
-    - Async Usage: async_example.md
-    - Xeto Intro: xeto_intro.md
+    - Logging: logging-example.md
+    - Async Usage: async-example.md
+    - Xeto Intro: xeto-intro.md
