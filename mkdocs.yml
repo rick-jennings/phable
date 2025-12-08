@@ -61,6 +61,6 @@ nav:
     - XetoCLI: xeto-cli.md
     - Data Types: data-types.md
   - Examples:
+    - Xeto Intro: xeto-intro.md
     - Logging: logging-example.md
     - Async Usage: async-example.md
-    - Xeto Intro: xeto-intro.md
