@@ -2,7 +2,7 @@ site_name: phable
 theme:
   name: material
   logo: assets/logo.svg
-  favicon: assets/favicon.svg
+  favicon: assets/favicon.png
   features:
     - navigation.tabs
     - navigation.sections
