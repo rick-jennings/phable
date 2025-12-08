@@ -5,6 +5,7 @@ This tutorial demonstrates how to create a Xeto library and use it with Python t
 ## Prerequisites
 
 - Install the latest [haxall build](https://github.com/Project-Haystack/xeto/blob/master/src/xeto/doc.xeto.tools/Setup.md) for Java.
+- Ensure the Haxall `bin` directory is in the `PATH` environment variable.
 - Install [uv](https://docs.astral.sh/uv/getting-started/installation/).
 
 ## Project Setup
@@ -23,7 +24,7 @@ uv sync
 
 ### Link to Haxall Runtime
 
-Link the project to the Haxall runtime (adjust the path to match your Haxall installation):
+Link the project to the Haxall runtime (adjust the path to match the Haxall installation):
 
 ```shell
 ~/haxall-4.0.4/bin/xeto env
