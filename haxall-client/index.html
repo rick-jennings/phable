@@ -1,0 +1,3360 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../haystack-client/">
+      
+      
+        <link rel="next" href="../xeto-cli/">
+      
+      
+      <link rel="icon" href="../assets/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+    
+    
+      
+        <title>HaxallClient - phable</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#haxallclient" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="phable" class="md-header__button md-logo" aria-label="phable" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            phable
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              HaxallClient
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 6H7c-3.31 0-6 2.69-6 6s2.69 6 6 6h10c3.31 0 6-2.69 6-6s-2.69-6-6-6m0 10H7c-2.21 0-4-1.79-4-4s1.79-4 4-4h10c2.21 0 4 1.79 4 4s-1.79 4-4 4M7 9c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="teal"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M17 7H7a5 5 0 0 0-5 5 5 5 0 0 0 5 5h10a5 5 0 0 0 5-5 5 5 0 0 0-5-5m0 8a3 3 0 0 1-3-3 3 3 0 0 1 3-3 3 3 0 0 1 3 3 3 3 0 0 1-3 3"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/rick-jennings/phable" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    phable
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href=".." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../haystack-client/" class="md-tabs__link">
+          
+  
+  
+  API Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../xeto-intro/" class="md-tabs__link">
+          
+  
+  
+  Examples
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+  
+
+<nav class="md-nav md-nav--primary md-nav--lifted md-nav--integrated" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="phable" class="md-nav__button md-logo" aria-label="phable" data-md-component="logo">
+      
+  <img src="../assets/logo.svg" alt="logo">
+
+    </a>
+    phable
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/rick-jennings/phable" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+  </div>
+  <div class="md-source__repository">
+    phable
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Home
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    API Reference
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            API Reference
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../haystack-client/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    HaystackClient
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    HaxallClient
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    HaxallClient
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#phable.haxall_client.open_haxall_client" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;open_haxall_client
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;HaxallClient
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" HaxallClient">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.commit_add" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;commit_add
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.commit_remove" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;commit_remove
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.commit_update" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;commit_update
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.eval" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;eval
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.file_get" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;file_get
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.file_post" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;file_post
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phable.haxall_client.HaxallClient.file_put" class="md-nav__link">
+    <span class="md-ellipsis">
+      <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;file_put
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xeto-cli/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    XetoCLI
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../data-types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Data Types
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Examples
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../xeto-intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Xeto Intro
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../logging-example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Logging
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../async-example/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Async Usage
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="haxallclient"><code>HaxallClient</code></h1>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h2 id="phable.haxall_client.open_haxall_client" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-function"></code>            <span class="doc doc-object-name doc-function-name">open_haxall_client</span>
+
+
+</h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">open_haxall_client</span><span class="p">(</span><span class="n">uri</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="s1">&#39;json&#39;</span><span class="p">,</span> <span class="n">ssl_context</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+        <p>Context manager for opening and closing a session with a
+<a href="https://haxall.io/">Haxall</a> application. May help prevent accidentially leaving a
+session with the server open.</p>
+<p><code>open_haxall_client</code> can be directly imported as follows:</p>
+<pre><code class="language-python">from phable import open_haxall_client
+</code></pre>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import open_haxall_client
+
+uri = &quot;http://localhost:8080/api/demo&quot;
+with open_haxall_client(uri, &quot;su&quot;, &quot;password&quot;) as client:
+    print(client.about())
+</code></pre>
+<p><strong>Note:</strong> This context manager uses Project Haystack's
+<a href="https://project-haystack.org/doc/docHaystack/Ops#close">close op</a>, which was
+later introduced. Therefore the context manager may not work with earlier versions
+of Haxall.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>uri</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>URI of endpoint such as "http://host/api/myProj/".</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>username</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Username for the API user.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>password</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Password for the API user.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>content_type</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Format of data exchanged via HTTP. "json" and "zinc" options are supported.</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;json&#39;</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>ssl_context</code>
+            </td>
+            <td>
+                  <code><span title="ssl">ssl</span>.<span title="ssl.SSLContext">SSLContext</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional SSL context. If not provided, a SSL context with default
+settings is created and used.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">17</span>
+<span class="normal">18</span>
+<span class="normal">19</span>
+<span class="normal">20</span>
+<span class="normal">21</span>
+<span class="normal">22</span>
+<span class="normal">23</span>
+<span class="normal">24</span>
+<span class="normal">25</span>
+<span class="normal">26</span>
+<span class="normal">27</span>
+<span class="normal">28</span>
+<span class="normal">29</span>
+<span class="normal">30</span>
+<span class="normal">31</span>
+<span class="normal">32</span>
+<span class="normal">33</span>
+<span class="normal">34</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span>
+<span class="normal">40</span>
+<span class="normal">41</span>
+<span class="normal">42</span>
+<span class="normal">43</span>
+<span class="normal">44</span>
+<span class="normal">45</span>
+<span class="normal">46</span>
+<span class="normal">47</span>
+<span class="normal">48</span>
+<span class="normal">49</span>
+<span class="normal">50</span>
+<span class="normal">51</span>
+<span class="normal">52</span>
+<span class="normal">53</span>
+<span class="normal">54</span>
+<span class="normal">55</span>
+<span class="normal">56</span>
+<span class="normal">57</span>
+<span class="normal">58</span>
+<span class="normal">59</span>
+<span class="normal">60</span>
+<span class="normal">61</span>
+<span class="normal">62</span>
+<span class="normal">63</span>
+<span class="normal">64</span>
+<span class="normal">65</span>
+<span class="normal">66</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@contextmanager</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">open_haxall_client</span><span class="p">(</span>
+    <span class="n">uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">username</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">password</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="o">*</span><span class="p">,</span>
+    <span class="n">content_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span><span class="p">,</span>
+    <span class="n">ssl_context</span><span class="p">:</span> <span class="n">SSLContext</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Generator</span><span class="p">[</span><span class="n">HaxallClient</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Context manager for opening and closing a session with a</span>
+<span class="sd">    [Haxall](https://haxall.io/) application. May help prevent accidentially leaving a</span>
+<span class="sd">    session with the server open.</span>
+
+<span class="sd">    `open_haxall_client` can be directly imported as follows:</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    with open_haxall_client(uri, &quot;su&quot;, &quot;password&quot;) as client:</span>
+<span class="sd">        print(client.about())</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    **Note:** This context manager uses Project Haystack&#39;s</span>
+<span class="sd">    [close op](https://project-haystack.org/doc/docHaystack/Ops#close), which was</span>
+<span class="sd">    later introduced. Therefore the context manager may not work with earlier versions</span>
+<span class="sd">    of Haxall.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        uri: URI of endpoint such as &quot;http://host/api/myProj/&quot;.</span>
+<span class="sd">        username: Username for the API user.</span>
+<span class="sd">        password: Password for the API user.</span>
+<span class="sd">        content_type:</span>
+<span class="sd">            Format of data exchanged via HTTP. &quot;json&quot; and &quot;zinc&quot; options are supported.</span>
+<span class="sd">        ssl_context:</span>
+<span class="sd">            Optional SSL context. If not provided, a SSL context with default</span>
+<span class="sd">            settings is created and used.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">client</span> <span class="o">=</span> <span class="n">HaxallClient</span><span class="o">.</span><span class="n">open</span><span class="p">(</span>
+        <span class="n">uri</span><span class="p">,</span> <span class="n">username</span><span class="p">,</span> <span class="n">password</span><span class="p">,</span> <span class="n">content_type</span><span class="o">=</span><span class="n">content_type</span><span class="p">,</span> <span class="n">ssl_context</span><span class="o">=</span><span class="n">ssl_context</span>
+    <span class="p">)</span>
+    <span class="k">yield</span> <span class="n">client</span>
+    <span class="n">client</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="phable.haxall_client.HaxallClient" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-class"></code>            <span class="doc doc-object-name doc-class-name">HaxallClient</span>
+
+
+</h2>
+
+
+    <div class="doc doc-contents first">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="phable">phable</span>.<span title="phable.haystack_client">haystack_client</span>.<a class="autorefs autorefs-internal" title="            HaystackClient (phable.haystack_client.HaystackClient)" href="../haystack-client/#phable.HaystackClient">HaystackClient</a></code></p>
+
+
+        <p>A superset of <code>HaystackClient</code> with support for Haxall specific operations.</p>
+<p>Learn more about Haxall <a href="https://haxall.io/">here</a>.</p>
+
+
+
+
+
+
+
+              <details class="quote">
+                <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+                <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 69</span>
+<span class="normal"> 70</span>
+<span class="normal"> 71</span>
+<span class="normal"> 72</span>
+<span class="normal"> 73</span>
+<span class="normal"> 74</span>
+<span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span>
+<span class="normal">337</span>
+<span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span>
+<span class="normal">375</span>
+<span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span>
+<span class="normal">413</span>
+<span class="normal">414</span>
+<span class="normal">415</span>
+<span class="normal">416</span>
+<span class="normal">417</span>
+<span class="normal">418</span>
+<span class="normal">419</span>
+<span class="normal">420</span>
+<span class="normal">421</span>
+<span class="normal">422</span>
+<span class="normal">423</span>
+<span class="normal">424</span>
+<span class="normal">425</span>
+<span class="normal">426</span>
+<span class="normal">427</span>
+<span class="normal">428</span>
+<span class="normal">429</span>
+<span class="normal">430</span>
+<span class="normal">431</span>
+<span class="normal">432</span>
+<span class="normal">433</span>
+<span class="normal">434</span>
+<span class="normal">435</span>
+<span class="normal">436</span>
+<span class="normal">437</span>
+<span class="normal">438</span>
+<span class="normal">439</span>
+<span class="normal">440</span>
+<span class="normal">441</span>
+<span class="normal">442</span>
+<span class="normal">443</span>
+<span class="normal">444</span>
+<span class="normal">445</span>
+<span class="normal">446</span>
+<span class="normal">447</span>
+<span class="normal">448</span>
+<span class="normal">449</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">HaxallClient</span><span class="p">(</span><span class="n">HaystackClient</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A superset of `HaystackClient` with support for Haxall specific operations.</span>
+
+<span class="sd">    Learn more about Haxall [here](https://haxall.io/).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">commit_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Adds one or more new records to the database.</span>
+
+<span class="sd">        As a general rule you should not have an `id` column in your commit grid.</span>
+<span class="sd">        However if you wish to predefine the id of the records, you can specify an `id`</span>
+<span class="sd">        column in the commit grid.</span>
+
+<span class="sd">        Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">        **Errors**</span>
+
+<span class="sd">        After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">        may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">        raised:</span>
+
+<span class="sd">        1. `ErrorGridError` if the operation fails</span>
+<span class="sd">        2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">        **Additional info**</span>
+
+<span class="sd">        See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">        [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import Marker, open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        # define the rec to add</span>
+<span class="sd">        rec = [{&quot;dis&quot;: &quot;TestRec&quot;, &quot;testing&quot;: Marker(), &quot;pytest&quot;: Marker()}]</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            # commit the rec and capture response</span>
+<span class="sd">            rec_added_grid = client.commit_add(rec)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            recs: Records to be added to the database.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The full tag definitions for each of the newly added records.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+            <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">commit_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Updates one or more existing records within the database.</span>
+
+<span class="sd">        Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">        **Errors**</span>
+
+<span class="sd">        After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">        may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">        raised:</span>
+
+<span class="sd">        1. `ErrorGridError` if the operation fails</span>
+<span class="sd">        2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">        **Additional info**</span>
+
+<span class="sd">        See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">        [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import Ref, open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            # query entire rec we want to modify to get the mod tag</span>
+<span class="sd">            rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))</span>
+
+<span class="sd">            # define new tag to add to rec</span>
+<span class="sd">            rec[&quot;foo&quot;] = &quot;new tag&quot;</span>
+
+<span class="sd">            # commit update to rec and capture response</span>
+<span class="sd">            rec_modified_grid = client.commit_update(rec)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            recs:</span>
+<span class="sd">                Existing records within the database to be updated. Each record (or</span>
+<span class="sd">                row) must at minimum have tags for the rec&#39;s existing `id` and `mod`</span>
+<span class="sd">                columns (defined by the server) and the columns being updated (defined</span>
+<span class="sd">                by the client).</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The latest full tag definitions for each of the updated records.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;update&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+            <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">commit_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Removes one or more records from the database.</span>
+
+<span class="sd">        Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">        **Errors**</span>
+
+<span class="sd">        An `ErrorGridError` is raised if any of the recs do not exist on</span>
+<span class="sd">        the server.</span>
+
+<span class="sd">        Also, after the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">        may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">        raised:</span>
+
+<span class="sd">        1. `ErrorGridError` if the operation fails</span>
+<span class="sd">        2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">        **Additional info**</span>
+
+<span class="sd">        See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">        [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import Ref, open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            # query entire rec you want to delete to get the mod tag</span>
+<span class="sd">            rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))</span>
+
+<span class="sd">            # delete the rec</span>
+<span class="sd">            client.commit_remove(rec)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            recs:</span>
+<span class="sd">                Records to be removed from the database. Each record (or row) must at</span>
+<span class="sd">                minimum define `id` and `mod` columns.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An empty `Grid`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;remove&quot;</span><span class="p">}</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+            <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+            <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Evaluates an Axon string expression.</span>
+
+<span class="sd">        **Errors**</span>
+
+<span class="sd">        After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">        may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">        raised:</span>
+
+<span class="sd">        1. `ErrorGridError` if the operation fails</span>
+<span class="sd">        2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">        **Additional info**</span>
+
+<span class="sd">        See Haxall&#39;s Eval operation docs for more details</span>
+<span class="sd">        [here](https://haxall.io/doc/lib-hx/op~eval).</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        # define an axon expression to evaluate on the server</span>
+<span class="sd">        axon_expr = &quot;read(power and point and equipRef-&gt;siteMeter).hisRead(lastMonth)&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            his_grid = client.eval(axon_expr)</span>
+
+<span class="sd">        his_df_meta, his_df = his_grid.to_polars_all()</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            expr: Axon string expression.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            `Grid` with the server&#39;s response.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;eval&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">({</span><span class="s2">&quot;expr&quot;</span><span class="p">:</span> <span class="n">expr</span><span class="p">}))</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">file_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BufferedReader</span><span class="p">:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fetches content from a file on the server and returns a buffered binary stream.</span>
+
+<span class="sd">        The data in the HTTP response is not logged since a buffered reader can only be read once.</span>
+
+<span class="sd">        Phable users should manually close the returned stream as shown in the example below.</span>
+
+<span class="sd">        **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            stream = client.file_get(&quot;/proj/demo/io/data.txt&quot;)</span>
+
+<span class="sd">            # write data from the stream to a local file called data.txt</span>
+<span class="sd">            with open(&quot;data.txt&quot;, &quot;wb&quot;) as file:</span>
+<span class="sd">                file.write(stream.read())</span>
+
+<span class="sd">            # don&#39;t forget to close the stream when finished!</span>
+<span class="sd">            stream.close()</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            remote_file_uri:</span>
+<span class="sd">                URI of the remote file that has content being fetched.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A buffered binary stream that is readable.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">remote_file_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uri</span> <span class="o">+</span> <span class="s2">&quot;/file&quot;</span> <span class="o">+</span> <span class="n">remote_file_uri</span>
+
+        <span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">remote_file_url</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mimetype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;BEARER authToken=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_auth_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">mimetype</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="n">request</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="n">remote_file_url</span><span class="p">,</span>
+            <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">BufferedReader</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">file_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Uploads a file to a project using the HTTP POST method.</span>
+
+<span class="sd">        If a file with the same name already exists on the server, then the uploaded file will be renamed.</span>
+
+<span class="sd">        **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            # use stream from local file data.txt to upload file on server</span>
+<span class="sd">            with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:</span>
+<span class="sd">                res_data = client.file_post(file, &quot;/proj/demo/io/data.txt&quot;)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError:</span>
+<span class="sd">                Server did not return a Grid with the URI that file content was written to.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            stream:</span>
+<span class="sd">                A buffered binary stream used for writing content to the remote file.</span>
+<span class="sd">            remote_file_uri:</span>
+<span class="sd">                URI that file content is intended to be written to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary of data containing the URI the file content was written to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upload_file</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">file_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Uploads a file to a project using the HTTP PUT method.</span>
+
+<span class="sd">        If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.</span>
+
+<span class="sd">        **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">        **Example:**</span>
+
+<span class="sd">        ```python</span>
+<span class="sd">        from phable import open_haxall_client</span>
+
+<span class="sd">        # define these settings specific to your use case</span>
+<span class="sd">        uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">        username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">        password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">        with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">            # use stream from local file data.txt to upload file on server</span>
+<span class="sd">            with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:</span>
+<span class="sd">                res_data = client.file_put(file, &quot;/proj/demo/io/data.txt&quot;)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError:</span>
+<span class="sd">                Server did not return a Grid with the URI that file content was written to.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            stream:</span>
+<span class="sd">                A buffered binary stream used for writing content to the remote file.</span>
+<span class="sd">            remote_file_uri:</span>
+<span class="sd">                URI of the remote file that content will be written to.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A dictionary of data containing the URI the file content was written to.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upload_file</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_upload_file</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">http_method</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+        <span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">remote_file_uri</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">mimetype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">stream</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+        <span class="n">stream</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="n">mimetype</span><span class="p">,</span>
+            <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;BEARER authToken=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_auth_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_content_type</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="n">res</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ph_decoder</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span>
+            <span class="n">ph_request</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">uri</span> <span class="o">+</span> <span class="s2">&quot;/file&quot;</span> <span class="o">+</span> <span class="n">remote_file_uri</span><span class="p">,</span>
+                <span class="n">headers</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_content_type</span><span class="p">,</span>
+                <span class="n">data</span><span class="p">,</span>
+                <span class="n">method</span><span class="o">=</span><span class="n">http_method</span><span class="p">,</span>
+                <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">,</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">body</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">res_data</span> <span class="o">=</span> <span class="n">res</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">res_data</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;uri&quot;</span><span class="p">),</span> <span class="n">Uri</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span>
+
+        <span class="k">return</span> <span class="n">res_data</span>
+</code></pre></div></td></tr></table></div>
+              </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.commit_add" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">commit_add</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">commit_add</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Adds one or more new records to the database.</p>
+<p>As a general rule you should not have an <code>id</code> column in your commit grid.
+However if you wish to predefine the id of the records, you can specify an <code>id</code>
+column in the commit grid.</p>
+<p>Commit access requires the API user to have admin permission.</p>
+<p><strong>Errors</strong></p>
+<p>After the request <code>Grid</code> is successfully read by the server, the server
+may respond with a <code>Grid</code> that triggers one of the following errors to be
+raised:</p>
+<ol>
+<li><code>ErrorGridError</code> if the operation fails</li>
+<li><code>IncompleteDataError</code> if incomplete data is being returned</li>
+</ol>
+<p><strong>Additional info</strong></p>
+<p>See Haxall's Commit operation docs for more details
+<a href="https://haxall.io/doc/lib-hx/op~commit">here</a>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import Marker, open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+# define the rec to add
+rec = [{&quot;dis&quot;: &quot;TestRec&quot;, &quot;testing&quot;: Marker(), &quot;pytest&quot;: Marker()}]
+
+with open_haxall_client(uri, username, password) as client:
+    # commit the rec and capture response
+    rec_added_grid = client.commit_add(rec)
+</code></pre>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>recs</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>] | <span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>]] | <span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Records to be added to the database.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The full tag definitions for each of the newly added records.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 75</span>
+<span class="normal"> 76</span>
+<span class="normal"> 77</span>
+<span class="normal"> 78</span>
+<span class="normal"> 79</span>
+<span class="normal"> 80</span>
+<span class="normal"> 81</span>
+<span class="normal"> 82</span>
+<span class="normal"> 83</span>
+<span class="normal"> 84</span>
+<span class="normal"> 85</span>
+<span class="normal"> 86</span>
+<span class="normal"> 87</span>
+<span class="normal"> 88</span>
+<span class="normal"> 89</span>
+<span class="normal"> 90</span>
+<span class="normal"> 91</span>
+<span class="normal"> 92</span>
+<span class="normal"> 93</span>
+<span class="normal"> 94</span>
+<span class="normal"> 95</span>
+<span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span>
+<span class="normal">112</span>
+<span class="normal">113</span>
+<span class="normal">114</span>
+<span class="normal">115</span>
+<span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">commit_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Adds one or more new records to the database.</span>
+
+<span class="sd">    As a general rule you should not have an `id` column in your commit grid.</span>
+<span class="sd">    However if you wish to predefine the id of the records, you can specify an `id`</span>
+<span class="sd">    column in the commit grid.</span>
+
+<span class="sd">    Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">    **Errors**</span>
+
+<span class="sd">    After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">    may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">    raised:</span>
+
+<span class="sd">    1. `ErrorGridError` if the operation fails</span>
+<span class="sd">    2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">    **Additional info**</span>
+
+<span class="sd">    See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">    [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import Marker, open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    # define the rec to add</span>
+<span class="sd">    rec = [{&quot;dis&quot;: &quot;TestRec&quot;, &quot;testing&quot;: Marker(), &quot;pytest&quot;: Marker()}]</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        # commit the rec and capture response</span>
+<span class="sd">        rec_added_grid = client.commit_add(rec)</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        recs: Records to be added to the database.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The full tag definitions for each of the newly added records.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;add&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+        <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.commit_remove" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">commit_remove</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">commit_remove</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Removes one or more records from the database.</p>
+<p>Commit access requires the API user to have admin permission.</p>
+<p><strong>Errors</strong></p>
+<p>An <code>ErrorGridError</code> is raised if any of the recs do not exist on
+the server.</p>
+<p>Also, after the request <code>Grid</code> is successfully read by the server, the server
+may respond with a <code>Grid</code> that triggers one of the following errors to be
+raised:</p>
+<ol>
+<li><code>ErrorGridError</code> if the operation fails</li>
+<li><code>IncompleteDataError</code> if incomplete data is being returned</li>
+</ol>
+<p><strong>Additional info</strong></p>
+<p>See Haxall's Commit operation docs for more details
+<a href="https://haxall.io/doc/lib-hx/op~commit">here</a>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import Ref, open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    # query entire rec you want to delete to get the mod tag
+    rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))
+
+    # delete the rec
+    client.commit_remove(rec)
+</code></pre>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>recs</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>] | <span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>]] | <span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Records to be removed from the database. Each record (or row) must at
+minimum define <code>id</code> and <code>mod</code> columns.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>An empty <code>Grid</code>.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">commit_remove</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes one or more records from the database.</span>
+
+<span class="sd">    Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">    **Errors**</span>
+
+<span class="sd">    An `ErrorGridError` is raised if any of the recs do not exist on</span>
+<span class="sd">    the server.</span>
+
+<span class="sd">    Also, after the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">    may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">    raised:</span>
+
+<span class="sd">    1. `ErrorGridError` if the operation fails</span>
+<span class="sd">    2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">    **Additional info**</span>
+
+<span class="sd">    See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">    [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import Ref, open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        # query entire rec you want to delete to get the mod tag</span>
+<span class="sd">        rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))</span>
+
+<span class="sd">        # delete the rec</span>
+<span class="sd">        client.commit_remove(rec)</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        recs:</span>
+<span class="sd">            Records to be removed from the database. Each record (or row) must at</span>
+<span class="sd">            minimum define `id` and `mod` columns.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        An empty `Grid`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;remove&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+        <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.commit_update" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">commit_update</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">commit_update</span><span class="p">(</span><span class="n">recs</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Updates one or more existing records within the database.</p>
+<p>Commit access requires the API user to have admin permission.</p>
+<p><strong>Errors</strong></p>
+<p>After the request <code>Grid</code> is successfully read by the server, the server
+may respond with a <code>Grid</code> that triggers one of the following errors to be
+raised:</p>
+<ol>
+<li><code>ErrorGridError</code> if the operation fails</li>
+<li><code>IncompleteDataError</code> if incomplete data is being returned</li>
+</ol>
+<p><strong>Additional info</strong></p>
+<p>See Haxall's Commit operation docs for more details
+<a href="https://haxall.io/doc/lib-hx/op~commit">here</a>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import Ref, open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    # query entire rec we want to modify to get the mod tag
+    rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))
+
+    # define new tag to add to rec
+    rec[&quot;foo&quot;] = &quot;new tag&quot;
+
+    # commit update to rec and capture response
+    rec_modified_grid = client.commit_update(rec)
+</code></pre>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>recs</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>] | <span title="list">list</span>[<span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>]] | <span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Existing records within the database to be updated. Each record (or
+row) must at minimum have tags for the rec's existing <code>id</code> and <code>mod</code>
+columns (defined by the server) and the columns being updated (defined
+by the client).</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>The latest full tag definitions for each of the updated records.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span>
+<span class="normal">141</span>
+<span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span>
+<span class="normal">158</span>
+<span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span>
+<span class="normal">173</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">commit_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">recs</span><span class="p">:</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]</span> <span class="o">|</span> <span class="nb">list</span><span class="p">[</span><span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]]</span> <span class="o">|</span> <span class="n">Grid</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Updates one or more existing records within the database.</span>
+
+<span class="sd">    Commit access requires the API user to have admin permission.</span>
+
+<span class="sd">    **Errors**</span>
+
+<span class="sd">    After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">    may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">    raised:</span>
+
+<span class="sd">    1. `ErrorGridError` if the operation fails</span>
+<span class="sd">    2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">    **Additional info**</span>
+
+<span class="sd">    See Haxall&#39;s Commit operation docs for more details</span>
+<span class="sd">    [here](https://haxall.io/doc/lib-hx/op~commit).</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import Ref, open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        # query entire rec we want to modify to get the mod tag</span>
+<span class="sd">        rec = client.read_by_id(Ref(&quot;2e9ab42e-c9822ff9&quot;))</span>
+
+<span class="sd">        # define new tag to add to rec</span>
+<span class="sd">        rec[&quot;foo&quot;] = &quot;new tag&quot;</span>
+
+<span class="sd">        # commit update to rec and capture response</span>
+<span class="sd">        rec_modified_grid = client.commit_update(rec)</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        recs:</span>
+<span class="sd">            Existing records within the database to be updated. Each record (or</span>
+<span class="sd">            row) must at minimum have tags for the rec&#39;s existing `id` and `mod`</span>
+<span class="sd">            columns (defined by the server) and the columns being updated (defined</span>
+<span class="sd">            by the client).</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The latest full tag definitions for each of the updated records.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">meta</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;commit&quot;</span><span class="p">:</span> <span class="s2">&quot;update&quot;</span><span class="p">}</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">Grid</span><span class="p">):</span>
+        <span class="n">meta</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">meta</span> <span class="o">|</span> <span class="n">meta</span>
+        <span class="n">recs</span> <span class="o">=</span> <span class="n">recs</span><span class="o">.</span><span class="n">rows</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;commit&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">(</span><span class="n">recs</span><span class="p">,</span> <span class="n">meta</span><span class="p">))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.eval" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">eval</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">eval</span><span class="p">(</span><span class="n">expr</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Evaluates an Axon string expression.</p>
+<p><strong>Errors</strong></p>
+<p>After the request <code>Grid</code> is successfully read by the server, the server
+may respond with a <code>Grid</code> that triggers one of the following errors to be
+raised:</p>
+<ol>
+<li><code>ErrorGridError</code> if the operation fails</li>
+<li><code>IncompleteDataError</code> if incomplete data is being returned</li>
+</ol>
+<p><strong>Additional info</strong></p>
+<p>See Haxall's Eval operation docs for more details
+<a href="https://haxall.io/doc/lib-hx/op~eval">here</a>.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+# define an axon expression to evaluate on the server
+axon_expr = &quot;read(power and point and equipRef-&gt;siteMeter).hisRead(lastMonth)&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    his_grid = client.eval(axon_expr)
+
+his_df_meta, his_df = his_grid.to_polars_all()
+</code></pre>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>expr</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Axon string expression.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="phable">phable</span>.<span title="phable.kinds">kinds</span>.<a class="autorefs autorefs-internal" title="            Grid
+
+
+  
+      dataclass
+   (phable.kinds.Grid)" href="../data-types/#phable.kinds.Grid">Grid</a></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p><code>Grid</code> with the server's response.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">eval</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">expr</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Grid</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluates an Axon string expression.</span>
+
+<span class="sd">    **Errors**</span>
+
+<span class="sd">    After the request `Grid` is successfully read by the server, the server</span>
+<span class="sd">    may respond with a `Grid` that triggers one of the following errors to be</span>
+<span class="sd">    raised:</span>
+
+<span class="sd">    1. `ErrorGridError` if the operation fails</span>
+<span class="sd">    2. `IncompleteDataError` if incomplete data is being returned</span>
+
+<span class="sd">    **Additional info**</span>
+
+<span class="sd">    See Haxall&#39;s Eval operation docs for more details</span>
+<span class="sd">    [here](https://haxall.io/doc/lib-hx/op~eval).</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    # define an axon expression to evaluate on the server</span>
+<span class="sd">    axon_expr = &quot;read(power and point and equipRef-&gt;siteMeter).hisRead(lastMonth)&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        his_grid = client.eval(axon_expr)</span>
+
+<span class="sd">    his_df_meta, his_df = his_grid.to_polars_all()</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        expr: Axon string expression.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        `Grid` with the server&#39;s response.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">call</span><span class="p">(</span><span class="s2">&quot;eval&quot;</span><span class="p">,</span> <span class="n">Grid</span><span class="o">.</span><span class="n">to_grid</span><span class="p">({</span><span class="s2">&quot;expr&quot;</span><span class="p">:</span> <span class="n">expr</span><span class="p">}))</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.file_get" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">file_get</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">file_get</span><span class="p">(</span><span class="n">remote_file_uri</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Fetches content from a file on the server and returns a buffered binary stream.</p>
+<p>The data in the HTTP response is not logged since a buffered reader can only be read once.</p>
+<p>Phable users should manually close the returned stream as shown in the example below.</p>
+<p><strong>Note:</strong>  This method is experimental and subject to change.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    stream = client.file_get(&quot;/proj/demo/io/data.txt&quot;)
+
+    # write data from the stream to a local file called data.txt
+    with open(&quot;data.txt&quot;, &quot;wb&quot;) as file:
+        file.write(stream.read())
+
+    # don't forget to close the stream when finished!
+    stream.close()
+</code></pre>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>remote_file_uri</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>URI of the remote file that has content being fetched.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="io">io</span>.<span title="io.BufferedReader">BufferedReader</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A buffered binary stream that is readable.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span>
+<span class="normal">292</span>
+<span class="normal">293</span>
+<span class="normal">294</span>
+<span class="normal">295</span>
+<span class="normal">296</span>
+<span class="normal">297</span>
+<span class="normal">298</span>
+<span class="normal">299</span>
+<span class="normal">300</span>
+<span class="normal">301</span>
+<span class="normal">302</span>
+<span class="normal">303</span>
+<span class="normal">304</span>
+<span class="normal">305</span>
+<span class="normal">306</span>
+<span class="normal">307</span>
+<span class="normal">308</span>
+<span class="normal">309</span>
+<span class="normal">310</span>
+<span class="normal">311</span>
+<span class="normal">312</span>
+<span class="normal">313</span>
+<span class="normal">314</span>
+<span class="normal">315</span>
+<span class="normal">316</span>
+<span class="normal">317</span>
+<span class="normal">318</span>
+<span class="normal">319</span>
+<span class="normal">320</span>
+<span class="normal">321</span>
+<span class="normal">322</span>
+<span class="normal">323</span>
+<span class="normal">324</span>
+<span class="normal">325</span>
+<span class="normal">326</span>
+<span class="normal">327</span>
+<span class="normal">328</span>
+<span class="normal">329</span>
+<span class="normal">330</span>
+<span class="normal">331</span>
+<span class="normal">332</span>
+<span class="normal">333</span>
+<span class="normal">334</span>
+<span class="normal">335</span>
+<span class="normal">336</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">file_get</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">BufferedReader</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fetches content from a file on the server and returns a buffered binary stream.</span>
+
+<span class="sd">    The data in the HTTP response is not logged since a buffered reader can only be read once.</span>
+
+<span class="sd">    Phable users should manually close the returned stream as shown in the example below.</span>
+
+<span class="sd">    **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        stream = client.file_get(&quot;/proj/demo/io/data.txt&quot;)</span>
+
+<span class="sd">        # write data from the stream to a local file called data.txt</span>
+<span class="sd">        with open(&quot;data.txt&quot;, &quot;wb&quot;) as file:</span>
+<span class="sd">            file.write(stream.read())</span>
+
+<span class="sd">        # don&#39;t forget to close the stream when finished!</span>
+<span class="sd">        stream.close()</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        remote_file_uri:</span>
+<span class="sd">            URI of the remote file that has content being fetched.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A buffered binary stream that is readable.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">remote_file_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">uri</span> <span class="o">+</span> <span class="s2">&quot;/file&quot;</span> <span class="o">+</span> <span class="n">remote_file_uri</span>
+
+    <span class="n">mimetype</span> <span class="o">=</span> <span class="n">mimetypes</span><span class="o">.</span><span class="n">guess_type</span><span class="p">(</span><span class="n">remote_file_url</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">mimetype</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span>
+
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;Authorization&quot;</span><span class="p">:</span> <span class="sa">f</span><span class="s2">&quot;BEARER authToken=</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_auth_token</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Accept&quot;</span><span class="p">:</span> <span class="n">mimetype</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">res</span> <span class="o">=</span> <span class="n">request</span><span class="p">(</span>
+        <span class="n">url</span><span class="o">=</span><span class="n">remote_file_url</span><span class="p">,</span>
+        <span class="n">headers</span><span class="o">=</span><span class="n">headers</span><span class="p">,</span>
+        <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">BufferedReader</span><span class="p">(</span><span class="n">res</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.file_post" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">file_post</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">file_post</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Uploads a file to a project using the HTTP POST method.</p>
+<p>If a file with the same name already exists on the server, then the uploaded file will be renamed.</p>
+<p><strong>Note:</strong>  This method is experimental and subject to change.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    # use stream from local file data.txt to upload file on server
+    with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:
+        res_data = client.file_post(file, &quot;/proj/demo/io/data.txt&quot;)
+</code></pre>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Server did not return a Grid with the URI that file content was written to.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>stream</code>
+            </td>
+            <td>
+                  <code><span title="io">io</span>.<span title="io.BufferedReader">BufferedReader</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A buffered binary stream used for writing content to the remote file.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>remote_file_uri</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>URI that file content is intended to be written to.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A dictionary of data containing the URI the file content was written to.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">338</span>
+<span class="normal">339</span>
+<span class="normal">340</span>
+<span class="normal">341</span>
+<span class="normal">342</span>
+<span class="normal">343</span>
+<span class="normal">344</span>
+<span class="normal">345</span>
+<span class="normal">346</span>
+<span class="normal">347</span>
+<span class="normal">348</span>
+<span class="normal">349</span>
+<span class="normal">350</span>
+<span class="normal">351</span>
+<span class="normal">352</span>
+<span class="normal">353</span>
+<span class="normal">354</span>
+<span class="normal">355</span>
+<span class="normal">356</span>
+<span class="normal">357</span>
+<span class="normal">358</span>
+<span class="normal">359</span>
+<span class="normal">360</span>
+<span class="normal">361</span>
+<span class="normal">362</span>
+<span class="normal">363</span>
+<span class="normal">364</span>
+<span class="normal">365</span>
+<span class="normal">366</span>
+<span class="normal">367</span>
+<span class="normal">368</span>
+<span class="normal">369</span>
+<span class="normal">370</span>
+<span class="normal">371</span>
+<span class="normal">372</span>
+<span class="normal">373</span>
+<span class="normal">374</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">file_post</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uploads a file to a project using the HTTP POST method.</span>
+
+<span class="sd">    If a file with the same name already exists on the server, then the uploaded file will be renamed.</span>
+
+<span class="sd">    **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        # use stream from local file data.txt to upload file on server</span>
+<span class="sd">        with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:</span>
+<span class="sd">            res_data = client.file_post(file, &quot;/proj/demo/io/data.txt&quot;)</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            Server did not return a Grid with the URI that file content was written to.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        stream:</span>
+<span class="sd">            A buffered binary stream used for writing content to the remote file.</span>
+<span class="sd">        remote_file_uri:</span>
+<span class="sd">            URI that file content is intended to be written to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary of data containing the URI the file content was written to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upload_file</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">,</span> <span class="s2">&quot;POST&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="phable.haxall_client.HaxallClient.file_put" class="doc doc-heading">
+<code class="doc-symbol doc-symbol-heading doc-symbol-method"></code>            <span class="doc doc-object-name doc-function-name">file_put</span>
+
+
+</h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">file_put</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Uploads a file to a project using the HTTP PUT method.</p>
+<p>If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.</p>
+<p><strong>Note:</strong>  This method is experimental and subject to change.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-python">from phable import open_haxall_client
+
+# define these settings specific to your use case
+uri = &quot;http://localhost:8080/api/demo&quot;
+username = &quot;&lt;username&gt;&quot;
+password = &quot;&lt;password&gt;&quot;
+
+with open_haxall_client(uri, username, password) as client:
+    # use stream from local file data.txt to upload file on server
+    with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:
+        res_data = client.file_put(file, &quot;/proj/demo/io/data.txt&quot;)
+</code></pre>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="ValueError">ValueError</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Server did not return a Grid with the URI that file content was written to.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>stream</code>
+            </td>
+            <td>
+                  <code><span title="io">io</span>.<span title="io.BufferedReader">BufferedReader</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A buffered binary stream used for writing content to the remote file.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>remote_file_uri</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>URI of the remote file that content will be written to.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                  <code><span title="dict">dict</span>[<span title="str">str</span>, <span title="typing">typing</span>.<span title="typing.Any">Any</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>A dictionary of data containing the URI the file content was written to.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/phable/haxall_client.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">376</span>
+<span class="normal">377</span>
+<span class="normal">378</span>
+<span class="normal">379</span>
+<span class="normal">380</span>
+<span class="normal">381</span>
+<span class="normal">382</span>
+<span class="normal">383</span>
+<span class="normal">384</span>
+<span class="normal">385</span>
+<span class="normal">386</span>
+<span class="normal">387</span>
+<span class="normal">388</span>
+<span class="normal">389</span>
+<span class="normal">390</span>
+<span class="normal">391</span>
+<span class="normal">392</span>
+<span class="normal">393</span>
+<span class="normal">394</span>
+<span class="normal">395</span>
+<span class="normal">396</span>
+<span class="normal">397</span>
+<span class="normal">398</span>
+<span class="normal">399</span>
+<span class="normal">400</span>
+<span class="normal">401</span>
+<span class="normal">402</span>
+<span class="normal">403</span>
+<span class="normal">404</span>
+<span class="normal">405</span>
+<span class="normal">406</span>
+<span class="normal">407</span>
+<span class="normal">408</span>
+<span class="normal">409</span>
+<span class="normal">410</span>
+<span class="normal">411</span>
+<span class="normal">412</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">file_put</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">stream</span><span class="p">:</span> <span class="n">BufferedReader</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="n">Any</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Uploads a file to a project using the HTTP PUT method.</span>
+
+<span class="sd">    If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.</span>
+
+<span class="sd">    **Note:**  This method is experimental and subject to change.</span>
+
+<span class="sd">    **Example:**</span>
+
+<span class="sd">    ```python</span>
+<span class="sd">    from phable import open_haxall_client</span>
+
+<span class="sd">    # define these settings specific to your use case</span>
+<span class="sd">    uri = &quot;http://localhost:8080/api/demo&quot;</span>
+<span class="sd">    username = &quot;&lt;username&gt;&quot;</span>
+<span class="sd">    password = &quot;&lt;password&gt;&quot;</span>
+
+<span class="sd">    with open_haxall_client(uri, username, password) as client:</span>
+<span class="sd">        # use stream from local file data.txt to upload file on server</span>
+<span class="sd">        with open(&quot;data.txt&quot;, &quot;rb&quot;) as file:</span>
+<span class="sd">            res_data = client.file_put(file, &quot;/proj/demo/io/data.txt&quot;)</span>
+<span class="sd">    ```</span>
+
+<span class="sd">    Raises:</span>
+<span class="sd">        ValueError:</span>
+<span class="sd">            Server did not return a Grid with the URI that file content was written to.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        stream:</span>
+<span class="sd">            A buffered binary stream used for writing content to the remote file.</span>
+<span class="sd">        remote_file_uri:</span>
+<span class="sd">            URI of the remote file that content will be written to.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        A dictionary of data containing the URI the file content was written to.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_upload_file</span><span class="p">(</span><span class="n">stream</span><span class="p">,</span> <span class="n">remote_file_uri</span><span class="p">,</span> <span class="s2">&quot;PUT&quot;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tabs", "navigation.sections", "toc.integrate", "navigation.top", "search.suggest", "search.highlight", "content.tabs.link", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.13a4f30d.min.js"></script>
+      
+    
+  </body>
+</html>
