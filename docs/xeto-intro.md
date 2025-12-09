@@ -22,14 +22,6 @@ uv add phable
 uv sync
 ```
 
-### Link to Haxall Runtime
-
-Link the project to the Haxall runtime (adjust the path to match the Haxall installation):
-
-```shell
-~/haxall-4.0.4/bin/xeto env
-```
-
 ### Create Xeto Library
 
 Create a Xeto library called `webinar`:
