@@ -1,7 +1,7 @@
 from datetime import date, datetime, time
 
 from phable.grid_builder import GridBuilder
-from phable.kinds import Grid
+from phable.kinds import Grid, GridCol
 
 
 def test_gb_his_items_zero_val_cols():
@@ -9,7 +9,7 @@ def test_gb_his_items_zero_val_cols():
     gb.add_col("ts")
     gb.add_row({})
 
-    assert gb.to_grid() == Grid({"ver": "3.0"}, [{"name": "ts"}], [{}])
+    assert gb.to_grid() == Grid({"ver": "3.0"}, [GridCol("ts")], [{}])
 
 
 def test_gb_his_items_one_val_cols():
@@ -22,7 +22,7 @@ def test_gb_his_items_one_val_cols():
 
     assert gb.to_grid() == Grid(
         {"ver": "3.0"},
-        [{"name": "ts"}, {"name": "v0"}],
+        [GridCol("ts"), GridCol("v0")],
         [
             {"ts": datetime.combine(date(2016, 7, 11), time(0, 5)), "v0": 5},
             {"ts": datetime.combine(date(2016, 7, 11), time(0, 10)), "v0": 10},

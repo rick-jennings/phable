@@ -66,6 +66,8 @@ Haystack:
 
 ::: phable.kinds.Grid
 
+::: phable.kinds.GridCol
+
 ::: phable.kinds.DateRange
 
 ::: phable.kinds.DateTimeRange

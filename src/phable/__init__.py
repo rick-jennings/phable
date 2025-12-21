@@ -13,6 +13,7 @@ from phable.kinds import (
     DateRange,
     DateTimeRange,
     Grid,
+    GridCol,
     Marker,
     Number,
     Ref,

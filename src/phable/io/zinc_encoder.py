@@ -8,6 +8,7 @@ from phable.kinds import (
     NA,
     Coord,
     Grid,
+    GridCol,
     Marker,
     Number,
     PhKind,
@@ -73,7 +74,7 @@ class ZincEncoder(PhEncoder):
                 if i > 0:
                     self._out.write(",")
                 self._write_col(col)
-                col_names.append(col["name"])
+                col_names.append(col.name)
             self._out.write("\n")
 
         # rows
@@ -83,11 +84,11 @@ class ZincEncoder(PhEncoder):
         self._out.write("\n")
         return self
 
-    def _write_col(self, col: dict[str, Any]) -> None:
-        self._out.write(col["name"])
+    def _write_col(self, col: GridCol) -> None:
+        self._out.write(col.name)
 
-        if col.get("meta") is not None:
-            self._write_meta(True, col["meta"])
+        if col.meta is not None:
+            self._write_meta(True, col.meta)
 
     def _write_row(self, row: dict[str, Any], col_names: list[str]) -> None:
         # def _write_row(self, row: dict[str, Any]) -> None:

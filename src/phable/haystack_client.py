@@ -17,6 +17,7 @@ from phable.kinds import (
     DateRange,
     DateTimeRange,
     Grid,
+    GridCol,
     Number,
     Ref,
 )
@@ -566,10 +567,10 @@ class HaystackClient:
             An empty `Grid`.
         """
         meta = {"ver": "3.0"}
-        cols = [{"name": "ts"}]
+        cols = [GridCol("ts")]
 
         for count, id in enumerate(ids):
-            cols.append({"name": f"v{count}", "meta": {"id": id}})
+            cols.append(GridCol(f"v{count}", {"id": id}))
 
         his_grid = Grid(meta, cols, his_rows)
 
@@ -622,7 +623,7 @@ class HaystackClient:
     def call(
         self,
         path: str,
-        data: Grid = Grid(meta={"ver": "3.0"}, cols=[{"name": "empty"}], rows=[]),
+        data: Grid = Grid(meta={"ver": "3.0"}, cols=[GridCol("empty")], rows=[]),
     ) -> Grid:
         """Sends a POST request to `{uri}/{path}` using provided `data`.
 

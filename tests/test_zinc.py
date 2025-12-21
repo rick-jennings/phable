@@ -12,6 +12,7 @@ from phable.kinds import (
     NA,
     Coord,
     Grid,
+    GridCol,
     Marker,
     Number,
     Ref,
@@ -31,7 +32,7 @@ from phable.kinds import (
 fooBar33
 
 """,
-            Grid({"ver": "3.0"}, [{"name": "fooBar33"}], []),
+            Grid({"ver": "3.0"}, [GridCol("fooBar33")], []),
         ),
         # 1x1
         (
@@ -79,7 +80,7 @@ NA,,^a:b,"foo"
 """,
             Grid(
                 {"ver": "3.0"},
-                [{"name": "a"}, {"name": "b"}, {"name": "c"}, {"name": "d"}],
+                [GridCol("a"), GridCol("b"), GridCol("c"), GridCol("d")],
                 [
                     {"a": True, "b": False, "d": Number(-99.0)},
                     {
@@ -194,7 +195,7 @@ a,_b,__45
 """,
             Grid(
                 {"ver": "3.0"},
-                [{"name": "a"}, {"name": "_b"}, {"name": "__45"}],
+                [GridCol("a"), GridCol("_b"), GridCol("__45")],
                 [
                     {"_b": Number(1), "__45": Number(2)},
                     {"a": Number(3), "__45": Number(5)},
@@ -244,7 +245,7 @@ a
                     "c": datetime(2009, 12, 3, 4, 5, 6, tzinfo=ZoneInfo("UTC")),
                     "baz": Marker(),
                 },
-                [{"name": "a"}],
+                [GridCol("a")],
                 [
                     {
                         "a": datetime(
@@ -540,14 +541,14 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
     expected = Grid(
         {"ver": "3.0", "siteRef": Ref("17eb894a-26bb44ff", "HQ"), "mark": Marker()},
         [
-            {"name": "id"},
-            {
-                "name": "ref",
-                "meta": {
+            GridCol("id"),
+            GridCol(
+                "ref",
+                {
                     "childRef": Ref("17eb894a-26bb44dd", "Child"),
                     "parentRef": Ref("17eb894a-26bb44ee", "Parent"),
                 },
-            },
+            ),
         ],
         [
             {"id": Ref("17eb894a-26bb4400"), "ref": Ref("17eb894a-26bb440a")},

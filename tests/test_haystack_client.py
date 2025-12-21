@@ -197,7 +197,7 @@ def test_his_read_by_id_with_date_range(client: HaystackClient):
     his_grid = client.his_read_by_id(point_ref, start)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -216,7 +216,7 @@ def test_his_read_by_ids_with_date_range(client: HaystackClient):
     his_grid = client.his_read_by_ids([point_ref1, point_ref2], start)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -242,7 +242,7 @@ def test_his_read_by_ids_with_datetime_range(client: HaystackClient):
     his_grid = client.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -265,7 +265,7 @@ def test_his_read_by_ids_with_date_slice(client: HaystackClient):
     his_grid = client.his_read_by_ids(point_ref, date_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -290,7 +290,7 @@ def test_his_read_by_ids_with_datetime_slice(client: HaystackClient):
     his_grid = client.his_read_by_ids(point_ref, datetime_range)
 
     # check his_grid
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
     assert his_grid.rows[0][cols[1]].val >= 0
@@ -308,7 +308,7 @@ def test_batch_his_read_by_ids(client: HaystackClient):
     ids = [id1, id2, id3, id4]
     his_grid = client.his_read_by_ids(ids, date.today())
 
-    cols = [col["name"] for col in his_grid.cols]
+    cols = [col.name for col in his_grid.cols]
     assert isinstance(his_grid.rows[0][cols[0]], datetime)
     assert isinstance(his_grid.rows[0][cols[1]], Number)
     assert his_grid.rows[0][cols[1]].unit == "kW"
@@ -385,7 +385,7 @@ def test_point_write_number(
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
-    assert response.cols[0]["name"] == "empty"
+    assert response.cols[0].name == "empty"
     assert response.rows == []
 
 
@@ -397,7 +397,7 @@ def test_point_write_number_who(
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
-    assert response.cols[0]["name"] == "empty"
+    assert response.cols[0].name == "empty"
     assert response.rows == []
 
     check_response = client.point_write_array(pt_rec["id"])
@@ -418,7 +418,7 @@ def test_point_write_number_who_dur(
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
-    assert response.cols[0]["name"] == "empty"
+    assert response.cols[0].name == "empty"
     assert response.rows == []
 
     check_response = client.point_write_array(pt_rec["id"])
@@ -439,7 +439,7 @@ def test_point_write_null(
 
     assert isinstance(response, Grid)
     assert response.meta["ok"] == Marker()
-    assert response.cols[0]["name"] == "empty"
+    assert response.cols[0].name == "empty"
     assert response.rows == []
 
 

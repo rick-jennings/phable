@@ -9,7 +9,7 @@ import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
 
-from phable.kinds import NA, Grid, Number, Ref, Uri
+from phable.kinds import NA, Grid, GridCol, Number, Ref, Uri
 
 TS_NOW = datetime.now(ZoneInfo("America/New_York"))
 
@@ -23,7 +23,7 @@ def one_col_grid() -> Grid:
         "hisEnd": TS_NOW,
     }
 
-    cols = [{"name": "ts"}, {"name": "val"}]
+    cols = [GridCol("ts"), GridCol("val")]
     rows = [
         {
             "ts": TS_NOW - timedelta(seconds=60),
@@ -49,7 +49,7 @@ def test_get_df_meta_on_one_col_grid(one_col_grid: Grid) -> None:
         "hisStart": TS_NOW - timedelta(hours=1),
         "hisEnd": TS_NOW,
     }
-    expected_cols = [{"name": "ts"}, {"name": "val"}]
+    expected_cols = [GridCol("ts"), GridCol("val")]
 
     df_meta = one_col_grid.get_df_meta()
 
@@ -88,12 +88,12 @@ def multi_col_grid() -> Grid:
     }
 
     cols = [
-        {"name": "ts"},
-        {"name": "v0"},
-        {"name": "v1"},
-        {"name": "v2"},
-        {"name": "v3"},
-        {"name": "v4"},
+        GridCol("ts"),
+        GridCol("v0"),
+        GridCol("v1"),
+        GridCol("v2"),
+        GridCol("v3"),
+        GridCol("v4"),
     ]
     rows = [
         {"ts": TS_NOW - timedelta(seconds=60), "v0": NA(), "v4": True},
@@ -123,12 +123,12 @@ def test_get_df_meta_on_multi_col_grid(multi_col_grid: Grid) -> None:
     }
 
     expected_cols = [
-        {"name": "ts"},
-        {"name": "v0"},
-        {"name": "v1"},
-        {"name": "v2"},
-        {"name": "v3"},
-        {"name": "v4"},
+        GridCol("ts"),
+        GridCol("v0"),
+        GridCol("v1"),
+        GridCol("v2"),
+        GridCol("v3"),
+        GridCol("v4"),
     ]
 
     df_meta = multi_col_grid.get_df_meta()
@@ -180,16 +180,16 @@ def test_grid_to_pandas() -> None:
 
     meta = {"ver": "3.0"}
     cols = [
-        {"name": "haystackVersion"},
-        {"name": "tz"},
-        {"name": "serverName"},
-        {"name": "serverTime"},
-        {"name": "serverBootTime"},
-        {"name": "productName"},
-        {"name": "productUri"},
-        {"name": "productVersion"},
-        {"name": "vendorName"},
-        {"name": "vendorUri"},
+        GridCol("haystackVersion"),
+        GridCol("tz"),
+        GridCol("serverName"),
+        GridCol("serverTime"),
+        GridCol("serverBootTime"),
+        GridCol("productName"),
+        GridCol("productUri"),
+        GridCol("productVersion"),
+        GridCol("vendorName"),
+        GridCol("vendorUri"),
     ]
     rows = [
         {

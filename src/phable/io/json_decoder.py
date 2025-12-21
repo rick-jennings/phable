@@ -12,6 +12,7 @@ from phable.kinds import (
     NA,
     Coord,
     Grid,
+    GridCol,
     Marker,
     Number,
     PhKind,
@@ -55,9 +56,11 @@ def _parse_val(value: Any) -> PhKind:
 def _parse_grid(json_data: dict[str, Any]) -> Grid:
     dict_data = _parse_dict(json_data)
 
+    cols = [_parse_grid_col(col) for col in dict_data["cols"]]
+
     return Grid(
         meta=dict_data["meta"],
-        cols=dict_data["cols"],
+        cols=cols,
         rows=dict_data["rows"],
     )
 
@@ -173,3 +176,9 @@ def _parse_xstr(d: dict[str, str]) -> XStr:
 
 def _parse_symbol(d: dict[str, str]) -> Symbol:
     return Symbol(d["val"])
+
+
+def _parse_grid_col(d: dict[str, Any]) -> GridCol:
+    name = d["name"]
+    meta = d.get("meta")
+    return GridCol(name, meta)

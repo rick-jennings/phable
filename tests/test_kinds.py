@@ -10,6 +10,7 @@ from phable import (
     DateRange,
     DateTimeRange,
     Grid,
+    GridCol,
     Marker,
     Number,
     Ref,
@@ -40,7 +41,7 @@ def test_to_grid_without_meta():
         {"ts": TS_NOW, "v0": "45kW", "v1": "50kW"},
     ]
     grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.cols == [GridCol("ts"), GridCol("v0"), GridCol("v1")]
     assert grid.meta == {
         "ver": "3.0",
         "hisStart": TS_NOW - timedelta(minutes=5),
@@ -53,7 +54,7 @@ def test_to_grid_without_meta():
         {"ts": TS_NOW, "v0": "50kW"},
     ]
     grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.cols == [GridCol("ts"), GridCol("v0"), GridCol("v1")]
     assert grid.meta == {
         "ver": "3.0",
         "hisStart": TS_NOW - timedelta(minutes=5),
@@ -66,7 +67,7 @@ def test_to_grid_without_meta():
         {"ts": TS_NOW, "v0": "50kW"},
     ]
     grid = Grid.to_grid(rows)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}]
+    assert grid.cols == [GridCol("ts"), GridCol("v0")]
     assert grid.meta == {
         "ver": "3.0",
         "hisStart": TS_NOW - timedelta(minutes=5),
@@ -82,7 +83,7 @@ def test_to_grid_with_meta():
         {"ts": TS_NOW, "v0": "45kW", "v1": "50kW"},
     ]
     grid = Grid.to_grid(rows, meta)
-    assert grid.cols == [{"name": "ts"}, {"name": "v0"}, {"name": "v1"}]
+    assert grid.cols == [GridCol("ts"), GridCol("v0"), GridCol("v1")]
     assert grid.meta == {
         "ver": "3.0",
         "test_meta": "Hi!",

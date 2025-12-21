@@ -8,6 +8,7 @@ import pytest
 from phable import (
     CallError,
     Grid,
+    GridCol,
     HaxallClient,
     Marker,
     Number,
@@ -308,7 +309,7 @@ def test_commit_remove_with_id_and_mod_rec_tags(
 
     # verify it returns an empty Grid
     assert response.rows == []
-    assert response.cols == [{"name": "empty"}]
+    assert response.cols == [GridCol("empty")]
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(UnknownRecError):
@@ -335,7 +336,7 @@ def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
 
     # verify it returns an empty Grid
     assert response.rows == []
-    assert response.cols == [{"name": "empty"}]
+    assert response.cols == [GridCol("empty")]
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(UnknownRecError):
@@ -353,7 +354,7 @@ def test_commit_remove_one_rec(
     response = client.commit_remove(pt_rec)
 
     assert response.rows == []
-    assert response.cols == [{"name": "empty"}]
+    assert response.cols == [GridCol("empty")]
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(UnknownRecError):
@@ -370,7 +371,7 @@ def test_commit_remove_with_all_rec_tags(
 
     # verify it returns an empty Grid
     assert response.rows == []
-    assert response.cols == [{"name": "empty"}]
+    assert response.cols == [GridCol("empty")]
     assert response.meta == {"ver": "3.0"}
 
     with pytest.raises(UnknownRecError):

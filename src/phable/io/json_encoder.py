@@ -9,6 +9,7 @@ from phable.kinds import (
     NA,
     Coord,
     Grid,
+    GridCol,
     Marker,
     Number,
     PhKind,
@@ -68,6 +69,8 @@ def _kind_to_json(kind: Any) -> dict[str, Any]:
                 "type": kind.type,
                 "val": kind.val,
             }
+        case GridCol():
+            return _grid_col_to_json(kind)
         case dict():
             return _dict_to_json(kind)
         case list():
@@ -124,3 +127,10 @@ def _ref_to_json(ref: Ref) -> dict[str, str]:
     if ref.dis is not None:
         json["dis"] = ref.dis
     return json
+
+
+def _grid_col_to_json(col: GridCol) -> dict[str, Any]:
+    result: dict[str, Any] = {"name": col.name}
+    if col.meta:
+        result["meta"] = _kind_to_json(col.meta)
+    return result

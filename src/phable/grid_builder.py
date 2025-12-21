@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Self
 
-from phable.kinds import Grid
+from phable.kinds import Grid, GridCol
 
 
 class GridBuilder:
@@ -12,7 +12,7 @@ class GridBuilder:
         self._rows = []
 
     _meta: dict[str, Any]
-    _cols: list[dict[str, Any]]
+    _cols: list[GridCol]
     _rows: list[dict[str, Any]]
 
     def set_meta(self, meta: dict[str, Any]) -> Self:
@@ -25,13 +25,10 @@ class GridBuilder:
 
         # verify the column does not already exist
         for c in self._cols:
-            if c["name"] == name:
+            if c.name == name:
                 raise Exception(f"Duplicate column name: {name}")
 
-        col = {"name": name}
-
-        if meta is not None:
-            col["meta"] = meta.copy()
+        col = GridCol(name, meta.copy() if meta is not None else None)
 
         self._cols.append(col)
         return self
@@ -44,9 +41,11 @@ class GridBuilder:
     def set_col_meta(self, col_name: str, meta: dict[str, Any]) -> Self:
         col_found = False
         for i, c in enumerate(self._cols):
-            if c["name"] == col_name:
+            if c.name == col_name:
                 col_found = True
-                self._cols[i]["meta"] = self._cols[i]["meta"] | meta.copy()
+                existing_meta = c.meta or {}
+                new_meta = existing_meta | meta.copy()
+                self._cols[i] = GridCol(c.name, new_meta)
                 break
 
         if col_found is False:
@@ -75,4 +74,4 @@ class GridBuilder:
         return len(self._cols)
 
     def col_names(self) -> list[str]:
-        return [col["name"] for col in self._cols]
+        return [col.name for col in self._cols]

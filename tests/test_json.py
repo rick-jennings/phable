@@ -117,6 +117,35 @@ def test_xstr_to_json():
     assert JsonEncoder.to_dict(x) == {"_kind": "xstr", "type": "value", "val": "red"}
 
 
+@pytest.mark.parametrize(
+    "col,expected",
+    [
+        (
+            kinds.GridCol("temp"),
+            {"name": "temp"},
+        ),
+        (
+            kinds.GridCol("temp", {"unit": "°F", "dis": "Temperature"}),
+            {"name": "temp", "meta": {"unit": "°F", "dis": "Temperature"}},
+        ),
+        (
+            kinds.GridCol(
+                "temp", {"id": kinds.Ref("sensor123"), "point": kinds.Marker()}
+            ),
+            {
+                "name": "temp",
+                "meta": {
+                    "id": {"_kind": "ref", "val": "sensor123"},
+                    "point": {"_kind": "marker"},
+                },
+            },
+        ),
+    ],
+)
+def test_grid_col_to_json(col: kinds.GridCol, expected: dict[str, Any]) -> None:
+    assert JsonEncoder.to_dict(col) == expected
+
+
 def test_list_to_json():
     x = [
         kinds.Number(12, "kW"),
@@ -533,6 +562,67 @@ def test__parse_date_time():
 def test__parse_json_dict_value_raises_exception():
     with pytest.raises(ValueError):
         JsonDecoder.from_dict(Decimal(7))
+
+
+@pytest.mark.parametrize(
+    "json_input,expected",
+    [
+        (
+            {
+                "_kind": "grid",
+                "meta": {"ver": "3.0"},
+                "cols": [{"name": "temp"}],
+                "rows": [],
+            },
+            kinds.Grid({"ver": "3.0"}, [kinds.GridCol("temp")], []),
+        ),
+        (
+            {
+                "_kind": "grid",
+                "meta": {"ver": "3.0"},
+                "cols": [
+                    {"name": "temp", "meta": {"unit": "°F", "dis": "Temperature"}}
+                ],
+                "rows": [],
+            },
+            kinds.Grid(
+                {"ver": "3.0"},
+                [kinds.GridCol("temp", {"unit": "°F", "dis": "Temperature"})],
+                [],
+            ),
+        ),
+        (
+            {
+                "_kind": "grid",
+                "meta": {"ver": "3.0"},
+                "cols": [
+                    {"name": "id"},
+                    {
+                        "name": "sensor",
+                        "meta": {
+                            "id": {"_kind": "ref", "val": "sensor123"},
+                            "point": {"_kind": "marker"},
+                        },
+                    },
+                ],
+                "rows": [],
+            },
+            kinds.Grid(
+                {"ver": "3.0"},
+                [
+                    kinds.GridCol("id"),
+                    kinds.GridCol(
+                        "sensor",
+                        {"id": kinds.Ref("sensor123"), "point": kinds.Marker()},
+                    ),
+                ],
+                [],
+            ),
+        ),
+    ],
+)
+def test_parse_grid_col(json_input: dict[str, Any], expected: kinds.Grid) -> None:
+    assert JsonDecoder.from_dict(json_input) == expected
 
 
 # -----------------------------------------------------------------------------

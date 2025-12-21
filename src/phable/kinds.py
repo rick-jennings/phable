@@ -195,18 +195,42 @@ class XStr:
 
 
 @dataclass(frozen=True, slots=True)
+class GridCol:
+    """`GridCol` defines a column in a `Grid`.
+
+    **Example:**
+    ```python
+    from phable.kinds import GridCol
+
+    # Column with metadata
+    temp_col = GridCol("temp", {"unit": "°F", "dis": "Temperature"})
+
+    # Simple column without metadata
+    id_col = GridCol("id")
+    ```
+
+    Parameters:
+        name: Column name following Haystack tag naming rules (lowercase start).
+        meta: Optional metadata dictionary for the column (e.g., unit, display name).
+    """
+
+    name: str
+    meta: dict[str, Any] | None = None
+
+
+@dataclass(frozen=True, slots=True)
 class Grid:
     """`Grid` data type defined by Project Haystack
     [here](https://project-haystack.org/doc/docHaystack/Kinds#grid).
 
     Parameters:
         meta: Metadata for the entire `Grid`.
-        cols: Metadata for columns within the `Grid`.
+        cols: Column definitions for the `Grid`.
         rows: Row data for `Grid`.
     """
 
     meta: dict[str, Any]
-    cols: list[dict[str, Any]]
+    cols: list[GridCol]
     rows: list[dict[str, Any]]
 
     def __str__(self):
@@ -236,7 +260,7 @@ class Grid:
                 if col_name not in col_names:
                     col_names.append(col_name)
 
-        cols = [{"name": name} for name in col_names]
+        cols = [GridCol(name) for name in col_names]
 
         grid_meta = {"ver": "3.0"}
 
@@ -254,7 +278,7 @@ class Grid:
 
     def get_df_meta(
         self,
-    ) -> dict[str, dict[str, Any] | list[dict[str, Any]]]:
+    ) -> dict[str, dict[str, Any] | list[GridCol]]:
         """Gets metadata for a DataFrame describing data from a `Grid`.
 
         In the returned dictionary:
@@ -265,7 +289,6 @@ class Grid:
         Returns:
             Dictionary with keys `meta` and `cols`.
         """
-
         df_meta = {}
         df_meta["meta"] = self.meta.copy()
         df_meta["cols"] = self.cols.copy()
@@ -506,7 +529,7 @@ def _get_data_for_df(grid: Grid):
 
 
 def _structure_his_data_for_df(grid: Grid) -> dict[str, list[Any]]:
-    col_names = [col["name"] for col in grid.cols]
+    col_names = [col.name for col in grid.cols]
     data = {}
     for col_name in col_names:
         data[col_name] = []
