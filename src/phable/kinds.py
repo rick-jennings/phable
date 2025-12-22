@@ -276,24 +276,6 @@ class Grid:
 
         return Grid(meta=grid_meta, cols=cols, rows=rows)
 
-    def get_df_meta(
-        self,
-    ) -> dict[str, dict[str, Any] | list[GridCol]]:
-        """Gets metadata for a DataFrame describing data from a `Grid`.
-
-        In the returned dictionary:
-
-         - Value for `meta` key is data used in Grid's `meta` attribute.
-         - Value for `cols` key is data used in Grid's `cols` attribute.
-
-        Returns:
-            Dictionary with keys `meta` and `cols`.
-        """
-        df_meta = {}
-        df_meta["meta"] = self.meta.copy()
-        df_meta["cols"] = self.cols.copy()
-        return df_meta
-
     def to_pandas(self):
         """Converts rows in the `Grid` to a Pandas DataFrame.
 
@@ -340,27 +322,6 @@ class Grid:
 
         return df
 
-    def to_pandas_all(self):
-        """Returns a tuple:  `(Grid.get_df_meta(), Grid.to_pandas())`
-
-        **Example:**
-
-        ```python
-        from datetime import datetime, timedelta
-
-        from phable import Grid, Number
-
-        ts_now = datetime.now()
-        data = [
-            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
-            {"ts": ts_now, "val": Number(38, "kW")},
-        ]
-        data = Grid.to_grid(data)
-        df_meta, df = data.to_pandas_all()
-        ```
-        """
-        return self.get_df_meta(), self.to_pandas()
-
     def to_polars(self):
         """Converts rows in the `Grid` to a Polars DataFrame.
 
@@ -404,27 +365,6 @@ class Grid:
         df = pl.DataFrame(data=data)
 
         return df
-
-    def to_polars_all(self):
-        """Returns a tuple:  `(Grid.get_df_meta(), Grid.to_polars())`
-
-        **Example:**
-
-        ```python
-        from datetime import datetime, timedelta
-
-        from phable import Grid, Number
-
-        ts_now = datetime.now()
-        data = [
-            {"ts": ts_now - timedelta(minutes=30), "val": Number(30, "kW")},
-            {"ts": ts_now, "val": Number(38, "kW")},
-        ]
-        data = Grid.to_grid(data)
-        df_meta, df = data.to_polars_all()
-        ```
-        """
-        return self.get_df_meta(), self.to_polars()
 
 
 @dataclass(frozen=True, slots=True)

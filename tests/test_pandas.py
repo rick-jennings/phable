@@ -42,21 +42,6 @@ def one_col_grid() -> Grid:
     return Grid(meta, cols, rows)
 
 
-def test_get_df_meta_on_one_col_grid(one_col_grid: Grid) -> None:
-    expected_meta = {
-        "ver": "3.0",
-        "id": Ref("1234", "foo kW"),
-        "hisStart": TS_NOW - timedelta(hours=1),
-        "hisEnd": TS_NOW,
-    }
-    expected_cols = [GridCol("ts"), GridCol("val")]
-
-    df_meta = one_col_grid.get_df_meta()
-
-    assert df_meta["meta"] == expected_meta
-    assert df_meta["cols"] == expected_cols
-
-
 def test_get_his_df_with_one_col(one_col_grid: Grid) -> None:
     df = one_col_grid.to_pandas()
     expected_df = pd.DataFrame(
@@ -112,29 +97,6 @@ def multi_col_grid() -> Grid:
     ]
 
     return Grid(meta, cols, rows)
-
-
-def test_get_df_meta_on_multi_col_grid(multi_col_grid: Grid) -> None:
-    expected_meta = {
-        "ver": "3.0",
-        "id": Ref("1234", "foo kW"),
-        "hisStart": TS_NOW - timedelta(hours=1),
-        "hisEnd": TS_NOW,
-    }
-
-    expected_cols = [
-        GridCol("ts"),
-        GridCol("v0"),
-        GridCol("v1"),
-        GridCol("v2"),
-        GridCol("v3"),
-        GridCol("v4"),
-    ]
-
-    df_meta = multi_col_grid.get_df_meta()
-
-    assert df_meta["meta"] == expected_meta
-    assert df_meta["cols"] == expected_cols
 
 
 def test_get_his_df_with_multi_cols(multi_col_grid: Grid) -> None:
