@@ -256,7 +256,7 @@ class ScramScheme:
             res_headers = e.headers
 
             log_http_req("GET", url, headers)
-            log_http_res(e.status, dict(res_headers))
+            log_http_res(e.status, dict(res_headers))  # ty: ignore [invalid-argument-type]
 
             if e.status == 403:
                 raise AuthError(
@@ -281,14 +281,14 @@ def _parse_hello_call_result(
     s = re.search(f"({exclude_msg})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg)
-    handshake_token = s.group(0)[start_index:]
+    handshake_token = s.group(0)[start_index:]  # ty: ignore [possibly-missing-attribute]
 
     # find the hash
     exclude_msg = "hash="
     s = re.search(f"({exclude_msg})(SHA-256)", auth_header)
 
     start_index = len(exclude_msg)
-    hash = s.group(0)[start_index:]
+    hash = s.group(0)[start_index:]  # ty: ignore [possibly-missing-attribute]
 
     return handshake_token, hash
 
@@ -306,7 +306,7 @@ def _parse_first_call_result(
     scram_data = re.search(f"({exclude_msg})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg)
-    decoded_scram_data = _from_base64(scram_data.group(0)[start_index:])
+    decoded_scram_data = _from_base64(scram_data.group(0)[start_index:])  # ty: ignore [possibly-missing-attribute]
     s_nonce, salt, iteration_count = decoded_scram_data.replace(" ", "").split(",")
 
     return (
@@ -328,13 +328,13 @@ def _parse_final_call_result(
     s1 = re.search(f"({exclude_msg1})[^,]+", auth_header)
 
     start_index = len(exclude_msg1)
-    auth_token = s1.group(0)[start_index:]
+    auth_token = s1.group(0)[start_index:]  # ty: ignore [possibly-missing-attribute]
 
     exclude_msg2 = "data="
     s2 = re.search(f"({exclude_msg2})[a-zA-Z0-9+=/]+", auth_header)
 
     start_index = len(exclude_msg2)
-    data = s2.group(0)[start_index:]
+    data = s2.group(0)[start_index:]  # ty: ignore [possibly-missing-attribute]
 
     server_signature = _from_base64(data).replace("v=", "", 1)
 

@@ -30,10 +30,10 @@ class JsonEncoder(PhEncoder):
 
     @staticmethod
     def to_dict(data: PhKind) -> dict[str, Any]:
-        return _kind_to_json(data)
+        return _kind_to_json(data)  # ty: ignore [invalid-return-type]
 
 
-def _kind_to_json(kind: Any) -> dict[str, Any]:
+def _kind_to_json(kind: Any) -> float | dict[str, Any] | list[dict[str, Any]]:
     match kind:
         case int() | float() | str() | bool():
             return kind
@@ -74,7 +74,7 @@ def _kind_to_json(kind: Any) -> dict[str, Any]:
         case dict():
             return _dict_to_json(kind)
         case list():
-            return [_kind_to_json(x) for x in kind]
+            return [_kind_to_json(x) for x in kind]  # ty: ignore [invalid-return-type]
         case Grid():
             return _grid_to_json(kind)
         case _:
@@ -93,7 +93,7 @@ def _grid_to_json(grid: Grid) -> dict[str, Any]:
 
 
 def _dict_to_json(row: dict[str, Any]) -> dict[str, Any]:
-    parsed_row: dict[str, str | dict[str, str]] = {}
+    parsed_row: dict[str, Any] = {}
     for key in row.keys():
         parsed_row[key] = _kind_to_json(row[key])
 

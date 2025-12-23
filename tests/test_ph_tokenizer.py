@@ -352,7 +352,7 @@ def test_haystack_tokenizer(
 )
 def test_haystack_tokenizer_with_keywords(
     x: str,
-    keywords: dict[str, Any] | None,
+    keywords: dict[str, Any],
     expected: list[tuple[PhToken, str]],
 ):
     t = PhTokenizer(StringIO(x))

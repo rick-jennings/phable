@@ -15,7 +15,6 @@ from phable import (
     Ref,
     UnknownRecError,
     open_haxall_client,
-    Uri,
 )
 
 from .test_haystack_client import client, create_kw_pt_rec_fn, URI, USERNAME, PASSWORD
@@ -82,7 +81,7 @@ def test_open_hx_client():
     assert e.value.status == 403
 
 
-def test_commit_add_one_rec(client: HaxallClient, sample_recs: list[dict, Any]):
+def test_commit_add_one_rec(client: HaxallClient, sample_recs: list[dict[str, Any]]):
     data = sample_recs[0].copy()
     response = client.commit_add(data)
 
@@ -99,7 +98,9 @@ def test_commit_add_one_rec(client: HaxallClient, sample_recs: list[dict, Any]):
     client.commit_remove(Grid.to_grid(response.rows))
 
 
-def test_commit_add_multiple_recs(client: HaxallClient, sample_recs: list[dict, Any]):
+def test_commit_add_multiple_recs(
+    client: HaxallClient, sample_recs: list[dict[str, Any]]
+):
     data = sample_recs.copy()
     response = client.commit_add(data)
 
@@ -121,7 +122,7 @@ def test_commit_add_multiple_recs(client: HaxallClient, sample_recs: list[dict, 
 
 
 def test_commit_add_multiple_recs_as_grid(
-    client: HaxallClient, sample_recs: list[dict, Any]
+    client: HaxallClient, sample_recs: list[dict[str, Any]]
 ):
     data = sample_recs.copy()
     response = client.commit_add(Grid.to_grid(data))
@@ -144,7 +145,7 @@ def test_commit_add_multiple_recs_as_grid(
 
 
 def test_commit_add_with_new_id_does_not_raise_error(
-    client: HaxallClient, sample_recs: list[dict, Any]
+    client: HaxallClient, sample_recs: list[dict[str, Any]]
 ):
     data = sample_recs[0].copy()
     data["id"] = Ref("2e006480-5896960d")
@@ -278,7 +279,7 @@ def test_commit_update_recs_with_only_id_mod_and_new_tag_sent(
 
 
 def test_commit_remove_with_only_id_rec_tags(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaxallClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_kw_pt_rec_fn()
     pt_rec2 = create_kw_pt_rec_fn()
@@ -295,7 +296,7 @@ def test_commit_remove_with_only_id_rec_tags(
 
 
 def test_commit_remove_with_id_and_mod_rec_tags(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
+    create_pt_that_is_not_removed_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -320,7 +321,7 @@ def test_commit_remove_with_id_and_mod_rec_tags(
 
 
 def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
+    create_pt_that_is_not_removed_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -347,7 +348,7 @@ def test_commit_remove_with_id_and_mod_rec_tags_as_grid(
 
 
 def test_commit_remove_one_rec(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
+    create_pt_that_is_not_removed_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec = create_pt_that_is_not_removed_fn()
 
@@ -362,7 +363,7 @@ def test_commit_remove_one_rec(
 
 
 def test_commit_remove_with_all_rec_tags(
-    create_pt_that_is_not_removed_fn: Callable[[], Ref], client: HaxallClient
+    create_pt_that_is_not_removed_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec1 = create_pt_that_is_not_removed_fn()
     pt_rec2 = create_pt_that_is_not_removed_fn()
@@ -382,7 +383,7 @@ def test_commit_remove_with_all_rec_tags(
 
 
 def test_commit_remove_with_non_existing_rec(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaxallClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaxallClient
 ):
     pt_rec_mod1 = create_kw_pt_rec_fn()
     pt_rec_mod2 = create_kw_pt_rec_fn()["mod"]

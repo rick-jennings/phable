@@ -46,12 +46,12 @@ def test_number_to_json():
 
 def test_int_to_json():
     x = 24
-    assert JsonEncoder.to_dict(x) == 24
+    assert JsonEncoder.to_dict(x) == 24  # ty: ignore[invalid-argument-type]
 
 
 def test_float_to_json():
     x = 24.1
-    assert JsonEncoder.to_dict(x) == 24.1
+    assert JsonEncoder.to_dict(x) == 24.1  # ty: ignore[invalid-argument-type]
 
 
 def test_str_to_json():
@@ -168,7 +168,7 @@ def test_list_to_json():
 
 def test_kind_to_json_raises_error():
     with pytest.raises(ValueError):
-        JsonEncoder.to_dict(timedelta(days=5))
+        JsonEncoder.to_dict(timedelta(days=5))  # ty: ignore[invalid-argument-type]
 
 
 # -----------------------------------------------------------------------------
@@ -234,7 +234,7 @@ def test__parse_nested_dict_with_kinds_to_json2():
 def test_parse_list_of_dicts_to_json(
     test_input: list[dict[str, Any]], expected: list[dict[str, Any]]
 ) -> None:
-    assert JsonDecoder.from_dict(test_input) == expected
+    assert JsonDecoder.from_json(test_input) == expected
 
 
 def test_grid_to_json_meta1():
@@ -265,13 +265,10 @@ def test_grid_to_json_meta2():
 def test_grid_to_json_col1():
     meta = {"ver": "3.0"}
     cols = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": kinds.Ref("hisA")}},
-        {
-            "name": "v1",
-            "meta": {"id": kinds.Ref("hisB"), "test_col_meta": kinds.Marker()},
-        },
-        {"name": "v2", "meta": {"id": kinds.Ref("hisC")}},
+        kinds.GridCol("ts"),
+        kinds.GridCol("v0", {"id": kinds.Ref("hisA")}),
+        kinds.GridCol("v1", {"id": kinds.Ref("hisB"), "test_col_meta": kinds.Marker()}),
+        kinds.GridCol("v2", {"id": kinds.Ref("hisC")}),
     ]
 
     ts1 = datetime.now()
@@ -326,7 +323,7 @@ def test__haystack_to_iana_tz():
 
 def test_create_single_his_write_grid():
     meta = {"ver": "3.0", "id": kinds.Ref("hisId")}
-    cols = [{"name": "ts"}, {"name": "val"}]
+    cols = [kinds.GridCol("ts"), kinds.GridCol("val")]
     rows = [
         {
             "ts": datetime.fromisoformat("2012-04-21T08:30:00-04:00").replace(
@@ -370,9 +367,9 @@ def test_create_batch_his_write_grid():
     meta = {"ver": "3.0"}
 
     cols_haystack = [
-        {"name": "ts"},
-        {"name": "v0", "meta": {"id": kinds.Ref("hisA")}},
-        {"name": "v1", "meta": {"id": kinds.Ref("hisB")}},
+        kinds.GridCol("ts"),
+        kinds.GridCol("v0", {"id": kinds.Ref("hisA")}),
+        kinds.GridCol("v1", {"id": kinds.Ref("hisB")}),
     ]
     rows_haystack = [
         {
@@ -447,45 +444,45 @@ def test_create_batch_his_write_grid():
 def test__parse_number():
     with pytest.raises(KeyError):
         x = {"_kind": "number", "unit": "kW"}
-        JsonDecoder.from_dict(x)
+        JsonDecoder.from_json(x)
 
     with pytest.raises(ValueError):
         y = {"_kind": "number", "val": "605.1abc", "unit": "kW"}
-        JsonDecoder.from_dict(y)
+        JsonDecoder.from_json(y)
 
     # successfully create a Number with unit
     z1 = {"_kind": "number", "val": "605.1", "unit": "kW"}
-    assert JsonDecoder.from_dict(z1) == kinds.Number(val=605.1, unit="kW")
+    assert JsonDecoder.from_json(z1) == kinds.Number(val=605.1, unit="kW")
 
     # successfully create a Number without unit
     z2 = {"_kind": "number", "val": "605.1"}
-    assert JsonDecoder.from_dict(z2) == kinds.Number(val=605.1, unit=None)
+    assert JsonDecoder.from_json(z2) == kinds.Number(val=605.1, unit=None)
 
 
 def test__parse_marker():
-    assert JsonDecoder.from_dict({"_kind": "marker"}) == kinds.Marker()
+    assert JsonDecoder.from_json({"_kind": "marker"}) == kinds.Marker()
 
 
 def test__parse_remove():
-    assert JsonDecoder.from_dict({"_kind": "remove"}) == kinds.Remove()
+    assert JsonDecoder.from_json({"_kind": "remove"}) == kinds.Remove()
 
 
 def test__parse_na():
-    assert JsonDecoder.from_dict({"_kind": "na"}) == kinds.NA()
+    assert JsonDecoder.from_json({"_kind": "na"}) == kinds.NA()
 
 
 def test__parse_ref():
     with pytest.raises(KeyError):
         x = {"_kind": "ref", "dis": "Elec Meter"}
-        JsonDecoder.from_dict(x)
+        JsonDecoder.from_json(x)
 
     # successfully create a Ref with dis
-    assert kinds.Ref("@foo", "Elec Meter") == JsonDecoder.from_dict(
+    assert kinds.Ref("@foo", "Elec Meter") == JsonDecoder.from_json(
         {"_kind": "ref", "val": "@foo", "dis": "Elec Meter"}
     )
 
     # successfully create a Ref without dis
-    assert kinds.Ref("@foo") == JsonDecoder.from_dict(
+    assert kinds.Ref("@foo") == JsonDecoder.from_json(
         {"_kind": "ref", "val": "@foo", "dis": None}
     )
 
@@ -493,13 +490,13 @@ def test__parse_ref():
 def test__parse_date():
     with pytest.raises(KeyError):
         x = {"_kind": "date", "value": "2011-06-07"}
-        JsonDecoder.from_dict(x)
+        JsonDecoder.from_json(x)
 
     with pytest.raises(ValueError):
         y = {"_kind": "date", "val": "2011-06-07abc"}
-        JsonDecoder.from_dict(y)
+        JsonDecoder.from_json(y)
 
-    assert JsonDecoder.from_dict({"_kind": "date", "val": "2011-06-07"}) == date(
+    assert JsonDecoder.from_json({"_kind": "date", "val": "2011-06-07"}) == date(
         2011, 6, 7
     )
 
@@ -507,13 +504,13 @@ def test__parse_date():
 def test__parse_time():
     with pytest.raises(KeyError):
         x = {"_kind": "time", "value": "14:30:00"}
-        JsonDecoder.from_dict(x)
+        JsonDecoder.from_json(x)
 
     with pytest.raises(ValueError):
         y = {"_kind": "time", "val": "14:30:00abc"}
-        JsonDecoder.from_dict(y)
+        JsonDecoder.from_json(y)
 
-    assert JsonDecoder.from_dict({"_kind": "time", "val": "14:30:00"}) == time(14, 30)
+    assert JsonDecoder.from_json({"_kind": "time", "val": "14:30:00"}) == time(14, 30)
 
 
 def test__parse_date_time():
@@ -523,7 +520,7 @@ def test__parse_date_time():
             "val1": "2023-06-20T23:45:00-04:00",
             "tz": "New_York",
         }
-        JsonDecoder.from_dict(x)
+        JsonDecoder.from_json(x)
 
     with pytest.raises(KeyError):
         y = {
@@ -531,7 +528,7 @@ def test__parse_date_time():
             "val": "2023-06-20T23:45:00-04:00",
             "tz1": "New_York",
         }
-        JsonDecoder.from_dict(y)
+        JsonDecoder.from_json(y)
 
     with pytest.raises(ValueError):
         z = {
@@ -539,14 +536,14 @@ def test__parse_date_time():
             "val": "2023-06-20T23:45:00-04:00abc",
             "tz": "New_York",
         }
-        JsonDecoder.from_dict(z)
+        JsonDecoder.from_json(z)
 
     a = {
         "_kind": "dateTime",
         "val": "2023-06-20T23:45:00-04:00",
         "tz": "New_York",
     }
-    assert JsonDecoder.from_dict(a) == datetime.fromisoformat(a["val"]).replace(
+    assert JsonDecoder.from_json(a) == datetime.fromisoformat(a["val"]).replace(
         tzinfo=ZoneInfo("America/New_York")
     )
 
@@ -556,12 +553,12 @@ def test__parse_date_time():
         "tz": "New_Yorkabc",
     }
     with pytest.raises(ValueError):
-        JsonDecoder.from_dict(b)
+        JsonDecoder.from_json(b)
 
 
 def test__parse_json_dict_value_raises_exception():
     with pytest.raises(ValueError):
-        JsonDecoder.from_dict(Decimal(7))
+        JsonDecoder.from_json({"x": Decimal("7.0")})
 
 
 @pytest.mark.parametrize(
@@ -622,7 +619,7 @@ def test__parse_json_dict_value_raises_exception():
     ],
 )
 def test_parse_grid_col(json_input: dict[str, Any], expected: kinds.Grid) -> None:
-    assert JsonDecoder.from_dict(json_input) == expected
+    assert JsonDecoder.from_json(json_input) == expected
 
 
 # -----------------------------------------------------------------------------
@@ -678,7 +675,7 @@ def test__parse_grid_with_nested_lists_dicts_and_grids():
         ]
     )
 
-    grid_from_json = JsonDecoder.from_dict(json_input)
+    grid_from_json = JsonDecoder.from_json(json_input)
     json_again = JsonEncoder.to_dict(grid_from_json)
     assert json_again == json_input
     assert grid_from_json == expected_grid

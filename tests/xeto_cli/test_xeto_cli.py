@@ -2,7 +2,7 @@ from typing import Any, Generator
 
 import pytest
 
-from phable import Grid, Marker, Ref, XetoCLI
+from phable import Grid, GridCol, Marker, Ref, XetoCLI
 
 
 @pytest.fixture(params=["json", "zinc"], scope="module")
@@ -129,7 +129,7 @@ SUBMETER2_PT = {
             ],
             Grid(
                 {"ver": "3.0"},
-                [{"name": "id"}, {"name": "msg"}],
+                [GridCol("id"), GridCol("msg")],
                 [],
             ),
         ),
@@ -145,7 +145,7 @@ SUBMETER2_PT = {
             ],
             Grid(
                 {"ver": "3.0"},
-                [{"name": "id"}, {"name": "msg"}],
+                [GridCol("id"), GridCol("msg")],
                 [
                     {
                         "id": Ref("site-meter"),
@@ -166,7 +166,7 @@ SUBMETER2_PT = {
             ],
             Grid(
                 {"ver": "3.0"},
-                [{"name": "id"}, {"name": "msg"}],
+                [GridCol("id"), GridCol("msg")],
                 [
                     {
                         "id": Ref("site-meter"),

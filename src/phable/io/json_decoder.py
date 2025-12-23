@@ -32,7 +32,7 @@ class JsonDecoder(PhDecoder):
         return _parse_val(json.loads(data))
 
     @staticmethod
-    def from_dict(data: dict[str, Any]) -> PhKind:
+    def from_json(data: dict[str, Any] | list[dict[str, Any]]) -> PhKind:
         return _parse_val(data)
 
 

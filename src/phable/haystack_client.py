@@ -12,6 +12,8 @@ from typing import (
 
 from phable.auth.scram import ScramScheme
 from phable.http import ph_request
+from phable.io.ph_decoder import PhDecoder
+from phable.io.ph_encoder import PhEncoder
 from phable.io.ph_io_factory import PH_IO_FACTORY
 from phable.kinds import (
     DateRange,
@@ -139,9 +141,9 @@ class HaystackClient:
         self._context: SSLContext | None = ssl_context
 
         io_factory = PH_IO_FACTORY[content_type]
-        self._ph_encoder = io_factory["encoder"]
-        self._ph_decoder = io_factory["decoder"]
-        self._content_type = io_factory["content_type"]
+        self._ph_encoder: PhEncoder = io_factory["encoder"]
+        self._ph_decoder: PhDecoder = io_factory["decoder"]
+        self._content_type: str = io_factory["content_type"]
 
     @classmethod
     def open(
@@ -220,7 +222,7 @@ class HaystackClient:
         Returns:
             An empty `dict` or a `dict` that describes the entity read.
         """
-        response = self.read_all(filter, Number(1))
+        response = self.read_all(filter, 1)
 
         if len(response.rows) == 0:
             if checked is True:
@@ -251,7 +253,7 @@ class HaystackClient:
         data_row = {"filter": filter}
 
         if limit is not None:
-            data_row["limit"] = limit
+            data_row["limit"] = Number(limit)
 
         response = self.call("read", Grid.to_grid(data_row))
 
@@ -654,18 +656,20 @@ class HaystackClient:
             "Accept": self._content_type,
         }
 
-        data = self._ph_encoder.encode(data)
+        encoded_data = self._ph_encoder.encode(data)
 
         response = self._ph_decoder.decode(
             ph_request(
                 url=f"{self.uri}/{path}",
                 headers=headers,
                 content_type=self._content_type,
-                data=data,
+                data=encoded_data,
                 method="POST",
                 context=self._context,
             ).body
         )
+
+        assert isinstance(response, Grid)
 
         _validate_response_meta(response)
 
@@ -675,22 +679,20 @@ class HaystackClient:
 def _validate_response_meta(response: Grid):
     meta = response.meta
     if "err" in meta.keys():
-        raise CallError(meta)
+        raise CallError(response)
 
 
 def _create_his_read_req_data(
     ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
 ) -> Grid:
-    # convert range to Haystack defined string
     if isinstance(range, date):
-        range = range.isoformat()
+        encoded_range = range.isoformat()
     else:
-        range = str(range)
+        encoded_range = str(range)
 
-    # structure data for HTTP request
     if isinstance(ids, Ref):
-        data = Grid.to_grid({"id": ids, "range": range})
+        data = Grid.to_grid({"id": ids, "range": encoded_range})
     elif isinstance(ids, list):
-        data = Grid.to_grid([{"id": id} for id in ids], {"range": range})
+        data = Grid.to_grid([{"id": id} for id in ids], {"range": encoded_range})
 
     return data

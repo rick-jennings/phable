@@ -1,7 +1,6 @@
 from datetime import date, datetime, time
+from decimal import Decimal
 from math import isnan
-
-# from typing import Any
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -109,10 +108,10 @@ NA,,^a:b,"foo"
                         "c": "",
                     },
                     {
-                        "a": Coord(12, -34),
-                        "b": Coord(0.123, -0.789),
-                        "c": Coord(84.5, -77.45),
-                        "d": Coord(-90, 180),
+                        "a": Coord(Decimal("12"), Decimal("-34")),
+                        "b": Coord(Decimal("0.123"), Decimal("-0.789")),
+                        "c": Coord(Decimal("84.5"), Decimal("-77.45")),
+                        "d": Coord(Decimal("-90"), Decimal("180")),
                     },
                     {"a": NA(), "c": Symbol("a:b"), "d": "foo"},
                 ],
@@ -263,6 +262,7 @@ a
 def test_parse_zinc(zinc: str, expected: Grid):
     zinc_decoded = ZincDecoder().from_str(zinc)
 
+    assert isinstance(zinc_decoded, Grid)
     assert zinc_decoded == expected
     assert ZincEncoder().to_str(expected) == zinc
 
@@ -272,6 +272,7 @@ def test_parse_nan():
 
     zinc_decoded = ZincDecoder().from_str(x)
 
+    assert isinstance(zinc_decoded, dict)
     assert isinstance(zinc_decoded["a"], Number)
     assert isnan(zinc_decoded["a"].val)
     assert zinc_decoded["b"] == Number(-2.5, "min")
@@ -282,6 +283,7 @@ def test_parse_scientific_notation():
 
     zinc_decoded = ZincDecoder().from_str(x)
 
+    assert isinstance(zinc_decoded, dict)
     assert zinc_decoded["test1"] == Number(123e12, "kJ/kg_dry")
     assert zinc_decoded["test2"] == Number(7.15625e-4, "kWh/ft²")
     assert zinc_decoded["test3"] == Number(3.814697265625e-6)
@@ -323,6 +325,7 @@ def test_number_with_underscore():
 
     zinc_decoded = ZincDecoder().from_str(x)
 
+    assert isinstance(zinc_decoded, dict)
     assert zinc_decoded["test"] == Number(7_000)
 
 

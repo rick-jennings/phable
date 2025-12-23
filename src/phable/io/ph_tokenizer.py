@@ -2,24 +2,23 @@ from __future__ import annotations
 
 from datetime import date, datetime, time
 from enum import StrEnum
-from io import TextIOWrapper
-from typing import Any
+from typing import Any, TextIO
 
 from phable.io.json_decoder import _haystack_to_iana_tz
 from phable.kinds import Number, Ref, Symbol, Uri
 
 
 class PhTokenizer:
-    def __init__(self, input: TextIOWrapper):
+    def __init__(self, input: TextIO):
         self._input = input
         self.tok = PhToken.EOF
         self.factory = HaystackFactory()
         self._consume()
         self._consume()
 
-    _input: TextIOWrapper
+    _input: TextIO
     _cur: str
-    _peek: str = None
+    _peek: str | None = None
     factory: HaystackFactory
 
     # Current token type
@@ -76,6 +75,8 @@ class PhTokenizer:
             self.line += 1
             self.tok = PhToken.NL
             return self.tok
+
+        assert isinstance(self._peek, str)
 
         # handle various starting chars
         if self._cur.isalpha() or (
@@ -155,7 +156,7 @@ class PhTokenizer:
             self._consume()
 
     def _consume(self) -> None:
-        self._cur = self._peek
+        self._cur = self._peek  # ty: ignore [invalid-assignment]
         self._peek = self._input.read(1)
 
     def _id(self) -> PhToken:
@@ -234,6 +235,7 @@ class PhTokenizer:
         colons, dashes, unit_index, exp = 0, 0, 0, False
 
         while True:
+            assert isinstance(self._peek, str)
             if not self._cur.isdigit():
                 if exp and (self._cur == "+" or self._cur == "-"):
                     ...
@@ -317,7 +319,7 @@ class PhTokenizer:
             try:
                 self.val = self.factory.make_datetime(s)
             except Exception:
-                raise f"Invalid DateTime literal '{s}'"
+                raise ValueError(f"Invalid DateTime literal '{s}'")
 
             return PhToken.DATETIME
 

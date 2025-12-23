@@ -37,7 +37,7 @@ def client(request) -> Generator[HaystackClient, None, None]:
 
 @pytest.fixture(scope="module")
 def create_kw_pt_rec_fn(
-    client: HaystackClient,
+    client: HaxallClient,
 ) -> Generator[Callable[[], dict[str, Any]], None, None]:
     axon_expr = (
         """diff(null, {pytest, point, his, tz: "New_York", writable, """
@@ -45,7 +45,7 @@ def create_kw_pt_rec_fn(
     )
     created_pt_ids = []
 
-    def _create_pt_rec():
+    def _create_pt_rec() -> dict[str, Any]:
         response = client.eval(axon_expr)
         pt_rec = response.rows[0]
         created_pt_ids.append(pt_rec["id"])
@@ -78,7 +78,7 @@ def test_open():
         x.about()
 
     with pytest.raises(TypeError):
-        HaystackClient(URI, USERNAME, "wrong_password")
+        HaystackClient(URI, USERNAME, "wrong_password")  # ty: ignore[too-many-positional-arguments]
 
 
 def test_auth_token(client: HaystackClient):
@@ -319,7 +319,7 @@ def test_batch_his_read_by_ids(client: HaystackClient):
 
 
 def test_single_his_write_by_id(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     test_pt_rec = create_kw_pt_rec_fn()
 
@@ -343,12 +343,17 @@ def test_single_his_write_by_id(
     range = date.today()
     his_grid = client.his_read_by_ids(test_pt_rec["id"], range)
 
-    assert his_grid.rows[0]["val"] == Number(pytest.approx(72.2), "kW")
-    assert his_grid.rows[1]["val"] == Number(pytest.approx(76.3), "kW")
+    expected_values = [
+        (0, 72.2, "kW"),
+        (1, 76.3, "kW"),
+    ]
+    for row_idx, expected_val, expected_unit in expected_values:
+        assert his_grid.rows[row_idx]["val"].val == pytest.approx(expected_val)
+        assert his_grid.rows[row_idx]["val"].unit == expected_unit
 
 
 def test_batch_his_write_by_ids(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     test_pt_rec1 = create_kw_pt_rec_fn()
     test_pt_rec2 = create_kw_pt_rec_fn()
@@ -371,14 +376,19 @@ def test_batch_his_write_by_ids(
     range = date.today()
     his_grid = client.his_read_by_ids([test_pt_rec1["id"], test_pt_rec2["id"]], range)
 
-    assert his_grid.rows[0]["v0"] == Number(pytest.approx(72.2), "kW")
-    assert his_grid.rows[1]["v0"] == Number(pytest.approx(76.3), "kW")
-    assert his_grid.rows[0]["v1"] == Number(pytest.approx(76.3), "kW")
-    assert his_grid.rows[1]["v1"] == Number(pytest.approx(72.2), "kW")
+    expected_values = [
+        (0, "v0", 72.2, "kW"),
+        (1, "v0", 76.3, "kW"),
+        (0, "v1", 76.3, "kW"),
+        (1, "v1", 72.2, "kW"),
+    ]
+    for row_idx, col, expected_val, expected_unit in expected_values:
+        assert his_grid.rows[row_idx][col].val == pytest.approx(expected_val)
+        assert his_grid.rows[row_idx][col].unit == expected_unit
 
 
 def test_point_write_number(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1, Number(0, "kW"))
@@ -390,7 +400,7 @@ def test_point_write_number(
 
 
 def test_point_write_number_who(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1, Number(50, "kW"), "Phable")
@@ -409,7 +419,7 @@ def test_point_write_number_who(
 
 
 def test_point_write_number_who_dur(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(
@@ -432,7 +442,7 @@ def test_point_write_number_who_dur(
 
 
 def test_point_write_null(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write(pt_rec["id"], 1)
@@ -444,7 +454,7 @@ def test_point_write_null(
 
 
 def test_point_write_array(
-    create_kw_pt_rec_fn: Callable[[], Ref], client: HaystackClient
+    create_kw_pt_rec_fn: Callable[[], dict[str, Any]], client: HaystackClient
 ):
     pt_rec = create_kw_pt_rec_fn()
     response = client.point_write_array(pt_rec["id"])

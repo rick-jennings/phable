@@ -73,7 +73,7 @@ def request(
     headers = headers.copy()
     headers["User-Agent"] = f"phable/{importlib.metadata.version('phable')}"
 
-    httprequest = urllib.request.Request(url, data=data, headers=headers, method=method)
+    httprequest = urllib.request.Request(url, data=data, headers=headers, method=method)  # ty: ignore [invalid-argument-type]
 
     if context is None:
         context = ssl.create_default_context()
@@ -83,8 +83,8 @@ def request(
     log_http_req(
         httprequest.get_method(),
         httprequest.full_url,
-        httprequest.headers,
-        httprequest.data,
+        httprequest.headers,  # ty: ignore [invalid-argument-type]
+        httprequest.data,  # ty: ignore [invalid-argument-type]
     )
 
     # do not log the http res data since the buffer can be read only once!

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from decimal import Decimal
 from io import StringIO
 from typing import Any
 
@@ -10,7 +11,7 @@ from phable.io.ph_tokenizer import (
     PhTokenizer,
     is_literal,
 )
-from phable.kinds import NA, Coord, Marker, Number, PhKind, Remove, XStr
+from phable.kinds import NA, Coord, Marker, Number, PhKind, Ref, Remove, XStr
 
 
 class ZincDecoder(PhDecoder):
@@ -30,7 +31,7 @@ class ZincDecoder(PhDecoder):
 
     _cur: PhToken  # current token
     _cur_val: Any | None = None  # current token value
-    _cur_line: int  # current token line number
+    _cur_line: int | None = None  # current token line number
 
     _peek: PhToken  # next token
     _peek_val: Any | None = None  # next token value
@@ -115,6 +116,7 @@ class ZincDecoder(PhDecoder):
     def _parse_literal(self) -> Any:
         val = self._cur_val
         if self._cur == PhToken.REF and self._peek == PhToken.STR:
+            assert isinstance(val, Ref)
             val = self._tokenizer.factory.make_ref(val.val, self._peek_val)
             self._consume()
         self._consume()
@@ -128,7 +130,7 @@ class ZincDecoder(PhDecoder):
         self._consume(PhToken.COMMA)
         lng = self._consume_num()
         self._consume(PhToken.RPAREN)
-        return Coord(lat.val, lng.val)
+        return Coord(Decimal(str(lat.val)), Decimal(str(lng.val)))
 
     def _parse_xstr(self, id: str) -> XStr:
         if not id[0].isupper():
@@ -283,12 +285,16 @@ class ZincDecoder(PhDecoder):
 
     def _consume_num(self) -> Number:
         val = self._cur_val
+        assert isinstance(val, Number)
         self._consume(PhToken.NUM)
+
         return val
 
     def _consume_str(self) -> str:
         val = self._cur_val
+        assert isinstance(val, str)
         self._consume(PhToken.STR)
+
         return val
 
     def _verify(self, expected: PhToken) -> None:
@@ -301,6 +307,7 @@ class ZincDecoder(PhDecoder):
 
         self._cur = self._peek
         self._cur_val = self._peek_val
+
         self._cur_line = self._peek_line
 
         self._peek = self._tokenizer.next()

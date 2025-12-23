@@ -438,6 +438,8 @@ class HaxallClient(HaystackClient):
             ).body
         )
 
+        assert isinstance(res, Grid)
+
         try:
             res_data = res.rows[0]
         except IndexError:

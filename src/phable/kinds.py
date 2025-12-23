@@ -359,7 +359,7 @@ class Grid:
         ```
         """
 
-        import polars as pl
+        import polars as pl  # ty: ignore[unresolved-import]
 
         data = _get_data_for_df(self)
         df = pl.DataFrame(data=data)
@@ -515,4 +515,5 @@ PhKind: TypeAlias = (
     | list
     | dict
     | Grid
+    | GridCol
 )
