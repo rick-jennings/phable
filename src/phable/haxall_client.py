@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import mimetypes
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, Any, Generator
+from typing import TYPE_CHECKING, Any, Generator, Literal, Mapping, Sequence
 
 from phable.haystack_client import HaystackClient
 from phable.http import ph_request, request
@@ -72,7 +72,9 @@ class HaxallClient(HaystackClient):
     Learn more about Haxall [here](https://haxall.io/).
     """
 
-    def commit_add(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
+    def commit_add(
+        self, recs: Mapping[str, Any] | Sequence[Mapping[str, Any]] | Grid
+    ) -> Grid:
         """Adds one or more new records to the database.
 
         As a general rule you should not have an `id` column in your commit grid.
@@ -119,13 +121,11 @@ class HaxallClient(HaystackClient):
         Returns:
             The full tag definitions for each of the newly added records.
         """
-        meta = {"commit": "add"}
-        if isinstance(recs, Grid):
-            meta = recs.meta | meta
-            recs = recs.rows
-        return self.call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", _get_commit_grid("add", recs))
 
-    def commit_update(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
+    def commit_update(
+        self, recs: Mapping[str, Any] | Sequence[Mapping[str, Any]] | Grid
+    ) -> Grid:
         """Updates one or more existing records within the database.
 
         Commit access requires the API user to have admin permission.
@@ -175,13 +175,11 @@ class HaxallClient(HaystackClient):
         Returns:
             The latest full tag definitions for each of the updated records.
         """
-        meta = {"commit": "update"}
-        if isinstance(recs, Grid):
-            meta = recs.meta | meta
-            recs = recs.rows
-        return self.call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", _get_commit_grid("update", recs))
 
-    def commit_remove(self, recs: dict[str, Any] | list[dict[str, Any]] | Grid) -> Grid:
+    def commit_remove(
+        self, recs: Mapping[str, Any] | Sequence[Mapping[str, Any]] | Grid
+    ) -> Grid:
         """Removes one or more records from the database.
 
         Commit access requires the API user to have admin permission.
@@ -229,11 +227,7 @@ class HaxallClient(HaystackClient):
         Returns:
             An empty `Grid`.
         """
-        meta = {"commit": "remove"}
-        if isinstance(recs, Grid):
-            meta = recs.meta | meta
-            recs = recs.rows
-        return self.call("commit", Grid.to_grid(recs, meta))
+        return self.call("commit", _get_commit_grid("remove", recs))
 
     def eval(self, expr: str) -> Grid:
         """Evaluates an Axon string expression.
@@ -335,7 +329,9 @@ class HaxallClient(HaystackClient):
 
         return BufferedReader(res)
 
-    def file_post(self, stream: BufferedReader, remote_file_uri: str) -> dict[str, Any]:
+    def file_post(
+        self, stream: BufferedReader, remote_file_uri: str
+    ) -> Mapping[str, Any]:
         """Uploads a file to a project using the HTTP POST method.
 
         If a file with the same name already exists on the server, then the uploaded file will be renamed.
@@ -373,7 +369,9 @@ class HaxallClient(HaystackClient):
         """
         return self._upload_file(stream, remote_file_uri, "POST")
 
-    def file_put(self, stream: BufferedReader, remote_file_uri: str) -> dict[str, Any]:
+    def file_put(
+        self, stream: BufferedReader, remote_file_uri: str
+    ) -> Mapping[str, Any]:
         """Uploads a file to a project using the HTTP PUT method.
 
         If a file with the same name already exists on the server, then the existing file will be overwritten with the uploaded file.
@@ -413,7 +411,7 @@ class HaxallClient(HaystackClient):
 
     def _upload_file(
         self, stream: BufferedReader, remote_file_uri: str, http_method: str
-    ) -> dict[str, Any]:
+    ) -> Mapping[str, Any]:
         mimetype = mimetypes.guess_type(remote_file_uri)[0]
         if mimetype is None:
             raise ValueError
@@ -449,3 +447,14 @@ class HaxallClient(HaystackClient):
             raise ValueError
 
         return res_data
+
+
+def _get_commit_grid(
+    op: Literal["remove", "add", "update"],
+    recs: Mapping[str, Any] | Sequence[Mapping[str, Any]] | Grid,
+) -> Grid:
+    meta = {"commit": op}
+    if isinstance(recs, Grid):
+        meta = dict(recs.meta) | meta
+        recs = recs.rows
+    return Grid.to_grid(recs, meta)

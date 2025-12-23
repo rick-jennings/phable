@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Mapping
 from urllib.error import HTTPError, URLError
 from zoneinfo import ZoneInfo
 
@@ -45,7 +45,7 @@ def create_kw_pt_rec_fn(
     )
     created_pt_ids = []
 
-    def _create_pt_rec() -> dict[str, Any]:
+    def _create_pt_rec() -> Mapping[str, Any]:
         response = client.eval(axon_expr)
         pt_rec = response.rows[0]
         created_pt_ids.append(pt_rec["id"])

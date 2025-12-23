@@ -1,7 +1,7 @@
 # flake8: noqa
 
 from datetime import datetime
-from typing import Any, Callable, Generator
+from typing import Any, Callable, Generator, Sequence, Mapping
 from urllib.error import HTTPError
 import pytest
 
@@ -215,7 +215,7 @@ def test_commit_update_with_multiple_recs_as_grid(
 
 
 def assert_commit_update_recs_sent_and_recv_match(
-    recs_sent: list[dict[str, Any]], recs_recv: list[dict[str, Any]]
+    recs_sent: Sequence[Mapping[str, Any]], recs_recv: Sequence[Mapping[str, Any]]
 ) -> None:
     for count, rec_sent in enumerate(recs_sent):
         rec_recv = recs_recv[count]

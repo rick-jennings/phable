@@ -1,6 +1,6 @@
 from datetime import date, datetime, time
 from io import StringIO
-from typing import Any, Self
+from typing import Any, Mapping, Self, Sequence
 
 from phable.io.json_decoder import _tz_iana_to_haystack
 from phable.io.ph_encoder import PhEncoder
@@ -90,7 +90,7 @@ class ZincEncoder(PhEncoder):
         if col.meta is not None:
             self._write_meta(True, col.meta)
 
-    def _write_row(self, row: dict[str, Any], col_names: list[str]) -> None:
+    def _write_row(self, row: Mapping[str, Any], col_names: Sequence[str]) -> None:
         # def _write_row(self, row: dict[str, Any]) -> None:
         # for index, (key, val) in enumerate(row.items()):
         for index, col_name in enumerate(col_names):
@@ -110,7 +110,7 @@ class ZincEncoder(PhEncoder):
                 raise IOError(f"Cannot write col '{col_name}' = '{val}'")
         self._out.write("\n")
 
-    def _write_meta(self, leading_space: bool, m: dict) -> None:
+    def _write_meta(self, leading_space: bool, m: Mapping) -> None:
         for key, val in m.items():
             if leading_space:
                 self._out.write(" ")

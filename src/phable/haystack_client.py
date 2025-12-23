@@ -3,12 +3,7 @@ from __future__ import annotations
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import date
-from typing import (
-    TYPE_CHECKING,
-    Any,
-    Generator,
-    Self,
-)
+from typing import TYPE_CHECKING, Any, Generator, Mapping, Self, Sequence
 
 from phable.auth.scram import ScramScheme
 from phable.http import ph_request
@@ -182,7 +177,7 @@ class HaystackClient:
 
         return cls(uri, auth_token, content_type=content_type, ssl_context=ssl_context)
 
-    def about(self) -> dict[str, Any]:
+    def about(self) -> Mapping[str, Any]:
         """Query basic information about the server.
 
         Returns:
@@ -202,7 +197,7 @@ class HaystackClient:
 
         return self.call("close")
 
-    def read(self, filter: str, checked: bool = True) -> dict[Any, Any]:
+    def read(self, filter: str, checked: bool = True) -> Mapping[str, Any]:
         """Read from the database the first record which matches the
         [filter](https://project-haystack.org/doc/docHaystack/Filters).
 
@@ -259,7 +254,7 @@ class HaystackClient:
 
         return response
 
-    def read_by_id(self, id: Ref, checked: bool = True) -> dict[Any, Any]:
+    def read_by_id(self, id: Ref, checked: bool = True) -> Mapping[str, Any]:
         """Read an entity record using its unique identifier.
 
         Raises:
@@ -290,7 +285,7 @@ class HaystackClient:
 
         return response
 
-    def read_by_ids(self, ids: list[Ref]) -> Grid:
+    def read_by_ids(self, ids: Sequence[Ref]) -> Grid:
         """Read a set of entity records using their unique identifiers.
 
         **Note:** Project Haystack recently introduced batch read support, which might
@@ -306,7 +301,7 @@ class HaystackClient:
         Returns:
             `Grid` with a row for each entity read.
         """
-        ids = ids.copy()
+        ids = list(ids)
         data_rows = [{"id": id} for id in ids]
         post_data = Grid.to_grid(data_rows)
         response = self.call("read", post_data)
@@ -375,7 +370,7 @@ class HaystackClient:
 
     def his_read_by_ids(
         self,
-        ids: list[Ref],
+        ids: Sequence[Ref],
         range: date | DateRange | DateTimeRange,
     ) -> Grid:
         """Read history data associated with `ids` for the given `range`.
@@ -435,7 +430,7 @@ class HaystackClient:
     def his_write_by_id(
         self,
         id: Ref,
-        his_rows: list[dict[str, Any]],
+        his_rows: Sequence[Mapping[str, Any]],
     ) -> Grid:
         """Write history data to point records on the server.
 
@@ -502,8 +497,8 @@ class HaystackClient:
 
     def his_write_by_ids(
         self,
-        ids: list[Ref],
-        his_rows: list[dict[str, Any]],
+        ids: Sequence[Ref],
+        his_rows: Sequence[Mapping[str, Any]],
     ) -> Grid:
         """Write history data to point records on the server.
 
@@ -683,7 +678,7 @@ def _validate_response_meta(response: Grid):
 
 
 def _create_his_read_req_data(
-    ids: Ref | list[Ref], range: date | DateRange | DateTimeRange
+    ids: Ref | Sequence[Ref], range: date | DateRange | DateTimeRange
 ) -> Grid:
     if isinstance(range, date):
         encoded_range = range.isoformat()
@@ -692,7 +687,7 @@ def _create_his_read_req_data(
 
     if isinstance(ids, Ref):
         data = Grid.to_grid({"id": ids, "range": encoded_range})
-    elif isinstance(ids, list):
+    elif isinstance(ids, Sequence):
         data = Grid.to_grid([{"id": id} for id in ids], {"range": encoded_range})
 
     return data

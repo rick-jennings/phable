@@ -3,7 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal, getcontext
-from typing import Any, TypeAlias
+from typing import Any, Mapping, Sequence, TypeAlias, cast
 from zoneinfo import ZoneInfo
 
 
@@ -229,17 +229,17 @@ class Grid:
         rows: Row data for `Grid`.
     """
 
-    meta: dict[str, Any]
-    cols: list[GridCol]
-    rows: list[dict[str, Any]]
+    meta: Mapping[str, Any]
+    cols: Sequence[GridCol]
+    rows: Sequence[Mapping[str, Any]]
 
     def __str__(self):
         return "Haystack Grid"
 
     @staticmethod
     def to_grid(
-        rows: dict[str, Any] | list[dict[str, Any]],
-        meta: dict[str, Any] | None = None,
+        rows: Mapping[str, Any] | Sequence[Mapping[str, Any]],
+        meta: Mapping[str, Any] | None = None,
     ) -> Grid:
         """Creates a `Grid` using row data and optional metadata.
 
@@ -250,31 +250,34 @@ class Grid:
             rows: Row data for `Grid`.
             meta: Optional metadata for the entire `Grid`.
         """
-        if isinstance(rows, dict):
-            rows = [rows]
+        normalized_rows: Sequence[Mapping[str, Any]]
+        if isinstance(rows, Mapping):
+            normalized_rows = [cast(Mapping[str, Any], rows)]
+        else:
+            normalized_rows = rows
 
         # might be able to find a nicer way to do this
         col_names: list[str] = []
-        for row in rows:
+        for row in normalized_rows:
             for col_name in row.keys():
                 if col_name not in col_names:
                     col_names.append(col_name)
 
         cols = [GridCol(name) for name in col_names]
 
-        grid_meta = {"ver": "3.0"}
+        grid_meta: dict[str, Any] = {"ver": "3.0"}
 
         if meta is not None:
-            grid_meta = grid_meta | meta
+            grid_meta = grid_meta | dict(meta)
 
-        his_start = rows[0].get("ts", None)
-        his_end = rows[-1].get("ts", None)
+        his_start = normalized_rows[0].get("ts", None)
+        his_end = normalized_rows[-1].get("ts", None)
 
         if his_start is not None and his_end is not None:
             grid_meta["hisStart"] = his_start
             grid_meta["hisEnd"] = his_end + timedelta(minutes=1)
 
-        return Grid(meta=grid_meta, cols=cols, rows=rows)
+        return Grid(meta=grid_meta, cols=cols, rows=normalized_rows)
 
     def to_pandas(self):
         """Converts rows in the `Grid` to a Pandas DataFrame.

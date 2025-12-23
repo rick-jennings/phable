@@ -34,9 +34,11 @@ Haystack's `DateTime`.
 
 | Project Haystack | Phable              |
 | -----------------| -------------------
-| `List`           | `list`              |
-| `Dict`           | `dict`              |
+| `List`           | `typing.Sequence`   |
+| `Dict`           | `typing.Mapping`    |
 | `Grid`           | `phable.Grid`       |
+
+**Note:** Project Haystack data types are immutable, but Python's lists and dicts are mutable. Type checkers can use `typing.Sequence` and `typing.Mapping` to detect mutations while giving programmers flexibility to use either mutable (list/dict) or immutable (tuple/frozendict) types at runtime. Native frozendict support may be added in Python 3.15.
 
 **Data Types in Phable Only**
 
