@@ -36,13 +36,11 @@ ENV FAN_SUBSTITUTE=/app/rel/
 ENV PATH=$PATH:/app/fan/bin
 #FANTOM SOURCE END
 
-
 #XETO START
-# ADD git@github.com:Project-Haystack/xeto.git xeto
-RUN git clone -b master --depth 1 --single-branch https://github.com/Project-Haystack/xeto xeto `
-  && rm -rf xeto/.git*
+# xeto is needed at haxall build time.
+# The volume will override it at runtime for live updates.
+COPY xeto xeto
 #XETO END
-
 
 #HAXALL START
 WORKDIR /app/
@@ -54,4 +52,5 @@ RUN <<EOF
   echo "path=../xeto;../phable-test" > fan.props
   fan src/build.fan clean compile
 EOF
+ENV PATH=/app/haxall/bin:$PATH
 #HAXALL END

@@ -5,7 +5,8 @@ services:
     image: phable_haxall_cli
     container_name: phable_haxall_cli_run
     build:
-      context: .
-      dockerfile: ./Dockerfile
+      context: ../../
+      dockerfile: phable/docker/Dockerfile
     volumes:
-      - ../../src/xeto:/app/phable-test/src/xeto
+      - ./src/xeto:/app/phable-test/src/xeto
+      - ../../xeto:/app/xeto

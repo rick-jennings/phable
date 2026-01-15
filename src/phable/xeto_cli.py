@@ -35,7 +35,7 @@ class XetoCLI:
                 If `True`, CLI commands will execute via a Docker container called `phable_haxall_cli_run`
                 that is assumed to be running. The container can be built and started by cloning
                 [phable](https://github.com/rick-jennings/phable) and following the instructions
-                [here](https://github.com/rick-jennings/phable/blob/main/tests/xeto_cli/README.md).
+                [here](https://github.com/rick-jennings/phable/blob/main/docker/README.md).
                 If `False` (default), commands run locally via Haxall's `xeto` CLI, which must
                 be installed and available on the system PATH.
             io_format:
