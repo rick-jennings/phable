@@ -183,7 +183,7 @@ class HaystackClient:
         Returns:
             A `dict` containing information about the server.
         """
-        return self.call("about").rows[0]
+        return self.call("about", method="GET").rows[0]
 
     def close(self) -> Grid:
         """Close the connection to the server.
@@ -621,6 +621,7 @@ class HaystackClient:
         self,
         path: str,
         data: Grid = Grid(meta={"ver": "3.0"}, cols=[GridCol("empty")], rows=[]),
+        method: str = "POST",
     ) -> Grid:
         """Sends a POST request to `{uri}/{path}` using provided `data`.
 
@@ -659,10 +660,13 @@ class HaystackClient:
                 headers=headers,
                 content_type=self._content_type,
                 data=encoded_data,
-                method="POST",
+                method=method,
                 context=self._context,
             ).body
         )
+
+        if isinstance(response, dict):
+            response = Grid.to_grid(rows=response)
 
         assert isinstance(response, Grid)
 
