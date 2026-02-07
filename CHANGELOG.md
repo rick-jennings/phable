@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.26 (2026-01-02)
+## 0.1.26 (2026-02-07)
 
 ### ⚠️ BREAKING CHANGES
 
@@ -17,6 +17,8 @@
 ### Improvements
 
 * Improved type hints using `Mapping` and `Sequence` for immutable collections
+* fix: HaystackClient.about uses GET and handles dict response for nhaystack support
+* test: replace skyspark dependency with haxall
 
 ---
 
