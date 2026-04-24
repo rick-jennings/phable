@@ -326,7 +326,7 @@ wheels = [
 
 [[package]]
 name = "phable"
-version = "0.1.27a2"
+version = "0.1.27"
 source = { editable = "." }
 
 [package.optional-dependencies]
