@@ -276,7 +276,7 @@ class Grid:
 
         return Grid(meta=grid_meta, cols=cols, rows=normalized_rows)
 
-    def to_pandas(self):
+    def to_pandas(self, *, col_names_as_ids: bool = False):
         """Converts time-series `Grid` to a long-format Pandas DataFrame.
 
         **Note:** This method is experimental and subject to change.
@@ -284,7 +284,7 @@ class Grid:
         **Requirements:**
         - Phable's optional Pandas dependency must be installed.
         - `Grid` must have history data (`hisStart` in Grid metadata that is timezone-aware).
-        - Grid column metadata must have an `id` of type `Ref`.
+        - Grid column metadata must have an `id` of type `Ref`, unless `col_names_as_ids=True`.
         - Grid row value types must be `Number`, `bool`, `str`, or `NA`.
         - Row timestamps must use the same timezone as `hisStart` in Grid metadata.
 
@@ -293,46 +293,52 @@ class Grid:
         performance, since different points may have different value types. All value columns are always present for
         schema consistency to enable predictable programmatic access.
 
-        For each DataFrame row: if the Grid value is Project Haystack's `NA`, the `na` column is `True` and all typed
-        value columns are `None`. Otherwise, `na` is `False` and exactly one typed value column is populated based on
+        For each DataFrame row: if the Grid value is Project Haystack's `NA`, the `val_na` column is `True` and all typed
+        value columns are `None`. Otherwise, `val_na` is `None` and exactly one typed value column is populated based on
         type: `val_bool` for `bool`, `val_str` for `str`, or `val_num` for `Number`.
 
-        | Column     | Pandas Type                  | Nullable | Description                                    |
-        |------------|------------------------------|----------|------------------------------------------------|
-        | `id`       | `Categorical`                | No       | Point identifier from Ref (without `@` prefix) |
-        | `ts`       | `timestamp[us, tz][pyarrow]` | No       | Timestamp of the reading                       |
-        | `val_bool` | `bool[pyarrow]`              | Yes      | Boolean value (when `kind` tag is `Bool`)      |
-        | `val_str`  | `string[pyarrow]`            | Yes      | String value (when `kind` tag is `Str`)        |
-        | `val_num`  | `double[pyarrow]`            | Yes      | Numeric value (when `kind` tag is `Number`)    |
-        | `na`       | `bool[pyarrow]`              | No       | `True` when value is Project Haystack's `NA`   |
+        | Column     | Pandas Type                  | Nullable | Description                                                                                 |
+        |------------|------------------------------|----------|---------------------------------------------------------------------------------------------|
+        | `id`       | `Categorical`                | No       | Point identifier from Ref (without `@` prefix), or column name when `col_names_as_ids=True` |
+        | `ts`       | `timestamp[us, tz][pyarrow]` | No       | Timestamp of the reading                                                                    |
+        | `val_bool` | `bool[pyarrow]`              | Yes      | Boolean value (when `kind` tag is `Bool`)                                                   |
+        | `val_str`  | `string[pyarrow]`            | Yes      | String value (when `kind` tag is `Str`)                                                     |
+        | `val_num`  | `double[pyarrow]`            | Yes      | Numeric value (when `kind` tag is `Number`)                                                 |
+        | `val_na`   | `bool[pyarrow]`              | Yes      | `True` when value is Project Haystack's `NA`                                                |
 
         The resultant DataFrame is sorted by `id` and `ts`.
 
-        Phable users are encouraged to interpolate data while in the long format dataframe using `na` before
+        Phable users are encouraged to interpolate data while in the long format dataframe using `val_na` before
         pivoting to a wide format dataframe, since pivoting loses `NA` semantics which define where
         interpolation should not occur.
 
         **Example:**
 
         ```python
-        # convert to long-format pandas dataframe
+        from phable.pandas_utils import his_long_to_wide
+
         df_long = his_grid.to_pandas()
 
-        # pivot to wide format (one column per point, indexed by timestamp)
-        # use the appropriate value column (val_bool, val_str, or val_num) based on point kind
-        df_wide = df_long.pivot_table(index="ts", columns="id", values="val_num")
+        # if applicable, interpolate using val_na before pivoting (pivoting loses NA semantics)
+
+        df_wide = his_long_to_wide(df_long)
         ```
+
+        Parameters:
+            col_names_as_ids:
+                When `True`, column names are used as `id` values.
 
         Raises:
             ValueError:
                 If `Grid` does not have `hisStart` in metadata, `hisStart` is not timezone-aware,
                 row timestamps have a different timezone than `hisStart`, columns are missing required `id`
-                metadata of type Ref, or values are unsupported types.
+                metadata of type Ref (when `col_names_as_ids=False`), values are unsupported types, or two or
+                more columns share the same `id` value and `col_names_as_ids=False`.
         """
         import pandas as pd
         import pyarrow as pa
 
-        tz, data = _structure_long_format_for_df(self)
+        tz, data = _structure_long_format_for_df(self, col_names_as_ids)
 
         schema = pa.schema(
             [
@@ -341,7 +347,7 @@ class Grid:
                 ("val_bool", pa.bool_()),
                 ("val_str", pa.string()),
                 ("val_num", pa.float64()),
-                ("na", pa.bool_()),
+                ("val_na", pa.bool_()),
             ]
         )
 
@@ -355,7 +361,7 @@ class Grid:
 
         return df.sort_values(["id", "ts"]).reset_index(drop=True)
 
-    def to_polars(self):
+    def to_polars(self, *, col_names_as_ids: bool = False):
         """Converts time-series `Grid` to a long-format Polars DataFrame.
 
         **Note:** This method is experimental and subject to change.
@@ -363,7 +369,7 @@ class Grid:
         **Requirements:**
         - Phable's optional Polars dependency must be installed.
         - `Grid` must have history data (`hisStart` in Grid metadata that is timezone-aware).
-        - Grid column metadata must have an `id` of type `Ref`.
+        - Grid column metadata must have an `id` of type `Ref`, unless `col_names_as_ids=True`.
         - Grid row value types must be `Number`, `bool`, `str`, or `NA`.
         - Row timestamps must use the same timezone as `hisStart` in Grid metadata.
 
@@ -372,45 +378,51 @@ class Grid:
         performance, since different points may have different value types. All value columns are always present for
         schema consistency to enable predictable programmatic access.
 
-        For each DataFrame row: if the Grid value is Project Haystack's `NA`, the `na` column is `True` and all typed
-        value columns are `None`. Otherwise, `na` is `False` and exactly one typed value column is populated based on
+        For each DataFrame row: if the Grid value is Project Haystack's `NA`, the `val_na` column is `True` and all typed
+        value columns are `None`. Otherwise, `val_na` is `None` and exactly one typed value column is populated based on
         type: `val_bool` for `bool`, `val_str` for `str`, or `val_num` for `Number`.
 
-        | Column     | Polars Type        | Nullable | Description                                    |
-        |------------|--------------------|----------|------------------------------------------------|
-        | `id`       | `Categorical`      | No       | Point identifier from Ref (without `@` prefix) |
-        | `ts`       | `Datetime[us, tz]` | No       | Timestamp of the reading                       |
-        | `val_bool` | `Boolean`          | Yes      | Boolean value (when `kind` tag is `Bool`)      |
-        | `val_str`  | `String`           | Yes      | String value (when `kind` tag is `Str`)        |
-        | `val_num`  | `Float64`          | Yes      | Numeric value (when `kind` tag is `Number`)    |
-        | `na`       | `Boolean`          | No       | `True` when value is Project Haystack's `NA`   |
+        | Column     | Polars Type        | Nullable | Description                                                                                 |
+        |------------|--------------------|----------|---------------------------------------------------------------------------------------------|
+        | `id`       | `Categorical`      | No       | Point identifier from Ref (without `@` prefix), or column name when `col_names_as_ids=True` |
+        | `ts`       | `Datetime[us, tz]` | No       | Timestamp of the reading                                                                    |
+        | `val_bool` | `Boolean`          | Yes      | Boolean value (when `kind` tag is `Bool`)                                                   |
+        | `val_str`  | `String`           | Yes      | String value (when `kind` tag is `Str`)                                                     |
+        | `val_num`  | `Float64`          | Yes      | Numeric value (when `kind` tag is `Number`)                                                 |
+        | `val_na`   | `Boolean`          | Yes      | `True` when value is Project Haystack's `NA`                                                |
 
         The resultant DataFrame is sorted by `id` and `ts`.
 
-        Phable users are encouraged to interpolate data while in the long format dataframe using `na` before
+        Phable users are encouraged to interpolate data while in the long format dataframe using `val_na` before
         pivoting to a wide format dataframe, since pivoting loses `NA` semantics which define where
         interpolation should not occur.
 
         **Example:**
 
         ```python
-        # convert to long-format polars dataframe
+        from phable.polar_utils import his_long_to_wide
+
         df_long = his_grid.to_polars()
 
-        # pivot to wide format (one column per point, indexed by timestamp)
-        # use the appropriate value column (val_bool, val_str, or val_num) based on point kind
-        df_wide = df_long.pivot(on="id", index="ts", values="val_num")
+        # if applicable, interpolate using val_na before pivoting (pivoting loses NA semantics)
+
+        df_wide = his_long_to_wide(df_long)
         ```
+
+        Parameters:
+            col_names_as_ids:
+                When `True`, column names are used as `id` values.
 
         Raises:
             ValueError:
                 If `Grid` does not have `hisStart` in metadata, `hisStart` is not timezone-aware,
                 row timestamps have a different timezone than `hisStart`, columns are missing required `id`
-                metadata of type Ref, or values are unsupported types.
+                metadata of type Ref (when `col_names_as_ids=False`), values are unsupported types, or two or
+                more columns share the same `id` value and `col_names_as_ids=False`.
         """
         import polars as pl  # ty: ignore[unresolved-import]
 
-        tz, data = _structure_long_format_for_df(self)
+        tz, data = _structure_long_format_for_df(self, col_names_as_ids)
 
         schema = {
             "id": pl.Categorical,
@@ -418,7 +430,7 @@ class Grid:
             "val_bool": pl.Boolean,
             "val_str": pl.String,
             "val_num": pl.Float64,
-            "na": pl.Boolean,
+            "val_na": pl.Boolean,
         }
 
         return pl.DataFrame(data=data, schema=schema).sort("id", "ts")
@@ -541,9 +553,23 @@ def _validate_his_grid_metadata(grid: Grid) -> None:
         #     )
 
 
-def _structure_long_format_for_df(grid: Grid) -> tuple[ZoneInfo, list[dict[str, Any]]]:
+def _structure_long_format_for_df(
+    grid: Grid, col_names_as_ids: bool = False
+) -> tuple[ZoneInfo, list[dict[str, Any]]]:
     _validate_his_grid_metadata(grid)
     tz = grid.meta["hisStart"].tzinfo
+
+    if not col_names_as_ids:
+        ids = [col.meta["id"].val for col in grid.cols if col.name != "ts"]  # type: ignore[index]
+        seen: set[str] = set()
+        for id_ in ids:
+            if id_ in seen:
+                raise ValueError(
+                    f"Duplicate id '{id_}' found in Grid columns. "
+                    "Consider using col_names_as_ids=True to assign unique column names instead."
+                )
+            seen.add(id_)
+
     rows = []
 
     for row in grid.rows:
@@ -566,7 +592,7 @@ def _structure_long_format_for_df(grid: Grid) -> tuple[ZoneInfo, list[dict[str, 
 
             assert col.meta is not None  # for type checker
 
-            point_id = col.meta["id"].val
+            point_id = col.name if col_names_as_ids else col.meta["id"].val
             # expected_unit = col.meta.get("unit")
             # kind = col.meta["kind"]
 
@@ -588,7 +614,7 @@ def _structure_long_format_for_df(grid: Grid) -> tuple[ZoneInfo, list[dict[str, 
                 val_bool = None
                 val_str = None
                 val_num = None
-                na = True
+                val_na = True
             elif isinstance(raw_val, Number):
                 # if expected_unit != raw_val.unit:
                 #     raise ValueError(
@@ -598,17 +624,17 @@ def _structure_long_format_for_df(grid: Grid) -> tuple[ZoneInfo, list[dict[str, 
                 val_bool = None
                 val_str = None
                 val_num = raw_val.val
-                na = False
+                val_na = None
             elif isinstance(raw_val, bool):
                 val_bool = raw_val
                 val_str = None
                 val_num = None
-                na = False
+                val_na = None
             elif isinstance(raw_val, str):
                 val_bool = None
                 val_str = raw_val
                 val_num = None
-                na = False
+                val_na = None
             else:
                 raise ValueError(
                     f"Unsupported type '{type(raw_val).__name__}' for column '{col.name}'. "
@@ -622,7 +648,7 @@ def _structure_long_format_for_df(grid: Grid) -> tuple[ZoneInfo, list[dict[str, 
                     "val_bool": val_bool,
                     "val_str": val_str,
                     "val_num": val_num,
-                    "na": na,
+                    "val_na": val_na,
                 }
             )
 

@@ -1,6 +1,6 @@
 [project]
 name = "phable"
-version = "0.1.26"
+version = "0.1.27a2"
 description = "A modern Python toolkit for working with Project Haystack tagged data, Xeto specs, and Haxall"
 authors = [{ name = "Rick Jennings", email = "rjennings055@gmail.com" }]
 requires-python = ">=3.11, <4"
@@ -9,7 +9,7 @@ license = "MIT"
 dependencies = []
 
 [project.optional-dependencies]
-pandas = ["pandas>=2.2.3,<3"]
+pandas = ["pandas>=3.0.2,<4"]
 pyarrow = ["pyarrow>=17.0.0,<18"]
 polars = ["polars>=1.9.0,<2"]
 

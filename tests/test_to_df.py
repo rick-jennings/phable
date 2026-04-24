@@ -20,9 +20,11 @@ class DataFrameAdapter:
     """Adapter for converting between Grid and dataframe types."""
 
     to_df: Callable[[Grid], Any]
+    to_df_col_names_as_ids: Callable[[Grid], Any]
     from_arrow: Callable[[pa.Table], Any]
     assert_equal: Callable[[Any, Any], None]
     get_ts_timezone: Callable[[Any], str]
+    get_unique_ids: Callable[[Any], list[str]]
 
 
 def _pandas_from_arrow(table):
@@ -37,15 +39,19 @@ def _pandas_from_arrow(table):
 DF_ADAPTERS: dict[str, DataFrameAdapter] = {
     "pandas": DataFrameAdapter(
         to_df=lambda grid: grid.to_pandas(),
+        to_df_col_names_as_ids=lambda grid: grid.to_pandas(col_names_as_ids=True),
         from_arrow=_pandas_from_arrow,
         assert_equal=pandas_assert_frame_equal,
         get_ts_timezone=lambda df: str(df["ts"].dtype.pyarrow_dtype.tz),
+        get_unique_ids=lambda df: sorted(df["id"].unique()),
     ),
     "polars": DataFrameAdapter(
         to_df=lambda grid: grid.to_polars(),
+        to_df_col_names_as_ids=lambda grid: grid.to_polars(col_names_as_ids=True),
         from_arrow=pl.from_arrow,
         assert_equal=polars_assert_frame_equal,
         get_ts_timezone=lambda df: df["ts"].dtype.time_zone,
+        get_unique_ids=lambda df: sorted(df["id"].unique().to_list()),
     ),
 }
 
@@ -228,6 +234,36 @@ def test_row_ts_tz_mismatch_raises_error(
         ValueError,
         match="Timestamp timezone mismatch: row timestamp has timezone 'UTC' "
         "but 'hisStart' has timezone 'America/New_York'",
+    ):
+        df_adapter.to_df(grid)
+
+
+def test_col_names_as_ids(
+    df_adapter: DataFrameAdapter,
+    multi_pt_his_grid: Grid,
+) -> None:
+    df = df_adapter.to_df_col_names_as_ids(multi_pt_his_grid)
+    assert df_adapter.get_unique_ids(df) == ["v0", "v1", "v2"]
+
+
+def test_duplicate_ids_raises_error(df_adapter: DataFrameAdapter) -> None:
+    ts_now = datetime.now(ZoneInfo("America/New_York"))
+    meta = {
+        "ver": "3.0",
+        "hisStart": ts_now - timedelta(hours=1),
+        "hisEnd": ts_now,
+    }
+    cols = [
+        GridCol("ts"),
+        GridCol("v0", {"id": Ref("point1"), "kind": "Number"}),
+        GridCol("v1", {"id": Ref("point1"), "kind": "Number"}),
+    ]
+    rows = [{"ts": ts_now, "v0": Number(1.0, "kW"), "v1": Number(2.0, "kW")}]
+    grid = Grid(meta, cols, rows)
+
+    with pytest.raises(
+        ValueError,
+        match="Duplicate id 'point1' found in Grid columns.",
     ):
         df_adapter.to_df(grid)
 

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from typing import Any, Callable, Generator, Mapping
+import random
 from datetime import datetime, timedelta
+from typing import Any, Callable, Generator, Mapping
 from zoneinfo import ZoneInfo
 
-import random
 import pyarrow as pa
 import pytest
 
-from phable.kinds import NA, Grid, GridCol, Number, Ref, Marker
 from phable import (
-    HaystackClient,
     HaxallClient,
+    HaystackClient,
 )
+from phable.kinds import NA, Grid, GridCol, Marker, Number, Ref
 
 _URI = "http://localhost:8080/api/sys"
 _USERNAME = "su"
@@ -43,7 +43,7 @@ EXPECTED_SCHEMA = pa.schema(
         ("val_bool", pa.bool_()),
         ("val_str", pa.string()),
         ("val_num", pa.float64()),
-        ("na", pa.bool_()),
+        ("val_na", pa.bool_()),
     ]
 )
 
@@ -116,7 +116,7 @@ def single_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": None,
-            "na": True,
+            "val_na": True,
         },
         {
             "id": "point1",
@@ -124,7 +124,7 @@ def single_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": 72.2,
-            "na": False,
+            "val_na": None,
         },
         {
             "id": "point1",
@@ -132,7 +132,7 @@ def single_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": 76.3,
-            "na": False,
+            "val_na": None,
         },
     ]
 
@@ -187,7 +187,7 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": None,
-            "na": True,
+            "val_na": True,
         },
         {
             "id": "point1",
@@ -195,7 +195,7 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": 76.3,
-            "na": False,
+            "val_na": None,
         },
         {
             "id": "point2",
@@ -203,7 +203,7 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": "available",
             "val_num": None,
-            "na": False,
+            "val_na": None,
         },
         {
             "id": "point2",
@@ -211,7 +211,7 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": None,
             "val_str": None,
             "val_num": None,
-            "na": True,
+            "val_na": True,
         },
         {
             "id": "point3",
@@ -219,7 +219,7 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": True,
             "val_str": None,
             "val_num": None,
-            "na": False,
+            "val_na": None,
         },
         {
             "id": "point3",
@@ -227,11 +227,13 @@ def multi_pt_his_table() -> pa.Table:
             "val_bool": False,
             "val_str": None,
             "val_num": None,
-            "na": False,
+            "val_na": None,
         },
     ]
 
     return pa.Table.from_pylist(data, schema=EXPECTED_SCHEMA)
+
+
 
 
 @pytest.fixture(scope="module")
