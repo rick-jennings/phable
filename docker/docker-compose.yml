@@ -10,3 +10,4 @@ services:
     volumes:
       - ./src/xeto:/app/phable-test/src/xeto
       - ../../xeto:/app/xeto
+      - ../../xeto-cc:/app/xeto-cc

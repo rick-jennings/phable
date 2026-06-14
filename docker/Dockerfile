@@ -44,12 +44,11 @@ COPY xeto xeto
 
 #HAXALL START
 WORKDIR /app/
-RUN git clone -b main --depth 1 --single-branch https://github.com/haxall/haxall haxall `
-  && rm -rf haxall/.git*
+COPY haxall haxall
 WORKDIR /app/haxall/
 RUN <<EOF
   chmod +x bin/*
-  echo "path=../xeto;../phable-test" > fan.props
+  echo "path=../xeto;../xeto-cc;../phable-test" > fan.props
   fan src/build.fan clean compile
 EOF
 ENV PATH=/app/haxall/bin:$PATH
