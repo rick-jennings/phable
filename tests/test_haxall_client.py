@@ -18,7 +18,6 @@ from phable import (
 )
 
 @pytest.mark.order(0)
-@pytest.mark.parametrize("client", ["json"], indirect=True)
 def test_configure_proj(client: HaxallClient):
     data = [
         {
@@ -101,7 +100,6 @@ def test_configure_proj(client: HaxallClient):
 
 
 @pytest.mark.order(-1)
-@pytest.mark.parametrize("client", ["json"], indirect=True)
 def test_teardown_proj(client: HaxallClient):
     clear_test_data(client)
 
