@@ -425,7 +425,7 @@ class HaxallClient(HaystackClient):
             "Accept": self._content_type,
         }
 
-        res = self._ph_decoder.decode(
+        res = self._codec.decode(
             ph_request(
                 self.uri + "/file" + remote_file_uri,
                 headers,

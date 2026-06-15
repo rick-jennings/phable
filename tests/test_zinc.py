@@ -5,8 +5,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from phable.io.zinc_decoder import ZincDecoder
-from phable.io.zinc_encoder import ZincEncoder
+from phable.io.zinc_codec import ZincCodec
 from phable.kinds import (
     NA,
     Coord,
@@ -260,17 +259,17 @@ a
     ],
 )
 def test_parse_zinc(zinc: str, expected: Grid):
-    zinc_decoded = ZincDecoder().from_str(zinc)
+    zinc_decoded = ZincCodec().from_str(zinc)
 
     assert isinstance(zinc_decoded, Grid)
     assert zinc_decoded == expected
-    assert ZincEncoder().to_str(expected) == zinc
+    assert ZincCodec().to_str(expected) == zinc
 
 
 def test_parse_nan():
     x = r"{a: NaN, b: -2.5min}"
 
-    zinc_decoded = ZincDecoder().from_str(x)
+    zinc_decoded = ZincCodec().from_str(x)
 
     assert isinstance(zinc_decoded, dict)
     assert isinstance(zinc_decoded["a"], Number)
@@ -281,7 +280,7 @@ def test_parse_nan():
 def test_parse_scientific_notation():
     x = r"{test1: 123e+12kJ/kg_dry, test2: 7.15625E-4kWh/ft², test3: 3.814697265625E-6}"
 
-    zinc_decoded = ZincDecoder().from_str(x)
+    zinc_decoded = ZincCodec().from_str(x)
 
     assert isinstance(zinc_decoded, dict)
     assert zinc_decoded["test1"] == Number(123e12, "kJ/kg_dry")
@@ -291,7 +290,7 @@ def test_parse_scientific_notation():
 
 def test_parse_datetime():
     x = r"{x: 2010-12-18T14:11:30.925000Z UTC, y: 2010-12-18T14:11:30.925000Z London, z: 2015-01-02T06:13:38.701000-08:00 PST8PDT}"
-    zinc_decoded = ZincDecoder().from_str(x)
+    zinc_decoded = ZincCodec().from_str(x)
 
     expected = {
         "x": datetime(2010, 12, 18, 14, 11, 30, 925_000, tzinfo=ZoneInfo("UTC")),
@@ -323,7 +322,7 @@ def test_parse_datetime():
 def test_number_with_underscore():
     x = r"{test: 7_000}"
 
-    zinc_decoded = ZincDecoder().from_str(x)
+    zinc_decoded = ZincCodec().from_str(x)
 
     assert isinstance(zinc_decoded, dict)
     assert zinc_decoded["test"] == Number(7_000)
@@ -500,10 +499,10 @@ y
     ],
 )
 def test_nested(zinc: str, expected: Grid):
-    zinc_decoded = ZincDecoder().from_str(zinc)
+    zinc_decoded = ZincCodec().from_str(zinc)
 
     assert zinc_decoded == expected
-    assert ZincEncoder().to_str(expected) == zinc
+    assert ZincCodec().to_str(expected) == zinc
 
 
 @pytest.mark.parametrize(
@@ -527,7 +526,7 @@ def test_nested(zinc: str, expected: Grid):
 )
 def test_exceptions(zinc: str, expected_msg: str):
     with pytest.raises(ValueError) as e:
-        ZincDecoder().from_str(zinc)
+        ZincCodec().from_str(zinc)
     assert str(e.value) == expected_msg
 
 
@@ -539,7 +538,7 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
 
 """
 
-    zinc_decoded = ZincDecoder().from_str(zinc)
+    zinc_decoded = ZincCodec().from_str(zinc)
 
     expected = Grid(
         {"ver": "3.0", "siteRef": Ref("17eb894a-26bb44ff", "HQ"), "mark": Marker()},
@@ -563,7 +562,7 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
     )
 
     assert zinc_decoded == expected
-    assert ZincEncoder().to_str(expected) == zinc
+    assert ZincCodec().to_str(expected) == zinc
 
 
 # @pytest.mark.parametrize(
@@ -596,7 +595,7 @@ id,ref childRef:@17eb894a-26bb44dd "Child" parentRef:@17eb894a-26bb44ee "Parent"
 def test_list():
     raw_zinc = '{x:[1,[2,3,4,"abc"],`def`,5]}'
 
-    zinc_decoded = ZincDecoder().from_str(raw_zinc)
+    zinc_decoded = ZincCodec().from_str(raw_zinc)
 
     expected = {
         "x": [
@@ -608,4 +607,4 @@ def test_list():
     }
 
     assert zinc_decoded == expected
-    assert ZincEncoder().to_str(expected) == raw_zinc
+    assert ZincCodec().to_str(expected) == raw_zinc

@@ -60,6 +60,7 @@ nav:
     - HaystackClient: haystack-client.md
     - HaxallClient: haxall-client.md
     - XetoCLI: xeto-cli.md
+    - Funcs: funcs.md
   - Examples:
     - Xeto Intro: xeto-intro.md
     - Logging: logging-example.md

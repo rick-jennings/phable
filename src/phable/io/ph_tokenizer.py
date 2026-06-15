@@ -4,7 +4,7 @@ from datetime import date, datetime, time
 from enum import StrEnum
 from typing import Any, TextIO
 
-from phable.io.json_decoder import _haystack_to_iana_tz
+from phable.io.ph_tz import _haystack_to_iana_tz
 from phable.kinds import Number, Ref, Symbol, Uri
 
 
