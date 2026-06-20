@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import json as _json
+import json
 from datetime import date, datetime, time
 from decimal import Decimal, getcontext
 from typing import Any
 
-from phable.io.ph_codec import PhCodec
 from phable.io.ph_tz import _haystack_to_iana_tz, _tz_iana_to_haystack
 from phable.kinds import (
     NA,
@@ -23,20 +22,54 @@ from phable.kinds import (
 )
 
 
-class JsonCodec(PhCodec):
-    media_type = "application/json"
+def ph_from_json(data: str | dict[str, Any]) -> PhKind:
+    """Decode a JSON string or a Python dict using the Haystack JSON encoding defined
+    [here](https://project-haystack.org/doc/docHaystack/Json) to a `PhKind` (phable's
+    Python representation of a Project Haystack kind).
 
-    def to_str(self, data: PhKind) -> str:
-        return _json.dumps(_kind_to_json(data))
+    **Example:**
+    ```python
+    from phable import ph_from_json
 
-    def from_str(self, data: str) -> PhKind:
-        return _parse_val(_json.loads(data))
+    data = {"equip": {"_kind": "marker"}}
+    ph_from_json(data)
+    # {"equip": Marker()}
+    ```
 
-    def to_dict(self, data: PhKind) -> dict[str, Any]:
-        return _kind_to_json(data)  # ty: ignore [invalid-return-type]
+    Parameters:
+        data: A JSON string or a Python dict using the Haystack JSON encoding.
 
-    def from_dict(self, data: dict[str, Any]) -> PhKind:
-        return _parse_val(data)
+    Returns:
+        A `PhKind`.
+    """
+
+    if isinstance(data, str):
+        data = json.loads(data)
+    return _parse_val(data)
+
+
+def ph_to_json(data: PhKind) -> str:
+    """Encode a `PhKind` (phable's Python representation of a Project Haystack kind)
+    to a JSON string using the Haystack JSON encoding defined
+    [here](https://project-haystack.org/doc/docHaystack/Json).
+
+    **Example:**
+    ```python
+    from phable import Marker, ph_to_json
+
+    data = {"equip": Marker()}
+    ph_to_json(data)
+    # '{"equip": {"_kind": "marker"}}'
+    ```
+
+    Parameters:
+        data: A `PhKind` to encode.
+
+    Returns:
+        A JSON string representation of the Haystack JSON encoding.
+    """
+
+    return json.dumps(_kind_to_json(data))
 
 
 # ── Encoding ──────────────────────────────────────────────────────────────────
@@ -142,7 +175,9 @@ def _parse_val(value: Any) -> PhKind:
         case list():
             return _parse_list(value)
         case _:
-            raise ValueError(f"Cannot parse value {value!r} of type {type(value).__name__}")
+            raise ValueError(
+                f"Cannot parse value {value!r} of type {type(value).__name__}"
+            )
 
 
 def _to_kind(d: dict[str, str]) -> PhKind:

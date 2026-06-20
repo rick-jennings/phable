@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Generator, Mapping, Self, Sequence
 
 from phable.auth.scram import ScramScheme
 from phable.http import ph_request
-from phable.io.codecs import PH_CODECS
+from phable.io.ph_codecs import PH_CODECS
 from phable.kinds import (
     DateRange,
     DateTimeRange,
@@ -133,8 +133,9 @@ class HaystackClient:
         self._auth_token: str = auth_token
         self._context: SSLContext | None = ssl_context
 
-        self._codec = PH_CODECS[content_type]
-        self._content_type: str = self._codec.media_type
+        self._encoder = PH_CODECS[content_type].encoder
+        self._decoder = PH_CODECS[content_type].decoder
+        self._content_type = PH_CODECS[content_type].media_type
 
     @classmethod
     def open(
@@ -648,9 +649,9 @@ class HaystackClient:
             "Accept": self._content_type,
         }
 
-        encoded_data = self._codec.encode(data)
+        encoded_data = self._encoder(data).encode("utf-8")
 
-        response = self._codec.decode(
+        response = self._decoder(
             ph_request(
                 url=f"{self.uri}/{path}",
                 headers=headers,
@@ -658,7 +659,7 @@ class HaystackClient:
                 data=encoded_data,
                 method=method,
                 context=self._context,
-            ).body
+            ).body.decode("utf-8")
         )
 
         if isinstance(response, dict):

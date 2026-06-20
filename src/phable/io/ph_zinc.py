@@ -6,7 +6,6 @@ from io import StringIO
 from typing import Any, Mapping, Sequence
 
 from phable.grid_builder import GridBuilder
-from phable.io.ph_codec import PhCodec
 from phable.io.ph_tokenizer import PhToken, PhTokenizer, is_literal
 from phable.io.ph_tz import _tz_iana_to_haystack
 from phable.kinds import (
@@ -25,21 +24,56 @@ from phable.kinds import (
 )
 
 
-class ZincCodec(PhCodec):
-    """Encode and decode Haystack data in Zinc format."""
+def ph_to_zinc(data: PhKind) -> str:
+    """Encode a `PhKind` (phable's Python representation of a Project Haystack kind)
+    to a Zinc string using the Haystack Zinc encoding defined
+    [here](https://project-haystack.org/doc/docHaystack/Zinc).
 
-    media_type = "text/zinc"
+    **Example:**
+    ```python
+    from phable import Marker, ph_to_zinc
 
-    def to_str(self, data: PhKind) -> str:
-        out = StringIO()
-        if isinstance(data, Grid):
-            _write_grid(out, data)
-        else:
-            _write_val(out, data)
-        return out.getvalue()
+    data = {"equip": Marker()}
+    ph_to_zinc(data)
+    # '{equip}'
+    ```
 
-    def from_str(self, data: str) -> PhKind:
-        return _ZincParser(data).read()
+    Parameters:
+        data: A `PhKind` to encode.
+
+    Returns:
+        A Zinc string representation of the Haystack Zinc encoding.
+    """
+
+    out = StringIO()
+    if isinstance(data, Grid):
+        _write_grid(out, data)
+    else:
+        _write_val(out, data)
+    return out.getvalue()
+
+
+def ph_from_zinc(data: str) -> PhKind:
+    """Decode a Zinc string using the Haystack Zinc encoding defined
+    [here](https://project-haystack.org/doc/docHaystack/Zinc) to a `PhKind` (phable's
+    Python representation of a Project Haystack kind).
+
+    **Example:**
+    ```python
+    from phable import ph_from_zinc
+
+    ph_from_zinc('{equip}')
+    # {"equip": Marker()}
+    ```
+
+    Parameters:
+        data: A Zinc string to decode.
+
+    Returns:
+        A `PhKind`.
+    """
+
+    return _ZincParser(data).read()
 
 
 # ── Encoding ──────────────────────────────────────────────────────────────────
@@ -85,9 +119,7 @@ def _write_col(out: StringIO, col: GridCol) -> None:
         _write_meta(out, True, col.meta)
 
 
-def _write_row(
-    out: StringIO, row: Mapping[str, Any], col_names: Sequence[str]
-) -> None:
+def _write_row(out: StringIO, row: Mapping[str, Any], col_names: Sequence[str]) -> None:
     for index, col_name in enumerate(col_names):
         if index > 0:
             out.write(",")
@@ -186,7 +218,9 @@ def _write_scalar(out: StringIO, val: Any) -> None:
         case Symbol():
             s = f"^{val.val}"
         case _:
-            raise ValueError(f"Cannot write scalar {val!r} of type {type(val).__name__}")
+            raise ValueError(
+                f"Cannot write scalar {val!r} of type {type(val).__name__}"
+            )
 
     out.write(s)
 

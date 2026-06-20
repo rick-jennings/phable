@@ -4,7 +4,7 @@ import tempfile
 from typing import Any, Literal
 
 from phable import Grid
-from phable.io.codecs import PH_CODECS
+from phable.io.ph_codecs import PH_CODECS
 
 
 class XetoCLI:
@@ -42,7 +42,8 @@ class XetoCLI:
         """
         self._docker_cli = docker_cli
         self._io_format = io_format
-        self._codec = PH_CODECS[io_format]
+        self._encoder = PH_CODECS[io_format].encoder
+        self._decoder = PH_CODECS[io_format].decoder
 
     def fits_explain(self, recs: list[dict[str, Any]], graph: bool = True) -> Grid:
         """Analyze records against Xeto type specifications and return detailed
@@ -85,7 +86,7 @@ class XetoCLI:
         with tempfile.NamedTemporaryFile(
             mode="w", suffix=f".{self._io_format}", delete=False
         ) as temp_file:
-            temp_file.write(self._codec.to_str(recs))
+            temp_file.write(self._encoder(recs))
             temp_file.flush()
             temp_file_path = temp_file.name
 
@@ -95,7 +96,7 @@ class XetoCLI:
             else:
                 cli_stdout = _exec_localhost_cmd(self._io_format, graph, temp_file_path)
 
-            decoded_str = self._codec.from_str(cli_stdout)
+            decoded_str = self._decoder(cli_stdout)
             assert isinstance(decoded_str, Grid)
             return decoded_str
         finally:

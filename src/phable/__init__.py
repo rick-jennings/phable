@@ -25,6 +25,7 @@ from phable.kinds import (
 from phable.xeto_cli import XetoCLI
 from phable.auth.scram import AuthError
 
-from phable.utils import ph_from_json, ph_to_json, ph_from_zinc, ph_to_zinc
+from phable.io.ph_json import ph_from_json, ph_to_json
+from phable.io.ph_zinc import ph_from_zinc, ph_to_zinc
 
 from phable.grid_builder import GridBuilder
