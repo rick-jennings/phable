@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.28 (2026-06-21)
+
+### Features
+
+* **ph_to_zinc()** / **ph_from_zinc()**: New top-level functions to encode/decode Haystack kinds to/from Zinc
+* **ph_to_json()** / **ph_from_json()**: New top-level functions to encode/decode Haystack kinds to/from JSON
+
+### Dependencies
+
+* Upgraded `pyarrow` from `>=17.0.0,<18` to `>=24.0.0,<25`
+
+---
+
 ## 0.1.27 (2026-04-24)
 
 ### ⚠️ BREAKING CHANGES
