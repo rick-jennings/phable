@@ -425,7 +425,7 @@ class HaxallClient(HaystackClient):
             "Accept": self._content_type,
         }
 
-        res = self._codec.decode(
+        res = self._decoder(
             ph_request(
                 self.uri + "/file" + remote_file_uri,
                 headers,
@@ -433,7 +433,7 @@ class HaxallClient(HaystackClient):
                 data,
                 method=http_method,
                 context=self._context,
-            ).body
+            ).body.decode("utf-8")
         )
 
         assert isinstance(res, Grid)
