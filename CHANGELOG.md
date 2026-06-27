@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.29 (2026-06-27)
+
+### Bug Fixes
+
+* **HaxallClient.file_post()** / **HaxallClient.file_put()**: Fixed a bug where decoding the response did not account for the io refactor in 0.1.28
+
+---
+
 ## 0.1.28 (2026-06-21)
 
 ### Features
