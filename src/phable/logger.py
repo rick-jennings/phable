@@ -1,6 +1,7 @@
 import json
 import logging
 from typing import Any
+from urllib.error import URLError
 
 logger = logging.getLogger("phable")
 
@@ -48,3 +49,12 @@ def _get_status_text(status: int) -> str:
         return "200 OK"
     else:
         return str(status)
+
+
+def log_url_err(url: str, url_error: URLError) -> None:
+    message = f"req error >\n\nURL: {url}\n\nReason: {url_error.reason}"
+    notes = getattr(url_error, "__notes__", None)
+    if notes:
+        message += "\n\nNotes:\n" + "\n".join(notes)
+
+    logger.debug(message)

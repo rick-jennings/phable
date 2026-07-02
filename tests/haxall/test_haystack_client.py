@@ -46,7 +46,7 @@ def test_auth_token(client: HaystackClient):
     auth_token = client._auth_token
 
     assert len(auth_token) > 40
-    assert "s-" in auth_token
+    assert "web-" in auth_token
 
 
 def test_open_client(URI: str, USERNAME: str, PASSWORD: str):
@@ -54,7 +54,7 @@ def test_open_client(URI: str, USERNAME: str, PASSWORD: str):
         auth_token = hc._auth_token
 
         assert len(auth_token) > 40
-        assert "s-" in auth_token
+        assert "web-" in auth_token
         assert hc.about()["vendorName"] == "SkyFoundry"
 
         auth_token = hc._auth_token
