@@ -7,7 +7,7 @@ from zoneinfo import ZoneInfo
 import pytest
 
 import phable.kinds as kinds
-from phable.io.ph_json import ph_from_json, ph_to_json
+from phable.io.ph_json import ph_from_json, ph_to_json_str
 from phable.io.ph_tz import _haystack_to_iana_tz
 
 # -----------------------------------------------------------------------------
@@ -17,7 +17,7 @@ from phable.io.ph_tz import _haystack_to_iana_tz
 
 def test_datetime_to_json():
     now = datetime.now(ZoneInfo("America/New_York"))
-    assert ph_to_json(now) == json.dumps(
+    assert ph_to_json_str(now) == json.dumps(
         {
             "_kind": "dateTime",
             "val": now.isoformat(),
@@ -28,47 +28,49 @@ def test_datetime_to_json():
 
 def test_date_to_json():
     today = date(2024, 3, 27)
-    assert ph_to_json(today) == json.dumps({"_kind": "date", "val": "2024-03-27"})
+    assert ph_to_json_str(today) == json.dumps({"_kind": "date", "val": "2024-03-27"})
 
 
 def test_time_to_json():
     t1 = time(12, 12, 59)
-    assert ph_to_json(t1) == json.dumps({"_kind": "time", "val": "12:12:59"})
+    assert ph_to_json_str(t1) == json.dumps({"_kind": "time", "val": "12:12:59"})
 
 
 def test_number_to_json():
     x = kinds.Number(20, "kW")
-    assert ph_to_json(x) == json.dumps({"_kind": "number", "val": 20, "unit": "kW"})
+    assert ph_to_json_str(x) == json.dumps({"_kind": "number", "val": 20, "unit": "kW"})
 
     y = kinds.Number(20)
-    assert ph_to_json(y) == json.dumps(20)
+    assert ph_to_json_str(y) == json.dumps(20)
 
 
 def test_int_to_json():
     x = 24
-    assert ph_to_json(x) == json.dumps(24)  # ty: ignore[invalid-argument-type]
+    assert ph_to_json_str(x) == json.dumps(24)  # ty: ignore[invalid-argument-type]
 
 
 def test_float_to_json():
     x = 24.1
-    assert ph_to_json(x) == json.dumps(24.1)  # ty: ignore[invalid-argument-type]
+    assert ph_to_json_str(x) == json.dumps(24.1)  # ty: ignore[invalid-argument-type]
 
 
 def test_str_to_json():
     x = "Hello World!"
-    assert ph_to_json(x) == json.dumps(x)
+    assert ph_to_json_str(x) == json.dumps(x)
 
 
 def test_bool_to_json():
     x = True
-    assert ph_to_json(x) == json.dumps(x)
+    assert ph_to_json_str(x) == json.dumps(x)
 
 
 def test_ref_to_json():
     ref_id = "abc1234"
-    assert ph_to_json(kinds.Ref(ref_id)) == json.dumps({"_kind": "ref", "val": ref_id})
+    assert ph_to_json_str(kinds.Ref(ref_id)) == json.dumps(
+        {"_kind": "ref", "val": ref_id}
+    )
 
-    assert ph_to_json(kinds.Ref(ref_id, "Carytown")) == json.dumps(
+    assert ph_to_json_str(kinds.Ref(ref_id, "Carytown")) == json.dumps(
         {
             "_kind": "ref",
             "val": ref_id,
@@ -79,27 +81,27 @@ def test_ref_to_json():
 
 def test_symbol_to_json():
     x = kinds.Symbol("abc")
-    assert ph_to_json(x) == json.dumps({"_kind": "symbol", "val": "abc"})
+    assert ph_to_json_str(x) == json.dumps({"_kind": "symbol", "val": "abc"})
 
 
 def test_marker_to_json():
     x = kinds.Marker()
-    assert ph_to_json(x) == json.dumps({"_kind": "marker"})
+    assert ph_to_json_str(x) == json.dumps({"_kind": "marker"})
 
 
 def test_na_to_json():
     x = kinds.NA()
-    assert ph_to_json(x) == json.dumps({"_kind": "na"})
+    assert ph_to_json_str(x) == json.dumps({"_kind": "na"})
 
 
 def test_remove_to_json():
     x = kinds.Remove()
-    assert ph_to_json(x) == json.dumps({"_kind": "remove"})
+    assert ph_to_json_str(x) == json.dumps({"_kind": "remove"})
 
 
 def test_uri_to_json():
     x = kinds.Uri("https://project-haystack.org")
-    assert ph_to_json(x) == json.dumps(
+    assert ph_to_json_str(x) == json.dumps(
         {
             "_kind": "uri",
             "val": "https://project-haystack.org",
@@ -109,7 +111,7 @@ def test_uri_to_json():
 
 def test_coord_to_json():
     x = kinds.Coord(Decimal("37.548266"), Decimal("-77.4491888"))
-    assert ph_to_json(x) == json.dumps(
+    assert ph_to_json_str(x) == json.dumps(
         {
             "_kind": "coord",
             "lat": 37.548266,
@@ -120,7 +122,9 @@ def test_coord_to_json():
 
 def test_xstr_to_json():
     x = kinds.XStr("value", "red")
-    assert ph_to_json(x) == json.dumps({"_kind": "xstr", "type": "value", "val": "red"})
+    assert ph_to_json_str(x) == json.dumps(
+        {"_kind": "xstr", "type": "value", "val": "red"}
+    )
 
 
 @pytest.mark.parametrize(
@@ -149,7 +153,7 @@ def test_xstr_to_json():
     ],
 )
 def test_grid_col_to_json(col: kinds.GridCol, expected: dict[str, Any]) -> None:
-    assert ph_to_json(col) == json.dumps(expected)
+    assert ph_to_json_str(col) == json.dumps(expected)
 
 
 def test_list_to_json():
@@ -159,7 +163,7 @@ def test_list_to_json():
         {"test": kinds.Marker()},
         kinds.Grid.to_grid({"id": kinds.Ref("test1"), "dis": "test1"}),
     ]
-    assert ph_to_json(x) == json.dumps(
+    assert ph_to_json_str(x) == json.dumps(
         [
             {"_kind": "number", "val": 12, "unit": "kW"},
             True,
@@ -176,7 +180,7 @@ def test_list_to_json():
 
 def test_kind_to_json_raises_error():
     with pytest.raises(ValueError):
-        ph_to_json(timedelta(days=5))  # ty: ignore[invalid-argument-type]
+        ph_to_json_str(timedelta(days=5))  # ty: ignore[invalid-argument-type]
 
 
 # -----------------------------------------------------------------------------
@@ -187,7 +191,7 @@ def test_kind_to_json_raises_error():
 def test__parse_dict_with_kinds_to_json():
     x = {"test_meta": kinds.Marker()}
 
-    assert ph_to_json(x) == json.dumps({"test_meta": {"_kind": "marker"}})
+    assert ph_to_json_str(x) == json.dumps({"test_meta": {"_kind": "marker"}})
 
 
 def test__parse_nested_dict_with_kinds_to_json1():
@@ -196,7 +200,7 @@ def test__parse_nested_dict_with_kinds_to_json1():
         "x2": {"y1": kinds.Marker(), "id": kinds.Ref("y1")},
     }
 
-    assert ph_to_json(x) == json.dumps(
+    assert ph_to_json_str(x) == json.dumps(
         {
             "x1": {"_kind": "marker"},
             "x2": {"y1": {"_kind": "marker"}, "id": {"_kind": "ref", "val": "y1"}},
@@ -215,7 +219,7 @@ def test__parse_nested_dict_with_kinds_to_json2():
         },
     }
 
-    assert ph_to_json(x) == json.dumps(
+    assert ph_to_json_str(x) == json.dumps(
         {
             "x1": {"_kind": "marker"},
             "x2": {"y1": {"_kind": "marker"}, "id": {"_kind": "ref", "val": "y1"}},
@@ -253,7 +257,7 @@ def test_grid_to_json_meta1():
     meta = {"test_meta": kinds.Marker()}
     rows = [{"x": 123}, {"y": 456}]
     test_grid = kinds.Grid.to_grid(rows, meta)
-    test_json = json.loads(ph_to_json(test_grid))
+    test_json = json.loads(ph_to_json_str(test_grid))
 
     assert test_json["meta"] == {
         "ver": "3.0",
@@ -265,7 +269,7 @@ def test_grid_to_json_meta2():
     meta = {"test_meta": kinds.Marker(), "id": kinds.Ref("test")}
     rows = [{"x": 123}, {"y": 456}]
     test_grid = kinds.Grid.to_grid(rows, meta)
-    test_json = json.loads(ph_to_json(test_grid))
+    test_json = json.loads(ph_to_json_str(test_grid))
 
     assert test_json["meta"] == {
         "ver": "3.0",
@@ -306,7 +310,7 @@ def test_grid_to_json_col1():
     ]
 
     test_grid = kinds.Grid(meta, cols, rows)
-    test_json = json.loads(ph_to_json(test_grid))
+    test_json = json.loads(ph_to_json_str(test_grid))
 
     assert test_json["meta"] == {"ver": "3.0"}
     assert test_json["cols"][1] == {
@@ -360,7 +364,7 @@ def test_create_single_his_write_grid():
                 "val": "2012-04-21T08:30:00-04:00",
                 "tz": "New_York",
             },
-            "val": json.loads(ph_to_json(kinds.Number(72.2))),
+            "val": json.loads(ph_to_json_str(kinds.Number(72.2))),
         },
         {
             "ts": {
@@ -368,11 +372,11 @@ def test_create_single_his_write_grid():
                 "val": "2012-04-21T08:45:00-04:00",
                 "tz": "New_York",
             },
-            "val": json.loads(ph_to_json(kinds.Number(76.3))),
+            "val": json.loads(ph_to_json_str(kinds.Number(76.3))),
         },
     ]
 
-    assert json.loads(ph_to_json(haystack_grid))["rows"] == rows_json
+    assert json.loads(ph_to_json_str(haystack_grid))["rows"] == rows_json
 
 
 def test_create_batch_his_write_grid():
@@ -407,7 +411,7 @@ def test_create_batch_his_write_grid():
 
     haystack_grid = kinds.Grid(meta=meta, cols=cols_haystack, rows=rows_haystack)
 
-    json_grid = json.loads(ph_to_json(haystack_grid))
+    json_grid = json.loads(ph_to_json_str(haystack_grid))
 
     cols_json = [
         {"name": "ts"},
@@ -424,8 +428,8 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T08:30:00-04:00",
                 "tz": "New_York",
             },
-            "v0": json.loads(ph_to_json(kinds.Number(72.2))),
-            "v1": json.loads(ph_to_json(kinds.Number(10))),
+            "v0": json.loads(ph_to_json_str(kinds.Number(72.2))),
+            "v1": json.loads(ph_to_json_str(kinds.Number(10))),
         },
         {
             "ts": {
@@ -433,7 +437,7 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T08:45:00-04:00",
                 "tz": "New_York",
             },
-            "v0": json.loads(ph_to_json(kinds.Number(76.3))),
+            "v0": json.loads(ph_to_json_str(kinds.Number(76.3))),
         },
         {
             "ts": {
@@ -441,7 +445,7 @@ def test_create_batch_his_write_grid():
                 "val": "2012-04-21T09:00:00-04:00",
                 "tz": "New_York",
             },
-            "v1": json.loads(ph_to_json(kinds.Number(12))),
+            "v1": json.loads(ph_to_json_str(kinds.Number(12))),
         },
     ]
 
@@ -686,6 +690,6 @@ def test__parse_grid_with_nested_lists_dicts_and_grids():
     )
 
     grid_from_json = ph_from_json(json_input)
-    json_again = json.loads(ph_to_json(grid_from_json))
+    json_again = json.loads(ph_to_json_str(grid_from_json))
     assert json_again == json_input
     assert grid_from_json == expected_grid

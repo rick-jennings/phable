@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Callable
 
-from phable.io.ph_json import ph_from_json, ph_to_json
+from phable.io.ph_json import ph_from_json, ph_to_json_str
 from phable.io.ph_zinc import ph_from_zinc, ph_to_zinc
 from phable.kinds import PhKind
 
@@ -15,5 +15,5 @@ class PhCodec:
 
 PH_CODECS: dict[str, PhCodec] = {
     "zinc": PhCodec("text/zinc", ph_to_zinc, ph_from_zinc),
-    "json": PhCodec("application/json", ph_to_json, ph_from_json),
+    "json": PhCodec("application/json", ph_to_json_str, ph_from_json),
 }

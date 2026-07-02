@@ -48,17 +48,17 @@ def ph_from_json(data: str | dict[str, Any]) -> PhKind:
     return _parse_val(data)
 
 
-def ph_to_json(data: PhKind) -> str:
+def ph_to_json_str(data: PhKind) -> str:
     """Encode a `PhKind` (phable's Python representation of a Project Haystack kind)
     to a JSON string using the Haystack JSON encoding defined
     [here](https://project-haystack.org/doc/docHaystack/Json).
 
     **Example:**
     ```python
-    from phable import Marker, ph_to_json
+    from phable import Marker, ph_to_json_str
 
     data = {"equip": Marker()}
-    ph_to_json(data)
+    ph_to_json_str(data)
     # '{"equip": {"_kind": "marker"}}'
     ```
 
