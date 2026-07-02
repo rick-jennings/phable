@@ -35,7 +35,7 @@ def test_open_hx_client(URI: str, USERNAME: str, PASSWORD: str):
         auth_token = hc._auth_token
 
         assert len(auth_token) > 40
-        assert "s-" in auth_token
+        assert "web-" in auth_token
         assert hc.about()["vendorName"] == "SkyFoundry"
 
         auth_token = hc._auth_token
