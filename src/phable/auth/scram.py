@@ -19,7 +19,7 @@ from random import randbytes
 from typing import TYPE_CHECKING
 from urllib.error import HTTPError
 
-from phable.http import ph_request
+from phable.http import PhHttpResponse, ph_request
 from phable.logger import log_http_req, log_http_res
 
 if TYPE_CHECKING:
@@ -99,18 +99,20 @@ class ScramScheme:
         headers = {
             "Authorization": f"HELLO username={_to_base64(self.username)}",
         }
-        res_headers = self._ph_scram_get(
+        res = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
         )
 
+        _check_scram_challenge(self.uri, "Hello", res)
+
         try:
-            self._handshake_token, self._hash = _parse_hello_call_result(res_headers)
-        except Exception:
+            self._handshake_token, self._hash = _parse_hello_call_result(res.headers)
+        except Exception as e:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's Hello call message"
-            )
+                _parsing_error_msg(self.uri, "Hello", res)
+            ) from e
 
     def _first_call(self) -> None:
         """Defines and sends the "client-first-message" to the server and
@@ -124,22 +126,24 @@ class ScramScheme:
             "Authorization": f"SCRAM data={_to_base64(c1_msg)}, handshakeToken={self._handshake_token}"
         }
 
-        res_headers = self._ph_scram_get(
+        res = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
         )
+
+        _check_scram_challenge(self.uri, "First", res)
 
         try:
             (
                 self._s_nonce,
                 self._salt,
                 self._iter_count,
-            ) = _parse_first_call_result(res_headers)
-        except Exception:
+            ) = _parse_first_call_result(res.headers)
+        except Exception as e:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's First call message"
-            )
+                _parsing_error_msg(self.uri, "First", res)
+            ) from e
 
     def _final_call(self) -> None:
         """Defines and sends the "client-final-message" to the server and
@@ -160,18 +164,25 @@ class ScramScheme:
             )
         }
 
-        res_headers = self._ph_scram_get(
+        res = self._ph_scram_get(
             self.uri + "/about",
             headers,
             context=self._context,
         )
 
-        try:
-            self._auth_token, server_signature = _parse_final_call_result(res_headers)
-        except Exception:
+        if res.status != 200:
             raise ScramServerResponseParsingError(
-                "Unable to parse the server's response to the client's Final call message"
+                f"Expected an HTTP 200 response from {self.uri} to the client's "
+                f"Final call message, but received HTTP {res.status} with "
+                f"headers: {_redact_auth_token(res.headers)!r}"
             )
+
+        try:
+            self._auth_token, server_signature = _parse_final_call_result(res.headers)
+        except Exception as e:
+            raise ScramServerResponseParsingError(
+                _parsing_error_msg(self.uri, "Final", res)
+            ) from e
 
         if server_signature != self._server_signature:
             raise ScramServerSignatureNotEqualError(
@@ -248,15 +259,14 @@ class ScramScheme:
         url: str,
         headers: dict[str, str],
         context: SSLContext | None = None,
-    ) -> Message:
+    ) -> PhHttpResponse:
         try:
-            response = ph_request(url, headers, self._content_type, context=context)
-            res_headers = response.headers
+            return ph_request(url, headers, self._content_type, context=context)
         except HTTPError as e:
-            res_headers = e.headers
+            body = e.read()
 
             log_http_req("GET", url, headers)
-            log_http_res(e.status, dict(res_headers))  # ty: ignore [invalid-argument-type]
+            log_http_res(e.status, dict(e.headers), body)  # ty: ignore [invalid-argument-type]
 
             if e.status == 403:
                 raise AuthError(
@@ -264,7 +274,42 @@ class ScramScheme:
                     + "provided."
                 )
 
-        return res_headers
+            return PhHttpResponse(
+                body=body,
+                headers=e.headers,
+                status=e.status,  # ty: ignore [invalid-argument-type]
+            )
+
+
+def _check_scram_challenge(uri: str, call_name: str, res: PhHttpResponse) -> None:
+    """Verifies the server responded to a client message with a SCRAM
+    challenge as defined by Project Haystack's auth instructions.
+    """
+
+    if res.status != 401 or "WWW-Authenticate" not in res.headers:
+        raise ScramServerResponseParsingError(
+            f"Expected an HTTP 401 response with a 'WWW-Authenticate' SCRAM "
+            f"challenge from {uri} to the client's {call_name} call message, "
+            f"but received HTTP {res.status} with headers: "
+            f"{_redact_auth_token(res.headers)!r}. This may indicate the URI "
+            "does not point to a Project Haystack server (e.g., a proxy or "
+            "gateway intercepted the request)."
+        )
+
+
+def _parsing_error_msg(uri: str, call_name: str, res: PhHttpResponse) -> str:
+    return (
+        f"Unable to parse the server's response to the client's {call_name} "
+        f"call message sent to {uri}. Received HTTP {res.status} with "
+        f"headers: {_redact_auth_token(res.headers)!r}"
+    )
+
+
+def _redact_auth_token(headers: Message) -> dict[str, str]:
+    return {
+        name: re.sub(r"authToken=[^,\s]+", "authToken=<redacted>", value)
+        for name, value in headers.items()
+    }
 
 
 def _parse_hello_call_result(
