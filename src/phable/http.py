@@ -35,6 +35,7 @@ def ph_request(
     data: bytes | None = None,
     method: str = "GET",
     context: SSLContext | None = None,
+    timeout: float | None = 30,
 ) -> PhHttpResponse:
     headers = headers.copy()
     headers["Content-Type"] = content_type
@@ -45,6 +46,7 @@ def ph_request(
         data,
         method,
         context,
+        timeout,
     )
     ph_res = PhHttpResponse(
         headers=http_response.headers,
@@ -66,6 +68,7 @@ def request(
     data: bytes | Grid | None = None,
     method: str = "GET",
     context: SSLContext | None = None,
+    timeout: float | None = 30,
 ) -> HTTPResponse:
     if not url.startswith("http"):
         raise URLError('URL must begin with the prefix "http"')
@@ -78,7 +81,7 @@ def request(
     if context is None:
         context = ssl.create_default_context()
 
-    http_res = urllib.request.urlopen(httprequest, context=context)
+    http_res = urllib.request.urlopen(httprequest, context=context, timeout=timeout)
 
     log_http_req(
         httprequest.get_method(),
