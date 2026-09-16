@@ -18,7 +18,8 @@ from phable import (
 )
 
 @pytest.mark.order(0)
-def test_configure_proj(client: HaxallClient):
+def test_configure_proj(admin_client: HaxallClient):
+    client = admin_client
     data = [
         {
             "id": Ref("ph-001"),
@@ -100,12 +101,12 @@ def test_configure_proj(client: HaxallClient):
 
 
 @pytest.mark.order(-1)
-def test_teardown_proj(client: HaxallClient):
-    clear_test_data(client)
+def test_teardown_proj(admin_client: HaxallClient):
+    clear_test_data(admin_client)
 
-    point_count = client.eval("readCount(point and pytest)").rows[0]["val"].val
-    equip_count = client.eval("readCount(equip and pytest)").rows[0]["val"].val
-    site_count = client.eval("readCount(site and pytest)").rows[0]["val"].val
+    point_count = admin_client.eval("readCount(point and pytest)").rows[0]["val"].val
+    equip_count = admin_client.eval("readCount(equip and pytest)").rows[0]["val"].val
+    site_count = admin_client.eval("readCount(site and pytest)").rows[0]["val"].val
 
     if point_count != 0:
         raise ValueError(

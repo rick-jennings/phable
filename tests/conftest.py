@@ -57,6 +57,15 @@ def client(request) -> Generator[HaystackClient, None, None]:
     hc.close()
 
 
+@pytest.fixture(scope="session")
+def admin_client() -> Generator[HaxallClient, None, None]:
+    hc = HaxallClient.open(_URI, _USERNAME, _PASSWORD, content_type="json")
+
+    yield hc
+
+    hc.close()
+
+
 @pytest.fixture(scope="module")
 def non_his_grid() -> Grid:
     meta = {"ver": "3.0"}
@@ -232,8 +241,6 @@ def multi_pt_his_table() -> pa.Table:
     ]
 
     return pa.Table.from_pylist(data, schema=EXPECTED_SCHEMA)
-
-
 
 
 @pytest.fixture(scope="module")
