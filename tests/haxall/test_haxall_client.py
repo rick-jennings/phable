@@ -1,7 +1,6 @@
 # flake8: noqa
 
-from datetime import datetime
-from typing import Any, Callable, Generator, Sequence, Mapping
+from typing import Any, Callable, Sequence, Mapping
 from urllib.error import HTTPError
 import pytest
 
@@ -16,116 +15,6 @@ from phable import (
     UnknownRecError,
     open_haxall_client,
 )
-
-@pytest.mark.order(0)
-def test_configure_proj(admin_client: HaxallClient):
-    client = admin_client
-    data = [
-        {
-            "id": Ref("ph-001"),
-            "site": Marker(),
-            "pytest": Marker(),
-            "dis": "Carytown",
-            "geoState": "VA",
-        },
-        {
-            "id": Ref("ph-002"),
-            "siteRef": Ref("ph-001"),
-            "equip": Marker(),
-            "pytest": Marker(),
-            "siteMeter": Marker(),
-            "dis": "Elec-Meter-01",
-            "elec": Marker(),
-            "meter": Marker(),
-        },
-        {
-            "id": Ref("ph-003"),
-            "siteRef": Ref("ph-001"),
-            "equipRef": Ref("ph-002"),
-            "point": Marker(),
-            "pytest": Marker(),
-            "his": Marker(),
-            "demand": Marker(),
-            "navName": "kW",
-            "kind": "Number",
-            "unit": "kW",
-            "tz": "New_York",
-        },
-        {
-            "id": Ref("ph-004"),
-            "siteRef": Ref("ph-001"),
-            "equipRef": Ref("ph-002"),
-            "point": Marker(),
-            "pytest": Marker(),
-            "his": Marker(),
-            "demand": Marker(),
-            "navName": "kW",
-            "kind": "Number",
-            "unit": "kW",
-            "tz": "New_York",
-        },
-    ]
-
-    try:
-        client.commit_add(data)
-    except CallError as e:
-        if "Rec already exists" in e.help_msg.meta["errTrace"]:
-            print("Previous test records still in database, clearing then re-adding")
-            clear_test_data(client)
-            client.commit_add(data)
-        else:
-            raise e
-
-    try:
-        client.eval('libAdd("hx.point")')
-    except CallError as e:
-        if "Lib already enabled: hx.point" not in e.help_msg.meta["errTrace"]:
-            raise e
-
-    point_count = client.eval("readCount(point and pytest)").rows[0]["val"].val
-    equip_count = client.eval("readCount(equip and pytest)").rows[0]["val"].val
-    site_count = client.eval("readCount(site and pytest)").rows[0]["val"].val
-
-    if point_count != 2:
-        raise ValueError(
-            f"Unexpected number of pytest points in database. {point_count} != 2"
-        )
-    if equip_count != 1:
-        raise ValueError(
-            f"Unexpected number of pytest equips in database. {equip_count} != 1"
-        )
-    if site_count != 1:
-        raise ValueError(
-            f"Unexpected number of pytest sites in database. {site_count} != 1"
-        )
-
-
-@pytest.mark.order(-1)
-def test_teardown_proj(admin_client: HaxallClient):
-    clear_test_data(admin_client)
-
-    point_count = admin_client.eval("readCount(point and pytest)").rows[0]["val"].val
-    equip_count = admin_client.eval("readCount(equip and pytest)").rows[0]["val"].val
-    site_count = admin_client.eval("readCount(site and pytest)").rows[0]["val"].val
-
-    if point_count != 0:
-        raise ValueError(
-            f"Unexpected number of pytest points in database. {point_count} != 0"
-        )
-    if equip_count != 0:
-        raise ValueError(
-            f"Unexpected number of pytest equips in database. {equip_count} != 0"
-        )
-    if site_count != 0:
-        raise ValueError(
-            f"Unexpected number of pytest sites in database. {site_count} != 0"
-        )
-
-
-def clear_test_data(client: HaxallClient):
-    client.eval(
-        "readAll((site or point or equip) and pytest).toRecList.map(r=> diff(r, null, {remove})).commit()"
-    )
 
 
 def test_about_op_with_trailing_uri_slash(URI: str, USERNAME: str, PASSWORD: str):
