@@ -22,6 +22,7 @@ def open_haxall_client(
     *,
     content_type: str = "json",
     ssl_context: SSLContext | None = None,
+    timeout: float | None = 30,
 ) -> Generator[HaxallClient, None, None]:
     """Context manager for opening and closing a session with a
     [Haxall](https://haxall.io/) application. May help prevent accidentially leaving a
@@ -57,10 +58,18 @@ def open_haxall_client(
         ssl_context:
             Optional SSL context. If not provided, a SSL context with default
             settings is created and used.
+        timeout:
+            Maximum number of seconds to wait for a response from the server
+            before raising a timeout error. If `None`, requests will never time out.
     """
 
     client = HaxallClient.open(
-        uri, username, password, content_type=content_type, ssl_context=ssl_context
+        uri,
+        username,
+        password,
+        content_type=content_type,
+        ssl_context=ssl_context,
+        timeout=timeout,
     )
     try:
         yield client
@@ -327,6 +336,7 @@ class HaxallClient(HaystackClient):
             url=remote_file_url,
             headers=headers,
             context=self._context,
+            timeout=self._timeout,
         )
 
         return BufferedReader(res)
@@ -435,6 +445,7 @@ class HaxallClient(HaystackClient):
                 data,
                 method=http_method,
                 context=self._context,
+                timeout=self._timeout,
             ).body.decode("utf-8")
         )
 

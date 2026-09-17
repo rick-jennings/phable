@@ -67,6 +67,7 @@ def open_haystack_client(
     *,
     content_type: str = "json",
     ssl_context: SSLContext | None = None,
+    timeout: float | None = 30,
 ) -> Generator[HaystackClient, None, None]:
     """Context manager for opening and closing a session with a Project Haystack
     defined server application. May help prevent accidentially leaving a session with
@@ -101,10 +102,18 @@ def open_haystack_client(
         ssl_context:
             Optional SSL context. If not provided, a SSL context with default
             settings is created and used.
+        timeout:
+            Maximum number of seconds to wait for a response from the server
+            before raising a timeout error. If `None`, requests will never time out.
     """
 
     client = HaystackClient.open(
-        uri, username, password, content_type=content_type, ssl_context=ssl_context
+        uri,
+        username,
+        password,
+        content_type=content_type,
+        ssl_context=ssl_context,
+        timeout=timeout,
     )
     try:
         yield client
@@ -130,10 +139,12 @@ class HaystackClient:
         *,
         content_type: str = "json",
         ssl_context: SSLContext | None = None,
+        timeout: float | None = 30,
     ):
         self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self._auth_token: str = auth_token
         self._context: SSLContext | None = ssl_context
+        self._timeout: float | None = timeout
 
         self._encoder = PH_CODECS[content_type].encoder
         self._decoder = PH_CODECS[content_type].decoder
@@ -148,6 +159,7 @@ class HaystackClient:
         *,
         content_type: str = "json",
         ssl_context: SSLContext | None = None,
+        timeout: float | None = 30,
     ) -> Self:
         """Opens a session with the server for the URI of the project.
 
@@ -166,15 +178,32 @@ class HaystackClient:
             ssl_context:
                 Optional SSL context. If not provided, a SSL context with default
                 settings is created and used.
+            timeout:
+                Maximum number of seconds to wait for a response from the server
+                before raising a timeout error. If `None`, requests will never time
+                out.
 
         Returns:
             An instance of the class this method is used on (i.e., Client or HxClient).
         """
 
-        scram = ScramScheme(uri, username, password, content_type, ssl_context)
+        scram = ScramScheme(
+            uri,
+            username,
+            password,
+            content_type,
+            ssl_context=ssl_context,
+            timeout=timeout,
+        )
         auth_token = scram.get_auth_token()
 
-        return cls(uri, auth_token, content_type=content_type, ssl_context=ssl_context)
+        return cls(
+            uri,
+            auth_token,
+            content_type=content_type,
+            ssl_context=ssl_context,
+            timeout=timeout,
+        )
 
     def about(self) -> Mapping[str, Any]:
         """Query basic information about the server.
@@ -661,6 +690,7 @@ class HaystackClient:
                 data=encoded_data,
                 method=method,
                 context=self._context,
+                timeout=self._timeout,
             ).body.decode("utf-8")
         )
 

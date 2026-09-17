@@ -61,13 +61,16 @@ class ScramScheme:
         username: str,
         password: str,
         content_type: str,
-        context: SSLContext | None = None,
+        *,
+        ssl_context: SSLContext | None = None,
+        timeout: float | None = 30,
     ):
         self.uri: str = uri[0:-1] if uri[-1] == "/" else uri
         self.username: str = username
         self._password: str = password
         self._content_type = content_type
-        self._context = context
+        self._context = ssl_context
+        self._timeout = timeout
 
         # others to be defined later
         self._handshake_token: str
@@ -99,11 +102,7 @@ class ScramScheme:
         headers = {
             "Authorization": f"HELLO username={_to_base64(self.username)}",
         }
-        res_headers = self._ph_scram_get(
-            self.uri + "/about",
-            headers,
-            context=self._context,
-        )
+        res_headers = self._ph_scram_get(self.uri + "/about", headers)
 
         try:
             self._handshake_token, self._hash = _parse_hello_call_result(res_headers)
@@ -124,11 +123,7 @@ class ScramScheme:
             "Authorization": f"SCRAM data={_to_base64(c1_msg)}, handshakeToken={self._handshake_token}"
         }
 
-        res_headers = self._ph_scram_get(
-            self.uri + "/about",
-            headers,
-            context=self._context,
-        )
+        res_headers = self._ph_scram_get(self.uri + "/about", headers)
 
         try:
             (
@@ -160,11 +155,7 @@ class ScramScheme:
             )
         }
 
-        res_headers = self._ph_scram_get(
-            self.uri + "/about",
-            headers,
-            context=self._context,
-        )
+        res_headers = self._ph_scram_get(self.uri + "/about", headers)
 
         try:
             self._auth_token, server_signature = _parse_final_call_result(res_headers)
@@ -247,10 +238,15 @@ class ScramScheme:
         self,
         url: str,
         headers: dict[str, str],
-        context: SSLContext | None = None,
     ) -> Message:
         try:
-            response = ph_request(url, headers, self._content_type, context=context)
+            response = ph_request(
+                url,
+                headers,
+                self._content_type,
+                context=self._context,
+                timeout=self._timeout,
+            )
             res_headers = response.headers
         except HTTPError as e:
             res_headers = e.headers
