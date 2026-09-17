@@ -106,8 +106,10 @@ def open_haystack_client(
     client = HaystackClient.open(
         uri, username, password, content_type=content_type, ssl_context=ssl_context
     )
-    yield client
-    client.close()
+    try:
+        yield client
+    finally:
+        client.close()
 
 
 class HaystackClient:
