@@ -1,5 +1,5 @@
 pragma: Lib <
-  doc: "TODO"
+  doc: "Xeto example used by the phable docs and tests"
   version: "0.0.1"
   depends: {
     { lib: "sys" }
@@ -8,7 +8,7 @@ pragma: Lib <
     { lib: "ph.equips" }
   }
   org: {
-    dis: "TODO"
-    uri: "TODO"
+    dis: "Project Haystack"
+    uri: "https://project-haystack.org/"
   }
 >

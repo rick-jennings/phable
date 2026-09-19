@@ -23,24 +23,15 @@ class XetoCLI:
     def __init__(
         self,
         *,
-        docker_cli: bool = False,
         io_format: Literal["json", "zinc"] = "zinc",
     ):
         """Initialize a `XetoCLI` instance.
 
         Parameters:
-            docker_cli:
-                If `True`, CLI commands will execute via a Docker container called `phable_haxall_cli_run`
-                that is assumed to be running. The container can be built and started by cloning
-                [phable](https://github.com/rick-jennings/phable) and following the instructions
-                [here](https://github.com/rick-jennings/phable/blob/main/docker/README.md).
-                If `False` (default), commands run locally via Haxall's `xeto` CLI, which must
-                be installed and available on the system PATH.
             io_format:
                 Data serialization format for communication with Haxall. Either `json`
                 or `zinc`. Defaults to `zinc`.
         """
-        self._docker_cli = docker_cli
         self._io_format = io_format
         self._encoder = PH_CODECS[io_format].encoder
         self._decoder = PH_CODECS[io_format].decoder
@@ -91,11 +82,7 @@ class XetoCLI:
             temp_file_path = temp_file.name
 
         try:
-            if self._docker_cli:
-                cli_stdout = _exec_docker_cmd(self._io_format, graph, temp_file_path)
-            else:
-                cli_stdout = _exec_localhost_cmd(self._io_format, graph, temp_file_path)
-
+            cli_stdout = _exec_localhost_cmd(self._io_format, graph, temp_file_path)
             decoded_str = self._decoder(cli_stdout)
             assert isinstance(decoded_str, Grid)
             return decoded_str
@@ -104,50 +91,6 @@ class XetoCLI:
                 os.unlink(temp_file_path)
             except OSError:
                 pass
-
-
-def _exec_docker_cmd(io_format: str, graph: bool, temp_file_path: str) -> str:
-    """Execute xeto fits command in phable_haxall_cli_run Docker container."""
-    container_name = "phable_haxall_cli_run"
-    container_bin_path = "/app/haxall/bin"
-    container_temp_path = f"/tmp/temp_data.{io_format}"
-    file_copied = False
-
-    try:
-        # Copy temp file into the container
-        subprocess.run(
-            ["docker", "cp", temp_file_path, f"{container_name}:{container_temp_path}"],
-            check=True,
-            capture_output=True,
-        )
-        file_copied = True
-
-        cmd = [
-            "docker",
-            "exec",
-            "-w",
-            container_bin_path,
-            container_name,
-            "fan",
-            "xeto",
-            "fits",
-            container_temp_path,
-            "-outFile",
-            f"stdout.{io_format}",
-        ]
-
-        if graph:
-            cmd.append("-graph")
-
-        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
-        return result.stdout
-    finally:
-        # Clean up temp file in container
-        if file_copied:
-            subprocess.run(
-                ["docker", "exec", container_name, "rm", "-f", container_temp_path],
-                capture_output=True,
-            )
 
 
 def _exec_localhost_cmd(

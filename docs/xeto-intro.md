@@ -54,7 +54,7 @@ Replace the contents of `specs.xeto` with the below text to define Xeto specs fo
 ```xeto
 ElecSiteMeter : ElecMeter {
   siteMeter
-  subMeters: Query<of:ElecSubMeter, inverse:"phable::ElecSubMeter.mySiteMeter">
+  subMeters: Query<of:ElecSubMeter, inverse:"webinar::ElecSubMeter.mySiteMeter">
   points: {
     ElecAcTotalImportActiveDemandSensor
   }

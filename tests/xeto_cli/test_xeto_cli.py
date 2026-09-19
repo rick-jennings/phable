@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Generator
 
 import pytest
@@ -18,19 +19,21 @@ def io_format(request) -> Generator[str, None, None]:
         XetoCLI(
             io_format="zinc",
         ),
-        XetoCLI(
-            docker_cli=True,
-            io_format="json",
-        ),
-        XetoCLI(
-            docker_cli=True,
-            io_format="zinc",
-        ),
     ],
     scope="module",
 )
 def xeto_cli(request) -> Generator[XetoCLI, None, None]:
     yield request.param
+
+
+@pytest.fixture(autouse=True)
+def xeto_workdir(monkeypatch: pytest.MonkeyPatch) -> None:
+    # The xeto CLI finds its work dir by walking up from the current directory
+    # to the first xeto.props, fan.props, or .git, then loads source libs from
+    # src/xeto/ under it. See "Env Path" in the Xeto tools Setup docs.
+    # The xeto.props here makes this folder the work dir, so the webinar lib
+    # from the phable.dev Xeto intro is found instead of the repo-root .git.
+    monkeypatch.chdir(Path(__file__).parent)
 
 
 SITE = {"id": Ref("site"), "site": Marker(), "spec": Ref("ph::Site")}
@@ -40,7 +43,7 @@ SITEMETER = {
     "meter": Marker(),
     "siteMeter": Marker(),
     "equip": Marker(),
-    "spec": Ref("phable.test::ElecSiteMeter"),
+    "spec": Ref("webinar::ElecSiteMeter"),
     "siteRef": Ref("site"),
 }
 
@@ -68,7 +71,7 @@ SUBMETER1 = {
     "subMeter": Marker(),
     "subMeterOf": Ref("site-meter"),
     "equip": Marker(),
-    "spec": Ref("phable.test::ElecSubMeter"),
+    "spec": Ref("webinar::ElecSubMeter"),
     "siteRef": Ref("site"),
 }
 SUBMETER1_PT = {
@@ -95,7 +98,7 @@ SUBMETER2 = {
     "subMeter": Marker(),
     "subMeterOf": Ref("site-meter"),
     "equip": Marker(),
-    "spec": Ref("phable.test::ElecSubMeter"),
+    "spec": Ref("webinar::ElecSubMeter"),
     "siteRef": Ref("site"),
 }
 
