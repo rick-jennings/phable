@@ -167,19 +167,21 @@ def test__log_proxy_settings_on_auth_url_error(
         assert client.about()["vendorName"] == "SkyFoundry"
 
     caplog.clear()
-    with socket.socket() as unavailable_proxy:
-        unavailable_proxy.bind(("127.0.0.1", 0))
-        proxy_port = unavailable_proxy.getsockname()[1]
-        proxy_url = f"http://proxy-user:proxy-password@127.0.0.1:{proxy_port}/"
+    unavailable_proxy = socket.socket()
+    unavailable_proxy.bind(("127.0.0.1", 0))
+    proxy_port = unavailable_proxy.getsockname()[1]
+    unavailable_proxy.close()  # fully release the port so the connect fails fast
 
-        monkeypatch.delenv("no_proxy")
-        monkeypatch.setenv("http_proxy", proxy_url)
-        assert getproxies().get("http") == proxy_url
+    proxy_url = f"http://proxy-user:proxy-password@127.0.0.1:{proxy_port}/"
 
-        with caplog.at_level(logging.DEBUG, logger="phable"):
-            with pytest.raises(URLError) as exc_info:
-                with open_haxall_client(URI, USERNAME, PASSWORD):
-                    pass
+    monkeypatch.delenv("no_proxy")
+    monkeypatch.setenv("http_proxy", proxy_url)
+    assert getproxies().get("http") == proxy_url
+
+    with caplog.at_level(logging.DEBUG, logger="phable"):
+        with pytest.raises(URLError) as exc_info:
+            with open_haxall_client(URI, USERNAME, PASSWORD):
+                pass
 
     notes = "\n".join(getattr(exc_info.value, "__notes__", []))
     safe_proxy_address = f"127.0.0.1:{proxy_port}"
