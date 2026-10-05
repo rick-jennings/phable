@@ -13,8 +13,8 @@ from pandas.testing import assert_frame_equal as pandas_assert_frame_equal
 from polars.testing import assert_frame_equal as polars_assert_frame_equal
 
 from phable.kinds import NA, Grid, GridCol, Number, Ref
-from phable.pandas_utils import his_long_to_wide as pandas_long_to_wide
-from phable.polar_utils import his_long_to_wide as polars_long_to_wide
+from phable.utils.pandas import his_long_to_wide as pandas_long_to_wide
+from phable.utils.polars import his_long_to_wide as polars_long_to_wide
 from tests.conftest import TS_NOW
 
 

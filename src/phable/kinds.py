@@ -315,7 +315,7 @@ class Grid:
         **Example:**
 
         ```python
-        from phable.pandas_utils import his_long_to_wide
+        from phable.utils.pandas import his_long_to_wide
 
         df_long = his_grid.to_pandas()
 
@@ -400,7 +400,7 @@ class Grid:
         **Example:**
 
         ```python
-        from phable.polar_utils import his_long_to_wide
+        from phable.utils.polars import his_long_to_wide
 
         df_long = his_grid.to_polars()
 
