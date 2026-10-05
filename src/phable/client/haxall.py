@@ -4,8 +4,8 @@ import mimetypes
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, Any, Generator, Literal, Mapping, Sequence
 
-from phable.haystack_client import HaystackClient
-from phable.http import ph_request, request
+from phable.client.haystack import HaystackClient
+from phable.client.http import ph_request, request
 from phable.kinds import Grid, Uri
 
 if TYPE_CHECKING:

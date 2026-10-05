@@ -5,8 +5,8 @@ from dataclasses import dataclass
 from datetime import date
 from typing import TYPE_CHECKING, Any, Generator, Mapping, Self, Sequence
 
-from phable.auth.scram import ScramScheme
-from phable.http import ph_request
+from phable.client.auth.scram import ScramScheme
+from phable.client.http import ph_request
 from phable.io.ph_codecs import PH_CODECS
 from phable.kinds import (
     DateRange,

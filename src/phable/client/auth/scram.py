@@ -21,7 +21,7 @@ from urllib.error import HTTPError, URLError
 from urllib.parse import urlsplit
 from urllib.request import getproxies
 
-from phable.http import PhHttpResponse, ph_request
+from phable.client.http import PhHttpResponse, ph_request
 from phable.logger import log_http_req, log_http_res, log_url_err
 
 if TYPE_CHECKING:

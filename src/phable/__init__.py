@@ -1,7 +1,7 @@
 # flake8: noqa
 
-from phable.haxall_client import HaxallClient, open_haxall_client
-from phable.haystack_client import (
+from phable.client.haxall import HaxallClient, open_haxall_client
+from phable.client.haystack import (
     CallError,
     HaystackClient,
     UnknownRecError,
@@ -23,7 +23,7 @@ from phable.kinds import (
     XStr,
 )
 from phable.xeto_cli import XetoCLI
-from phable.auth.scram import AuthError
+from phable.client.auth.scram import AuthError
 
 from phable.io.ph_json import ph_from_json, ph_to_json_str
 from phable.io.ph_zinc import ph_from_zinc, ph_to_zinc
