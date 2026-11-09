@@ -76,23 +76,29 @@ def ph_to_json_str(data: PhKind) -> str:
 
 
 def _kind_to_json(kind: Any) -> float | dict[str, Any] | list[dict[str, Any]]:
+    # cases are ordered roughly by how often they occur, most common first
     match kind:
-        case int() | float() | str() | bool():
+        case dict():
+            return {key: _kind_to_json(val) for key, val in kind.items()}
+        case Number():
+            return _number_to_json(kind)
+        case str() | bool() | int() | float():
             return kind
+        case Marker():
+            return {"_kind": "marker"}
+        case Ref():
+            return _ref_to_json(kind)
+        # datetime must be matched before date since datetime is a subclass of date
         case datetime():
             return _datetime_to_json(kind)
         case date():
             return {"_kind": "date", "val": kind.isoformat()}
         case time():
             return {"_kind": "time", "val": kind.isoformat()}
-        case Number():
-            return _number_to_json(kind)
-        case Ref():
-            return _ref_to_json(kind)
+        case list():
+            return [_kind_to_json(x) for x in kind]  # ty: ignore [invalid-return-type]
         case Symbol():
             return {"_kind": "symbol", "val": kind.val}
-        case Marker():
-            return {"_kind": "marker"}
         case NA():
             return {"_kind": "na"}
         case Remove():
@@ -109,10 +115,6 @@ def _kind_to_json(kind: Any) -> float | dict[str, Any] | list[dict[str, Any]]:
             return {"_kind": "xstr", "type": kind.type, "val": kind.val}
         case GridCol():
             return _grid_col_to_json(kind)
-        case dict():
-            return {key: _kind_to_json(val) for key, val in kind.items()}
-        case list():
-            return [_kind_to_json(x) for x in kind]  # ty: ignore [invalid-return-type]
         case Grid():
             return _grid_to_json(kind)
         case _:
