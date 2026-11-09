@@ -168,8 +168,9 @@ def _parse_val(value: Any) -> PhKind:
         case int() | float():
             return Number(value, None)
         case dict():
-            if "_kind" in value.keys():
-                return _to_kind(value)
+            if "_kind" in value:
+                parser = _PARSER_BY_KIND[value["_kind"]]
+                return parser(value)
             else:
                 return _parse_dict(value)
         case list():
@@ -178,26 +179,6 @@ def _parse_val(value: Any) -> PhKind:
             raise ValueError(
                 f"Cannot parse value {value!r} of type {type(value).__name__}"
             )
-
-
-def _to_kind(d: dict[str, str]) -> PhKind:
-    parse_map = {
-        "number": _parse_number,
-        "marker": _parse_marker,
-        "remove": _parse_remove,
-        "na": _parse_na,
-        "ref": _parse_ref,
-        "dict": _parse_dict,
-        "date": _parse_date,
-        "time": _parse_time,
-        "dateTime": _parse_date_time,
-        "uri": _parse_uri,
-        "coord": _parse_coord,
-        "xstr": _parse_xstr,
-        "symbol": _parse_symbol,
-        "grid": _parse_grid,
-    }
-    return parse_map[d["_kind"]](d)
 
 
 def _parse_grid(json_data: dict[str, Any]) -> Grid:
@@ -270,3 +251,21 @@ def _parse_symbol(d: dict[str, str]) -> Symbol:
 
 def _parse_grid_col(d: dict[str, Any]) -> GridCol:
     return GridCol(d["name"], d.get("meta"))
+
+
+_PARSER_BY_KIND = {
+    "number": _parse_number,
+    "marker": _parse_marker,
+    "remove": _parse_remove,
+    "na": _parse_na,
+    "ref": _parse_ref,
+    "dict": _parse_dict,
+    "date": _parse_date,
+    "time": _parse_time,
+    "dateTime": _parse_date_time,
+    "uri": _parse_uri,
+    "coord": _parse_coord,
+    "xstr": _parse_xstr,
+    "symbol": _parse_symbol,
+    "grid": _parse_grid,
+}
