@@ -163,16 +163,18 @@ def _grid_col_to_json(col: GridCol) -> dict[str, Any]:
 
 def _parse_val(value: Any) -> PhKind:
     match value:
-        case bool() | str():
-            return value
-        case int() | float():
-            return Number(value, None)
+        # dict is first since it is the most common: every Haystack row and every
+        # `_kind` value (number with unit, marker, ref, dateTime, ...) is a JSON object
         case dict():
             if "_kind" in value:
                 parser = _PARSER_BY_KIND[value["_kind"]]
                 return parser(value)
-            else:
-                return _parse_dict(value)
+            return _parse_dict(value)
+        # bool must be matched before int since bool is a subclass of int
+        case str() | bool():
+            return value
+        case int() | float():
+            return Number(value, None)
         case list():
             return _parse_list(value)
         case _:
